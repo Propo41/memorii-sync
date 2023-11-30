@@ -1,4 +1,5 @@
-# @rneui/template
+## Requirements
+- node v16.13.0
 
 ## React Native Elements Expo Template
 
