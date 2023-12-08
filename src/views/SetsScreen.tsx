@@ -2,8 +2,8 @@ import React from 'react';
 import { View } from 'react-native';
 import { makeStyles, Text, Button, useThemeMode, useTheme } from '@rneui/themed';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native';
 import { NavProps } from '../config/routes';
+import NavigationBar from '../components/NavigationBar';
 
 const Tab = createBottomTabNavigator();
 
@@ -11,12 +11,14 @@ export default function SetsScreen({ navigation }: NavProps) {
   const styles = useStyles();
   const { setMode, mode } = useThemeMode();
   const { theme } = useTheme();
+  console.log(mode);
 
   //navigation.navigate()
 
   return (
     <View>
-      <Text>Sets</Text>
+      <NavigationBar />
+      <Text h1>Sets</Text>
     </View>
   );
 }
@@ -24,11 +26,7 @@ export default function SetsScreen({ navigation }: NavProps) {
 const useStyles = makeStyles((theme) => ({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.orange,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  text: {
-    marginVertical: theme.spacing.lg,
   },
 }));

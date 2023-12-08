@@ -1,8 +1,8 @@
-import "@rneui/themed";
-import { RecursivePartial } from "@rneui/themed/dist/config/theme";
-import { StyleProp, TextStyle } from "react-native";
+import '@rneui/themed';
+import { RecursivePartial } from '@rneui/themed/dist/config/theme';
+import { StyleProp, TextStyle } from 'react-native';
 
-declare module "@rneui/themed" {
+declare module '@rneui/themed' {
   export interface TextProps {
     bold?: boolean;
     body1?: boolean;
@@ -14,7 +14,7 @@ declare module "@rneui/themed" {
     purple?: string;
     ash?: string;
     lightAsh?: string;
-    black?: string;
+    violetShade?: string;
   }
 
   export interface ComponentTheme {
