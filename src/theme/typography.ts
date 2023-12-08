@@ -1,12 +1,11 @@
 import { TextProps } from '@rneui/themed';
 import { TextStyle } from 'react-native';
 import { toFont } from '../helpers/scaling';
+
 // ----------------------------------------------------------------------
 
-const FF_REGULAR = 'JosefinSans-Regular';
-const FF_SEMIBOLD = 'JosefinSans-SemiBold';
-const FF_MEDIUM = 'JosefinSans-Medium';
-const FF_BOLD = 'JosefinSans-Bold';
+const FF_REGULAR = 'JosefinSans_400Regular';
+const FF_BOLD = 'JosefinSans_700Bold';
 
 type FontStyle = {
   h1?: TextStyle;
@@ -33,8 +32,9 @@ const fontStyle: FontStyle = {
     fontWeight: 'bold',
   },
   body1: {
-    fontSize: toFont(25),
+    fontSize: toFont(20),
     fontFamily: FF_REGULAR,
+    lineHeight: 25,
   },
   body2: {
     fontSize: toFont(12),
@@ -44,7 +44,6 @@ const fontStyle: FontStyle = {
 
 const typography = (props: TextProps) => {
   const propKey = Object.keys(props).find((key) => fontStyle[key as keyof FontStyle]);
-
   const typography: TextProps = {
     style: propKey ? fontStyle[propKey as keyof FontStyle] : fontStyle['body1'],
   };

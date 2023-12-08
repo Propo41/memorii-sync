@@ -1,8 +1,11 @@
 import React from 'react';
 import { View } from 'react-native';
-import { Text, Button, useThemeMode } from '@rneui/themed';
+import { makeStyles, Button, useThemeMode } from '@rneui/themed';
+import { NavProps } from '../config/routes';
+import TitleBar from '../components/TitleBar';
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ navigation }: NavProps) {
+  const styles = useStyles();
   const { setMode, mode } = useThemeMode();
 
   const handleOnPress = () => {
@@ -11,8 +14,10 @@ export default function SettingsScreen() {
 
   return (
     <View>
-      <Text>Settings</Text>
+      <TitleBar title="Settings" />
       <Button onPress={handleOnPress} title={'change mode'} />
     </View>
   );
 }
+
+const useStyles = makeStyles((theme) => ({}));

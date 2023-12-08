@@ -1,6 +1,5 @@
 import '@rneui/themed';
 import { RecursivePartial } from '@rneui/themed/dist/config/theme';
-import { StyleProp, TextStyle } from 'react-native';
 
 declare module '@rneui/themed' {
   export interface TextProps {

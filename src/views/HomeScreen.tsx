@@ -1,21 +1,29 @@
 import React from 'react';
 import { View } from 'react-native';
-import { makeStyles, Text, Button } from '@rneui/themed';
+import { makeStyles, Avatar } from '@rneui/themed';
 import { NavProps } from '../config/routes';
+import { toSize } from '../helpers/scaling';
+import TitleBar from '../components/TitleBar';
 
 export default function HomeScreen({ navigation }: NavProps) {
   const styles = useStyles();
 
   return (
-    <View style={styles.container}>
-      <Text h3>Sets</Text>
-      <Button onPress={() => navigation.push('Sets')} title={'Go to sets'} />
+    <View>
+      <TitleBar title="Decks" subtitle="Your available decks">
+        <Avatar
+          size={toSize(50)}
+          rounded
+          source={{ uri: 'https://randomuser.me/api/portraits/men/36.jpg' }}
+          containerStyle={styles.avatar}
+        />
+      </TitleBar>
     </View>
   );
 }
 
 const useStyles = makeStyles((theme) => ({
-  container: {
-    height: '100vh',
+  avatar: {
+    marginVertical: toSize(5),
   },
 }));
