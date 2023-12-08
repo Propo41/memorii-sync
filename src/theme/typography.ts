@@ -48,6 +48,10 @@ const typography = (props: TextProps) => {
     style: propKey ? fontStyle[propKey as keyof FontStyle] : fontStyle['body1'],
   };
 
+  if (props.bold) {
+    typography.style.fontWeight = 'bold';
+  }
+
   return typography;
 };
 

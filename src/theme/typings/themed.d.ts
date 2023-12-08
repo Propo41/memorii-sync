@@ -6,6 +6,7 @@ declare module '@rneui/themed' {
     bold?: boolean;
     body1?: boolean;
     body2?: boolean;
+    color?: string;
   }
 
   export interface Colors {
@@ -14,6 +15,7 @@ declare module '@rneui/themed' {
     ash?: string;
     lightAsh?: string;
     violetShade?: string;
+    text?: string;
   }
 
   export interface ComponentTheme {

@@ -1,8 +1,9 @@
-import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { View } from 'react-native';
 import { Button, Text, makeStyles } from '@rneui/themed';
 import { toSize } from '../helpers/scaling';
 import { useNavigation } from '@react-navigation/native';
+import React from 'react';
 
 const NavigationBar = () => {
   const styles = useStyles();
@@ -15,7 +16,7 @@ const NavigationBar = () => {
   return (
     <View style={styles.container}>
       <Button title="Clear" type="clear" buttonStyle={styles.iconButton} onPress={onBackPress}>
-        <Icon name="angle-left" style={styles.icon} size={toSize(30)} />
+        <Icon name="navigate-before" style={styles.icon} size={toSize(30)} />
       </Button>
       <Text style={styles.text} h3>
         Sets

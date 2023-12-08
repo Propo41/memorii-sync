@@ -23,6 +23,7 @@ export default function BottomNavigator() {
         tabBarActiveTintColor: theme.colors.purple,
         tabBarInactiveTintColor: theme.colors.ash,
       }}
+      initialRouteName={BottomNavRoutes.Settings}
     >
       <RootTab.Screen
         name={BottomNavRoutes.Home}
