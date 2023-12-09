@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { makeStyles, Button, useThemeMode, useTheme, Text } from '@rneui/themed';
+import { makeStyles, useThemeMode, useTheme, Text } from '@rneui/themed';
 import { NavProps } from '../config/routes';
 import TitleBar from '../components/TitleBar';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { toSize } from '../helpers/scaling';
 import { Divider } from '@rneui/themed';
 import { Switch } from '@rneui/themed';
+import Touchable from '../components/Touchable';
 
 type MenuProps = {
   title: string;
@@ -19,16 +20,18 @@ const Menu = ({ Icon1, title, subtitle, Icon2 }: MenuProps) => {
   const styles = useStyles();
 
   return (
-    <View style={styles.menuContainer}>
-      {Icon1}
-      <Text body1_bold style={styles.menuTitle}>
-        {title}
-      </Text>
-      <Text body1 style={styles.menuSubtitle}>
-        {subtitle}
-      </Text>
-      {Icon2}
-    </View>
+    <Touchable>
+      <View style={styles.menuContainer}>
+        {Icon1}
+        <Text body1_bold style={styles.menuTitle}>
+          {title}
+        </Text>
+        <Text body1 style={styles.menuSubtitle}>
+          {subtitle}
+        </Text>
+        {Icon2}
+      </View>
+    </Touchable>
   );
 };
 
