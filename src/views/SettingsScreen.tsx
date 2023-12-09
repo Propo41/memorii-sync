@@ -101,7 +101,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 15,
   },
   menuTitle: {
     flexGrow: 1,

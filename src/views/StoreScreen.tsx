@@ -11,14 +11,18 @@ export default function StoreScreen() {
 
   return (
     <View>
-      <TitleBar title="Market" subtitle="Buy ready-made decks">
-        <Icon
-          name="shopping-cart"
-          color={theme.colors.purple}
-          size={toSize(50)}
-          style={styles.headerIcon}
-        />
-      </TitleBar>
+      <TitleBar
+        title="Market"
+        subtitle="Buy ready-made decks"
+        icon={
+          <Icon
+            name="shopping-cart"
+            color={theme.colors.purple}
+            size={toSize(50)}
+            style={styles.headerIcon}
+          />
+        }
+      />
     </View>
   );
 }

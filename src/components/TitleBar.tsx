@@ -6,10 +6,10 @@ import { margins } from '../config/margins';
 type TitleProps = {
   title: string;
   subtitle?: string;
-  children?: ReactElement;
+  icon?: ReactElement;
 };
 
-const TitleBar = ({ title, subtitle, children }: TitleProps) => {
+const TitleBar = ({ title, subtitle, icon }: TitleProps) => {
   const styles = useStyles();
 
   return (
@@ -18,11 +18,13 @@ const TitleBar = ({ title, subtitle, children }: TitleProps) => {
         <Text head1 style={styles.title}>
           {title}
         </Text>
-        <Text style={styles.text} body1>
-          {subtitle}
-        </Text>
+        {subtitle && (
+          <Text style={styles.text} body1>
+            {subtitle}
+          </Text>
+        )}
       </View>
-      {children}
+      {icon}
     </View>
   );
 };
@@ -32,6 +34,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'row',
     paddingTop: margins.window_vert,
+    marginBottom: 15,
   },
   titleContainer: {
     flexGrow: 1,
@@ -41,7 +44,7 @@ const useStyles = makeStyles((theme) => ({
   },
   text: {
     marginTop: 5,
-    color: theme.mode === 'dark' ? theme.colors.white : theme.colors.black,
+    color: theme.colors.text,
   },
 }));
 

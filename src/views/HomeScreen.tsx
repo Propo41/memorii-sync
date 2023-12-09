@@ -10,14 +10,18 @@ export default function HomeScreen({ navigation }: NavProps) {
 
   return (
     <View>
-      <TitleBar title="Decks" subtitle="Your available decks">
-        <Avatar
-          size={toSize(50)}
-          rounded
-          source={{ uri: 'https://randomuser.me/api/portraits/men/36.jpg' }}
-          containerStyle={styles.avatar}
-        />
-      </TitleBar>
+      <TitleBar
+        title="Decks"
+        subtitle="Your available decks"
+        icon={
+          <Avatar
+            size={toSize(50)}
+            rounded
+            source={{ uri: 'https://randomuser.me/api/portraits/men/36.jpg' }}
+            containerStyle={styles.avatar}
+          />
+        }
+      />
     </View>
   );
 }
