@@ -21,7 +21,7 @@ const Menu = ({ Icon1, title, subtitle, Icon2 }: MenuProps) => {
   return (
     <View style={styles.menuContainer}>
       {Icon1}
-      <Text body1 bold style={styles.menuTitle}>
+      <Text body1_bold style={styles.menuTitle}>
         {title}
       </Text>
       <Text body1 style={styles.menuSubtitle}>
@@ -54,7 +54,6 @@ export default function SettingsScreen({ navigation }: NavProps) {
             name="language"
             color={theme.mode === 'dark' ? theme.colors.white : theme.colors.black}
             size={toSize(30)}
-            style={styles.menuIcon}
           />
         }
         Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(30)} />}
@@ -67,7 +66,6 @@ export default function SettingsScreen({ navigation }: NavProps) {
             name="wb-sunny"
             color={theme.mode === 'dark' ? theme.colors.white : theme.colors.black}
             size={toSize(30)}
-            style={styles.menuIcon}
           />
         }
         Icon2={
@@ -90,7 +88,6 @@ export default function SettingsScreen({ navigation }: NavProps) {
             name="help"
             color={theme.mode === 'dark' ? theme.colors.white : theme.colors.black}
             size={toSize(30)}
-            style={styles.menuIcon}
           />
         }
         Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(30)} />}
@@ -106,17 +103,15 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     paddingVertical: 20,
   },
-  menuIcon: {},
   menuTitle: {
-    fontWeight: 'bold',
     flexGrow: 1,
     marginLeft: 10,
-    color: theme.mode === 'dark' ? theme.colors.white : theme.colors.black,
+    color: theme.colors.text,
   },
   menuSubtitle: {
-    color: theme.mode === 'dark' ? theme.colors.white : theme.colors.black,
+    color: theme.colors.text,
   },
   icon: {
-    color: theme.mode === 'dark' ? theme.colors.white : theme.colors.black,
+    color: theme.colors.text,
   },
 }));

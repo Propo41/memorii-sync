@@ -18,7 +18,7 @@ export default function SetsScreen({ navigation }: NavProps) {
   return (
     <View>
       <NavigationBar title='Sets'/>
-      <Text h1>Sets</Text>
+      <Text head1>Sets</Text>
     </View>
   );
 }

@@ -15,7 +15,7 @@ const TitleBar = ({ title, subtitle, children }: TitleProps) => {
   return (
     <View style={styles.container}>
       <View style={styles.titleContainer}>
-        <Text h1 style={styles.title}>
+        <Text head1 style={styles.title}>
           {title}
         </Text>
         <Text style={styles.text} body1>
@@ -32,7 +32,6 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'row',
     paddingTop: margins.window_vert,
-    paddingBottom: 10
   },
   titleContainer: {
     flexGrow: 1,

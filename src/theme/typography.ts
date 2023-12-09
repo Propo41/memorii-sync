@@ -5,40 +5,47 @@ import { toFont } from '../helpers/scaling';
 // ----------------------------------------------------------------------
 
 const FF_REGULAR = 'JosefinSans_400Regular';
-const FF_BOLD = 'JosefinSans_400Regular';
+const FF_BOLD = 'JosefinSans_700Bold';
 
 type FontStyle = {
-  h1?: TextStyle;
-  h2?: TextStyle;
-  h3?: TextStyle;
+  head1?: TextStyle;
+  head2?: TextStyle;
+  head3?: TextStyle;
   body1?: TextStyle;
+  body1_bold?: TextStyle;
   body2?: TextStyle;
+  body2_bold?: TextStyle;
 };
 
 const fontStyle: FontStyle = {
-  h1: {
+  head1: {
     fontSize: toFont(43),
     fontFamily: FF_BOLD,
-    fontWeight: 'bold',
   },
-  h2: {
+  head2: {
     fontSize: toFont(35),
     fontFamily: FF_BOLD,
-    fontWeight: 'bold',
   },
-  h3: {
+  head3: {
     fontSize: toFont(25),
     fontFamily: FF_BOLD,
-    fontWeight: 'bold',
   },
   body1: {
     fontSize: toFont(20),
     fontFamily: FF_REGULAR,
     lineHeight: 25,
   },
+  body1_bold: {
+    fontSize: toFont(20),
+    fontFamily: FF_BOLD,
+  },
   body2: {
     fontSize: toFont(12),
     fontFamily: FF_REGULAR,
+  },
+  body2_bold: {
+    fontSize: toFont(12),
+    fontFamily: FF_BOLD,
   },
 };
 

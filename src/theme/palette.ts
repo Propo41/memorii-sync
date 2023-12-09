@@ -18,6 +18,7 @@ const palette: ColorPalette = {
     primary: '#7C82FF',
     secondary: '#555555',
     violetShade: '#3C1E64',
+    text: '#555555',
   },
   dark: {
     background: '#371D58',
@@ -30,6 +31,7 @@ const palette: ColorPalette = {
     primary: '#7C82FF',
     secondary: '#555555',
     violetShade: '#3C1E64',
+    text: '#FFFFFF',
   },
 };
 
