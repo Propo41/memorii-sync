@@ -32,6 +32,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'row',
     paddingTop: margins.window_vert,
+    paddingBottom: 10
   },
   titleContainer: {
     flexGrow: 1,
@@ -40,6 +41,7 @@ const useStyles = makeStyles((theme) => ({
     color: theme.colors.purple,
   },
   text: {
+    marginTop: 5,
     color: theme.mode === 'dark' ? theme.colors.white : theme.colors.black,
   },
 }));

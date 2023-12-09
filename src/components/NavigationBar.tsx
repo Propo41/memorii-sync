@@ -5,7 +5,11 @@ import { toSize } from '../helpers/scaling';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 
-const NavigationBar = () => {
+type Props = {
+  title: string;
+};
+
+const NavigationBar = ({ title }: Props) => {
   const styles = useStyles();
   const navigation = useNavigation();
 
@@ -19,7 +23,7 @@ const NavigationBar = () => {
         <Icon name="navigate-before" style={styles.icon} size={toSize(30)} />
       </Button>
       <Text style={styles.text} h3>
-        Sets
+        {title}
       </Text>
     </View>
   );

@@ -5,7 +5,7 @@ import { toFont } from '../helpers/scaling';
 // ----------------------------------------------------------------------
 
 const FF_REGULAR = 'JosefinSans_400Regular';
-const FF_BOLD = 'JosefinSans_700Bold';
+const FF_BOLD = 'JosefinSans_400Regular';
 
 type FontStyle = {
   h1?: TextStyle;
@@ -47,10 +47,6 @@ const typography = (props: TextProps) => {
   const typography: TextProps = {
     style: propKey ? fontStyle[propKey as keyof FontStyle] : fontStyle['body1'],
   };
-
-  if (props.bold) {
-    typography.style.fontWeight = 'bold';
-  }
 
   return typography;
 };

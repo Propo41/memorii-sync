@@ -17,8 +17,6 @@ export function toSize(size: number, type: string = 'hor') {
 
 export function toFont(fontSize: number) {
   const { height, width } = Dimensions.get('window');
-  console.log(height, width);
-
   const standardLength = width > height ? width : height;
   const offset = width > height ? 0 : StatusBar.currentHeight || 0;
 
