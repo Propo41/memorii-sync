@@ -4,6 +4,7 @@ import { Button, Text, makeStyles } from '@rneui/themed';
 import { toSize } from '../helpers/scaling';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
+import { margins } from '../config/margins';
 
 type Props = {
   title: string;
@@ -35,6 +36,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'row',
     paddingVertical: toSize(15),
     backgroundColor: theme.colors.background,
+    paddingHorizontal: margins.window_hor,
   },
   icon: {
     color: theme.mode === 'dark' ? theme.colors.white : theme.colors.black,

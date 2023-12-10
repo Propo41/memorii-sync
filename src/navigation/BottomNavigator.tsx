@@ -79,6 +79,5 @@ const useStyles = makeStyles((theme) => ({
   },
   scene: {
     backgroundColor: theme.colors.background,
-    paddingHorizontal: margins.window_hor,
   },
 }));

@@ -35,6 +35,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'row',
     paddingTop: margins.window_vert,
     marginBottom: 15,
+    paddingHorizontal: margins.window_hor,
   },
   titleContainer: {
     flexGrow: 1,

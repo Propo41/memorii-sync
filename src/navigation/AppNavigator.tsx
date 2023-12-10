@@ -3,7 +3,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BottomNavigator from './BottomNavigator';
 import { NavParamList, NavRoutes } from '../config/routes';
 import { makeStyles } from '@rneui/themed';
-import { margins } from '../config/margins';
 import React from 'react';
 
 const RootStack = createNativeStackNavigator<NavParamList>();
@@ -19,5 +18,5 @@ export default function AppNavigator() {
 }
 
 const useStyles = makeStyles((theme) => ({
-  contentStyle: { paddingHorizontal: margins.window_hor, backgroundColor: theme.colors.background },
+  contentStyle: { backgroundColor: theme.colors.background },
 }));

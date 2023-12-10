@@ -1,13 +1,19 @@
-import { ColorValue, TouchableNativeFeedback } from 'react-native';
+import { ColorValue, Platform, TouchableNativeFeedback, View } from 'react-native';
 import React from 'react';
 import { makeStyles } from '@rneui/themed';
 
 type Props = {
   children: React.ReactElement;
+  onPress?: () => void;
 };
 
-const Touchable = ({ children }: Props) => {
+const Touchable = ({ onPress, children }: Props) => {
   const styles = useStyles();
+
+  if (Platform.OS === 'web') {
+    console.log('cannot use touchable in web');
+    return <View onTouchEnd={onPress}>{children}</View>;
+  }
 
   return (
     <TouchableNativeFeedback
@@ -15,6 +21,7 @@ const Touchable = ({ children }: Props) => {
         styles.touchableContainer.color as ColorValue,
         false
       )}
+      onPress={onPress}
     >
       {children}
     </TouchableNativeFeedback>
@@ -23,7 +30,7 @@ const Touchable = ({ children }: Props) => {
 
 const useStyles = makeStyles((theme) => ({
   touchableContainer: {
-    color: theme.mode === 'dark' ? theme.colors.ash : theme.colors.orange,
+    color: theme.colors.ash,
   },
 }));
 
