@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { View } from 'react-native';
 import { makeStyles, useThemeMode, useTheme, Text } from '@rneui/themed';
 import { NavProps } from '../config/routes';
@@ -9,7 +9,6 @@ import { Divider } from '@rneui/themed';
 import { Switch } from '@rneui/themed';
 import Touchable from '../components/Touchable';
 import { margins } from '../config/margins';
-import BottomSheet from '@gorhom/bottom-sheet';
 
 type MenuProps = {
   title: string;
@@ -38,31 +37,6 @@ const Menu = ({ Icon1, title, subtitle, Icon2, onPress }: MenuProps) => {
   );
 };
 
-const LanguageSelectorDialog = () => {
-  const styles = useStyles();
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['25%', '50%'], []);
-
-  const handleSheetChanges = useCallback((index: number) => {
-    console.log('handleSheetChanges', index);
-  }, []);
-
-  return (
-    <View style={styles.dialogContainer}>
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={1}
-        snapPoints={snapPoints}
-        onChange={handleSheetChanges}
-      >
-        <View style={styles.dialogContentContainer}>
-          <Text>Awesome 🎉</Text>
-        </View>
-      </BottomSheet>
-    </View>
-  );
-};
-
 export default function SettingsScreen({ navigation }: NavProps) {
   const styles = useStyles();
   const { setMode, mode } = useThemeMode();
@@ -77,7 +51,6 @@ export default function SettingsScreen({ navigation }: NavProps) {
   return (
     <View>
       <TitleBar title="Settings" />
-      <LanguageSelectorDialog />
       <Menu
         title="Language"
         subtitle="English"
@@ -138,14 +111,5 @@ const useStyles = makeStyles((theme) => ({
   },
   icon: {
     color: theme.colors.text,
-  },
-  dialogContainer: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: 'grey',
-  },
-  dialogContentContainer: {
-    flex: 1,
-    alignItems: 'center',
   },
 }));
