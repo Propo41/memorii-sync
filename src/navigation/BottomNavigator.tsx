@@ -3,7 +3,7 @@ import React from 'react';
 import { HomeScreen, StoreScreen, MyDecksScreen, SettingsScreen } from '../views';
 import { BottomNavRoutes, BottomParamList } from '../config/routes';
 import { makeStyles, useTheme } from '@rneui/themed';
-import { margins } from '../config/margins';
+import { margins } from '../config';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { toSize } from '../helpers/scaling';
 

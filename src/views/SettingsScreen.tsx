@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import { View } from 'react-native';
-import { makeStyles, useThemeMode, useTheme, Text } from '@rneui/themed';
-import { NavProps } from '../config/routes';
-import TitleBar from '../components/TitleBar';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { toSize } from '../helpers/scaling';
+import { makeStyles, Text, useTheme, useThemeMode } from '@rneui/themed';
 import { Divider } from '@rneui/themed';
 import { Switch } from '@rneui/themed';
+import React, { useState } from 'react';
+import { View } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+import BottomSheet from '../components/BottomSheet';
+import TitleBar from '../components/TitleBar';
 import Touchable from '../components/Touchable';
-import { margins } from '../config/margins';
+import { margins } from '../config';
+import { NavProps } from '../config/routes';
+import { toSize } from '../helpers/scaling';
 
 type MenuProps = {
   title: string;
@@ -51,6 +53,11 @@ export default function SettingsScreen({ navigation }: NavProps) {
   return (
     <View>
       <TitleBar title="Settings" />
+      <BottomSheet>
+        <Text body1 style={styles.menuSubtitle}>
+          hello
+        </Text>
+      </BottomSheet>
       <Menu
         title="Language"
         subtitle="English"

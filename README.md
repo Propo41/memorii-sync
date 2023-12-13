@@ -25,3 +25,8 @@ https://blog.logrocket.com/adding-custom-fonts-react-native/
 #### Bleeding Edge Typescript (Experimental)
 
         expo init app --template @rneui/template@edge-ts
+
+
+## Issues faced
+
+- View is not a jsx component: https://github.com/eslint/eslint/issues/15802

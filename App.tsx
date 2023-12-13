@@ -1,13 +1,12 @@
-import React from 'react';
-import { createTheme, ThemeProvider } from '@rneui/themed';
-import { palette, typography } from './src/theme';
+import { JosefinSans_400Regular, JosefinSans_700Bold, useFonts } from '@expo-google-fonts/josefin-sans';
 import { NavigationContainer } from '@react-navigation/native';
+import { createTheme, ThemeProvider } from '@rneui/themed';
+import React from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 import { AppNavigator } from './src/navigation';
-import {
-  useFonts,
-  JosefinSans_400Regular,
-  JosefinSans_700Bold,
-} from '@expo-google-fonts/josefin-sans';
+import { palette, typography } from './src/theme';
 
 const theme = createTheme({
   lightColors: palette['light'],
@@ -30,10 +29,19 @@ export default function App() {
   console.log(fontsLoaded);
 
   return (
-    <ThemeProvider theme={theme}>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
-    </ThemeProvider>
+    <GestureHandlerRootView style={styles.container}>
+      <ThemeProvider theme={theme}>
+        <NavigationContainer>
+          <AppNavigator />
+        </NavigationContainer>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
+const BACKGROUND_COLOR = '#F8F9FF';
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: BACKGROUND_COLOR,
+  },
+});

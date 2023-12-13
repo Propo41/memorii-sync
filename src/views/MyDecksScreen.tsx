@@ -2,8 +2,6 @@ import React from 'react';
 import { View } from 'react-native';
 import { makeStyles, Text } from '@rneui/themed';
 import { NavProps } from '../config/routes';
-import { margins } from '../config/margins';
-import { toSize } from '../helpers/scaling';
 import TitleBar from '../components/TitleBar';
 
 export default function MyDecks({ navigation }: NavProps) {

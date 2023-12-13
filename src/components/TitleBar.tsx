@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react';
 import { View } from 'react-native';
 import { makeStyles, Text } from '@rneui/themed';
-import { margins } from '../config/margins';
+import { margins } from '../config';
 
 type TitleProps = {
   title: string;

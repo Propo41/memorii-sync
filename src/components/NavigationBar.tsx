@@ -4,7 +4,7 @@ import { Button, Text, makeStyles } from '@rneui/themed';
 import { toSize } from '../helpers/scaling';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { margins } from '../config/margins';
+import { margins } from '../config';
 
 type Props = {
   title: string;
