@@ -4,6 +4,7 @@ import { makeStyles, useTheme } from '@rneui/themed';
 import { toSize } from '../helpers/scaling';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import TitleBar from '../components/TitleBar';
+import { iconSize } from '../config';
 
 export default function StoreScreen() {
   const { theme } = useTheme();
@@ -14,14 +15,7 @@ export default function StoreScreen() {
       <TitleBar
         title="Market"
         subtitle="Buy ready-made decks"
-        icon={
-          <Icon
-            name="shopping-cart"
-            color={theme.colors.purple}
-            size={toSize(50)}
-            style={styles.headerIcon}
-          />
-        }
+        icon={<Icon name="shopping-cart" color={theme.colors.purple} size={iconSize.lg} style={styles.headerIcon} />}
       />
     </View>
   );
@@ -29,6 +23,6 @@ export default function StoreScreen() {
 
 const useStyles = makeStyles((theme) => ({
   headerIcon: {
-    marginVertical: toSize(5),
+    marginVertical: toSize(20),
   },
 }));

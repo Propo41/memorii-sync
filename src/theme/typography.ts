@@ -41,11 +41,11 @@ const fontStyle: FontStyle = {
     fontFamily: FF_BOLD,
   },
   body2: {
-    fontSize: toFont(12),
+    fontSize: toFont(16),
     fontFamily: FF_REGULAR,
   },
   body2_bold: {
-    fontSize: toFont(12),
+    fontSize: toFont(16),
     fontFamily: FF_BOLD,
   },
 };

@@ -66,14 +66,14 @@ export default function SettingsScreen({ navigation }: NavProps) {
       <Menu
         title="Language"
         subtitle={language}
-        Icon1={<Icon name="language" color={theme.colors.text} size={toSize(iconSize.sm)} />}
+        Icon1={<Icon name="language" style={styles.icon1} color={theme.colors.text} size={toSize(iconSize.sm)} />}
         Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(iconSize.sm)} />}
         onPress={() => setDialogOpen(true)}
       />
       <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
         title="Dark Mode"
-        Icon1={<Icon name="wb-sunny" color={theme.colors.text} size={toSize(iconSize.sm)} />}
+        Icon1={<Icon name="wb-sunny" style={styles.icon1} color={theme.colors.text} size={toSize(iconSize.sm)} />}
         Icon2={
           <Switch
             value={darkModeSwitch}
@@ -89,13 +89,13 @@ export default function SettingsScreen({ navigation }: NavProps) {
       <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
         title="Help & Support"
-        Icon1={<Icon name="help" color={theme.colors.text} size={toSize(iconSize.sm)} />}
+        Icon1={<Icon name="help" style={styles.icon1} color={theme.colors.text} size={toSize(iconSize.sm)} />}
         Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(iconSize.sm)} />}
       />
       <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
         title="Log out of all sessions"
-        Icon1={<Icon name="logout" color={theme.colors.orange} size={toSize(iconSize.sm)} />}
+        Icon1={<Icon name="logout" style={styles.icon1} color={theme.colors.orange} size={toSize(iconSize.sm)} />}
         Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(iconSize.sm)} />}
       />
       {/* dialogs */}
@@ -110,7 +110,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 20,
-    paddingHorizontal: margins.window_hor,
+    paddingHorizontal: margins.window_hor + 15,
   },
   divider: {
     marginHorizontal: margins.window_hor,
@@ -125,5 +125,8 @@ const useStyles = makeStyles((theme) => ({
   },
   icon: {
     color: theme.colors.text,
+  },
+  icon1: {
+    marginRight: 10,
   },
 }));

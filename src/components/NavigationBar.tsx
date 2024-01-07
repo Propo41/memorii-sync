@@ -6,11 +6,11 @@ import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { margins } from '../config';
 
-type Props = {
+type NavigationBarProps = {
   title: string;
 };
 
-const NavigationBar = ({ title }: Props) => {
+const NavigationBar = ({ title }: NavigationBarProps) => {
   const styles = useStyles();
   const navigation = useNavigation();
 
@@ -34,9 +34,9 @@ const useStyles = makeStyles((theme) => ({
   container: {
     display: 'flex',
     flexDirection: 'row',
-    paddingVertical: toSize(15),
+    paddingVertical: margins.window_vert,
     backgroundColor: theme.colors.background,
-    paddingHorizontal: margins.window_hor,
+    paddingHorizontal: margins.window_hor_w_icon,
   },
   icon: {
     color: theme.mode === 'dark' ? theme.colors.white : theme.colors.black,

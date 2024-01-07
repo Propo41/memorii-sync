@@ -1,9 +1,10 @@
-import React, { useCallback, useMemo, useRef } from 'react';
 import BottomSheet, { BottomSheetBackdrop, useBottomSheetTimingConfigs } from '@gorhom/bottom-sheet';
 import { makeStyles, Text, useTheme } from '@rneui/themed';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { View } from 'react-native';
-import AppButton from './AppButton';
 import { Easing } from 'react-native-reanimated';
+
+import AppButton from './AppButton';
 
 type ChangeLanguageDialogProp = {
   language: string;
@@ -91,8 +92,8 @@ const useStyles = makeStyles((theme) => ({
   },
   handle: {
     backgroundColor: theme.colors.background,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   handleIndicator: {
     backgroundColor: theme.colors.ash,

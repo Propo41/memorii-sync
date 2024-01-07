@@ -1,22 +1,21 @@
-import { ColorValue, Platform, TouchableNativeFeedback, View } from 'react-native';
+import { ColorValue, TouchableNativeFeedback } from 'react-native';
 import React from 'react';
 import { makeStyles } from '@rneui/themed';
 
 type Props = {
   children: React.ReactElement;
   onPress?: () => void;
+  rippleColor?: string;
 };
 
-const Touchable = ({ onPress, children }: Props) => {
+const Touchable = ({ onPress, children, rippleColor }: Props) => {
   const styles = useStyles();
 
-  if (Platform.OS === 'web') {
-    console.log('cannot use touchable in web');
-    return <View onTouchEnd={onPress}>{children}</View>;
-  }
-
   return (
-    <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple(styles.touchableContainer.color as ColorValue, false)} onPress={onPress}>
+    <TouchableNativeFeedback
+      background={TouchableNativeFeedback.Ripple((rippleColor || styles.touchableContainer.color) as ColorValue, false)}
+      onPress={onPress}
+    >
       {children}
     </TouchableNativeFeedback>
   );
