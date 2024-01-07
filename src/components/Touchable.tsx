@@ -16,13 +16,7 @@ const Touchable = ({ onPress, children }: Props) => {
   }
 
   return (
-    <TouchableNativeFeedback
-      background={TouchableNativeFeedback.Ripple(
-        styles.touchableContainer.color as ColorValue,
-        false
-      )}
-      onPress={onPress}
-    >
+    <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple(styles.touchableContainer.color as ColorValue, false)} onPress={onPress}>
       {children}
     </TouchableNativeFeedback>
   );
@@ -30,7 +24,7 @@ const Touchable = ({ onPress, children }: Props) => {
 
 const useStyles = makeStyles((theme) => ({
   touchableContainer: {
-    color: theme.colors.ash,
+    color: theme.colors.touchable,
   },
 }));
 

@@ -19,6 +19,8 @@ const palette: ColorPalette = {
     secondary: '#555555',
     violetShade: '#3C1E64',
     text: '#555555',
+    grey: 'grey',
+    touchable: '#D4D4D4',
   },
   dark: {
     background: '#371D58',
@@ -32,6 +34,8 @@ const palette: ColorPalette = {
     secondary: '#555555',
     violetShade: '#3C1E64',
     text: '#FFFFFF',
+    grey: 'grey',
+    touchable: '#512C81',
   },
 };
 

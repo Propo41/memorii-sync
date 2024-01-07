@@ -1,15 +1,16 @@
-import { makeStyles, Text, useTheme, useThemeMode } from '@rneui/themed';
+import { makeStyles, Text, ThemeMode, useTheme, useThemeMode } from '@rneui/themed';
 import { Divider } from '@rneui/themed';
 import { Switch } from '@rneui/themed';
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-import BottomSheet from '../components/BottomSheet';
+import ChangeLanguageDialog from '../components/ChangeLanguageDialog';
 import TitleBar from '../components/TitleBar';
 import Touchable from '../components/Touchable';
-import { margins } from '../config';
+import { iconSize, margins } from '../config';
 import { NavProps } from '../config/routes';
+import { getAppState } from '../database';
 import { toSize } from '../helpers/scaling';
 
 type MenuProps = {
@@ -43,35 +44,39 @@ export default function SettingsScreen({ navigation }: NavProps) {
   const styles = useStyles();
   const { setMode, mode } = useThemeMode();
   const { theme } = useTheme();
-  const [checked, setChecked] = useState(false);
+  const [darkModeSwitch, setDarkModeSwitch] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [language, setLanguage] = useState('English');
+
+  React.useEffect(() => {
+    const { language, colorMode } = getAppState();
+    setLanguage(language);
+    setMode(colorMode as ThemeMode);
+    setDarkModeSwitch(colorMode === 'dark' ? true : false);
+  }, []);
 
   const toggleDarkMode = () => {
     setMode(mode === 'dark' ? 'light' : 'dark');
-    setChecked(checked ? false : true);
+    setDarkModeSwitch(darkModeSwitch ? false : true);
   };
 
   return (
-    <View>
+    <>
       <TitleBar title="Settings" />
-      <BottomSheet>
-        <Text body1 style={styles.menuSubtitle}>
-          hello
-        </Text>
-      </BottomSheet>
       <Menu
         title="Language"
-        subtitle="English"
-        Icon1={<Icon name="language" color={theme.colors.text} size={toSize(30)} />}
-        Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(30)} />}
-        onPress={() => console.log('hello')}
+        subtitle={language}
+        Icon1={<Icon name="language" color={theme.colors.text} size={toSize(iconSize.sm)} />}
+        Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(iconSize.sm)} />}
+        onPress={() => setDialogOpen(true)}
       />
-      <Divider style={styles.divider} />
+      <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
         title="Dark Mode"
-        Icon1={<Icon name="wb-sunny" color={theme.colors.text} size={toSize(30)} />}
+        Icon1={<Icon name="wb-sunny" color={theme.colors.text} size={toSize(iconSize.sm)} />}
         Icon2={
           <Switch
-            value={checked}
+            value={darkModeSwitch}
             onValueChange={toggleDarkMode}
             color={theme.colors.purple}
             trackColor={{
@@ -81,19 +86,21 @@ export default function SettingsScreen({ navigation }: NavProps) {
           />
         }
       />
-      <Divider style={styles.divider} />
+      <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
         title="Help & Support"
-        Icon1={<Icon name="help" color={theme.colors.text} size={toSize(30)} />}
-        Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(30)} />}
+        Icon1={<Icon name="help" color={theme.colors.text} size={toSize(iconSize.sm)} />}
+        Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(iconSize.sm)} />}
       />
-      <Divider style={styles.divider} />
+      <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
         title="Log out of all sessions"
-        Icon1={<Icon name="logout" color={theme.colors.orange} size={toSize(30)} />}
-        Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(30)} />}
+        Icon1={<Icon name="logout" color={theme.colors.orange} size={toSize(iconSize.sm)} />}
+        Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(iconSize.sm)} />}
       />
-    </View>
+      {/* dialogs */}
+      <ChangeLanguageDialog dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} language={language} setLanguage={setLanguage} />
+    </>
   );
 }
 

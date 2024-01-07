@@ -1,11 +1,12 @@
 import { TextProps } from '@rneui/themed';
 import { TextStyle } from 'react-native';
+
 import { toFont } from '../helpers/scaling';
 
 // ----------------------------------------------------------------------
 
-const FF_REGULAR = 'JosefinSans_400Regular';
-const FF_BOLD = 'JosefinSans_700Bold';
+export const FF_REGULAR = 'JosefinSans_400Regular';
+export const FF_BOLD = 'JosefinSans_700Bold';
 
 type FontStyle = {
   head1?: TextStyle;

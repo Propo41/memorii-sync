@@ -21,6 +21,8 @@ declare module '@rneui/themed' {
     lightAsh?: string;
     violetShade?: string;
     text?: string;
+    grey?: string;
+    touchable?: string;
   }
 
   export interface ComponentTheme {
