@@ -2,12 +2,10 @@ import { makeStyles, Text, ThemeMode, useTheme, useThemeMode } from '@rneui/them
 import { Divider } from '@rneui/themed';
 import { Switch } from '@rneui/themed';
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { ColorValue, TouchableNativeFeedback, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
 import ChangeLanguageDialog from '../components/ChangeLanguageDialog';
 import TitleBar from '../components/TitleBar';
-import Touchable from '../components/Touchable';
 import { iconSize, margins } from '../config';
 import { NavProps } from '../config/routes';
 import { getAppState } from '../database';
@@ -23,9 +21,10 @@ type MenuProps = {
 
 const Menu = ({ Icon1, title, subtitle, Icon2, onPress }: MenuProps) => {
   const styles = useStyles();
+  const { theme } = useTheme();
 
   return (
-    <Touchable onPress={onPress}>
+    <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple(theme.colors.touchable as ColorValue, false)} onPress={onPress}>
       <View style={styles.menuContainer}>
         {Icon1}
         <Text body1_bold style={styles.menuTitle}>
@@ -36,7 +35,7 @@ const Menu = ({ Icon1, title, subtitle, Icon2, onPress }: MenuProps) => {
         </Text>
         {Icon2}
       </View>
-    </Touchable>
+    </TouchableNativeFeedback>
   );
 };
 

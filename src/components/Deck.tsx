@@ -1,5 +1,5 @@
 import { makeStyles, Text } from '@rneui/themed';
-import { TouchableHighlight, View } from 'react-native';
+import { TouchableNativeFeedback, View } from 'react-native';
 import React from 'react';
 import { LinearProgress } from '@rneui/themed';
 import { margins } from '../config';
@@ -20,40 +20,41 @@ const Deck = ({ name, progress, containerBgColor, pbColor, pbBackgroundColor, te
   const styles = useStyles();
 
   return (
-    <TouchableHighlight
-      onPress={onDeckPress}
-      underlayColor={'red'}
-      style={{ ...styles.container, backgroundColor: containerBgColor, marginTop: mt || 0, marginBottom: mb || 0 }}
-    >
-      <>
-        <Text style={{ color: textColor || styles.text.color }} head2>
-          {name}
-        </Text>
-        <LinearProgress
-          style={{ ...styles.progressBar, backgroundColor: pbBackgroundColor }}
-          color={pbColor}
-          value={progress}
-          variant="determinate"
-        />
-        <View style={styles.progressStatusContainer}>
-          <Text body2 style={[styles.flex, { color: textColor || styles.text.color }]}>
-            Completion
+    <View style={{ ...styles.container, backgroundColor: containerBgColor, marginTop: mt || 0, marginBottom: mb || 0 }}>
+      <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple(pbBackgroundColor, false)} onPress={onDeckPress}>
+        <View style={styles.contentContainer}>
+          <Text style={{ color: textColor || styles.text.color }} head2>
+            {name}
           </Text>
-          <Text style={{ color: textColor || styles.text.color }} body2>
-            {progress * 100}%
-          </Text>
+          <LinearProgress
+            style={{ ...styles.progressBar, backgroundColor: pbBackgroundColor }}
+            color={pbColor}
+            value={progress}
+            variant="determinate"
+          />
+          <View style={styles.progressStatusContainer}>
+            <Text body2 style={[styles.flex, { color: textColor || styles.text.color }]}>
+              Completion
+            </Text>
+            <Text style={{ color: textColor || styles.text.color }} body2>
+              {progress * 100}%
+            </Text>
+          </View>
         </View>
-      </>
-    </TouchableHighlight>
+      </TouchableNativeFeedback>
+    </View>
   );
 };
 
 const useStyles = makeStyles((theme) => ({
   container: {
-    paddingHorizontal: 25,
-    paddingVertical: 20,
     borderRadius: 15,
     marginHorizontal: margins.window_hor,
+    overflow: 'hidden',
+  },
+  contentContainer: {
+    paddingHorizontal: 25,
+    paddingVertical: 20,
   },
   text: {
     color: theme.colors.white,
