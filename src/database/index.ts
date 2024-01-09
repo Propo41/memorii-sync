@@ -17,11 +17,15 @@ const decks = [...Array(10)].map(() => {
         name: 'Beginner',
         cards: [...Array(20)].map((_, i) => `Horse-${i}`),
         completed: 15,
+        bgColor: '#F35B60',
+        fgColor: '#F48B8E',
       },
       {
         name: 'Intermediate',
         cards: [...Array(20)].map((_, i) => `Horse-${i}`),
         completed: 5,
+        bgColor: '#F35B60',
+        fgColor: '#F48B8E',
       },
     ],
   };
@@ -38,8 +42,12 @@ export const getAppState = () => {
 
 export const getUser = () => {
   return user;
-}
+};
 
 export const getDecks = () => {
   return decks;
+};
+
+export const getSets = (deckName: string) => {
+  return decks.find((deck) => deck.name === deckName)?.sets;
 };

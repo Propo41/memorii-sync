@@ -21,6 +21,8 @@ const palette: ColorPalette = {
     text: '#555555',
     grey: 'grey',
     touchable: '#D4D4D4',
+    green: '#75F94C',
+    darkRed: '#8B1A10'
   },
   dark: {
     background: '#371D58',
@@ -36,6 +38,8 @@ const palette: ColorPalette = {
     text: '#FFFFFF',
     grey: 'grey',
     touchable: '#512C81',
+    green: '#75F94C',
+    darkRed: '#8B1A10'
   },
 };
 
