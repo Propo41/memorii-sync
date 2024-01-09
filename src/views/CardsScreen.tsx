@@ -6,7 +6,7 @@ import NavigationBar from '../components/NavigationBar';
 import { getSets } from '../database';
 import Set from '../components/Set';
 
-export default function SetsScreen({ navigation }: NavProps) {
+export default function CardsScreen({ navigation }: NavProps) {
   const styles = useStyles();
   const { setMode, mode } = useThemeMode();
   const { theme } = useTheme();
@@ -25,29 +25,8 @@ export default function SetsScreen({ navigation }: NavProps) {
   return (
     <View>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <NavigationBar title="Sets" />
-        <View style={{ marginTop: theme.spacing.sm }}>
-          {sets.map((set, index) => {
-            const { name, cards, completed, bgColor, fgColor } = set;
-
-            const progress = completed / cards.length;
-
-            return (
-              <Set
-                key={index}
-                name={name}
-                progress={progress}
-                mt={index > 0 ? 8 : 0}
-                mb={index === sets.length - 1 ? 70 : 0}
-                fgColor={fgColor}
-                bgColor={bgColor}
-                onSetPress={() => {
-                  navigation.push(NavRoutes.Cards);
-                }}
-              />
-            );
-          })}
-        </View>
+        <NavigationBar title="" />
+        <View style={{ marginTop: theme.spacing.sm }}></View>
       </ScrollView>
     </View>
   );

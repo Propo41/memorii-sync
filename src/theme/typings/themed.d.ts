@@ -11,7 +11,7 @@ declare module '@rneui/themed' {
     body1_bold?: boolean;
     body2?: boolean;
     body2_bold?: boolean;
-    color?: string;
+    color?: string; // @todo obsolte. safely remove it
   }
 
   export interface Colors {
@@ -23,6 +23,8 @@ declare module '@rneui/themed' {
     text?: string;
     grey?: string;
     touchable?: string;
+    green?: string;
+    darkRed?: string
   }
 
   export interface ComponentTheme {

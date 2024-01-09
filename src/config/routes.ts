@@ -4,6 +4,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 export enum NavRoutes {
   App = 'App', // contains the bottom nav bar
   Sets = 'Sets',
+  Cards = 'Cards',
 }
 
 export enum BottomNavRoutes {
@@ -13,15 +14,9 @@ export enum BottomNavRoutes {
   Settings = 'Settings',
 }
 
-const NavProps: Record<string, undefined> = Object.keys(NavRoutes).reduce(
-  (obj, key) => ({ ...obj, [key]: undefined }),
-  {}
-);
+const NavProps: Record<string, undefined> = Object.keys(NavRoutes).reduce((obj, key) => ({ ...obj, [key]: undefined }), {});
 
-const BottomTabProps: Record<string, undefined> = Object.keys(BottomNavRoutes).reduce(
-  (obj, key) => ({ ...obj, [key]: undefined }),
-  {}
-);
+const BottomTabProps: Record<string, undefined> = Object.keys(BottomNavRoutes).reduce((obj, key) => ({ ...obj, [key]: undefined }), {});
 
 export type NavParamList = typeof NavProps;
 export type BottomParamList = typeof BottomTabProps;

@@ -1,4 +1,4 @@
-import { SetsScreen } from '../views';
+import { CardsScreen, SetsScreen } from '../views';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BottomNavigator from './BottomNavigator';
 import { NavParamList, NavRoutes } from '../config/routes';
@@ -16,6 +16,7 @@ export default function AppNavigator() {
     >
       <RootStack.Screen name={NavRoutes.App} component={BottomNavigator} />
       <RootStack.Screen name={NavRoutes.Sets} component={SetsScreen} options={styles} />
+      <RootStack.Screen name={NavRoutes.Cards} component={CardsScreen} options={styles} />
     </RootStack.Navigator>
   );
 }
