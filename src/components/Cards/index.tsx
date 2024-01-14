@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { View, Animated, PanResponder } from 'react-native';
-import { makeStyles } from '@rneui/themed';
+import { View, Animated, PanResponder, Image } from 'react-native';
+import { Button, makeStyles } from '@rneui/themed';
 import { SCREEN_HEIGHT } from '../../helpers/scaling';
 import { SCREEN_WIDTH } from '@gorhom/bottom-sheet';
 import Card from './Card';
@@ -8,7 +8,8 @@ import Card from './Card';
 type SwipeableCardsProps = {
   cards: {
     id: string;
-    uri: string;
+    key: string;
+    value: string;
   }[];
 };
 
@@ -16,7 +17,35 @@ export default function SwipeableCards({ cards }: SwipeableCardsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const position = useRef(new Animated.ValueXY()).current;
   const styles = useStyles();
-  
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  const flipAnimation = useRef(new Animated.Value(0)).current;
+  let flipRotation = 0;
+  flipAnimation.addListener(({ value }) => {
+    flipRotation = value;
+    console.log(value);
+  });
+
+  const flipToFront = () => {
+    Animated.timing(flipAnimation, {
+      toValue: 180,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      // setIsFlipped((p) => !p);
+    });
+  };
+
+  const flipToBack = () => {
+    Animated.timing(flipAnimation, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      // setIsFlipped(true);
+    });
+  };
+
   const rotate = position.x.interpolate({
     inputRange: [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
     outputRange: ['-10deg', '0deg', '10deg'],
@@ -24,7 +53,29 @@ export default function SwipeableCards({ cards }: SwipeableCardsProps) {
   });
 
   const rotateAndTranslate = {
-    transform: [{ rotate }, ...position.getTranslateTransform()],
+    transform: [
+      { rotate },
+      ...position.getTranslateTransform(),
+      {
+        rotateY: flipAnimation.interpolate({
+          inputRange: [0, 180],
+          outputRange: ['0deg', '180deg'],
+        }),
+      },
+    ],
+  };
+
+  const rotateAndTranslate2 = {
+    transform: [
+      { rotate },
+      ...position.getTranslateTransform(),
+      {
+        rotateY: flipAnimation.interpolate({
+          inputRange: [0, 180],
+          outputRange: ['180deg', '360deg'],
+        }),
+      },
+    ],
   };
 
   const nextCardOpacity = position.x.interpolate({
@@ -42,6 +93,9 @@ export default function SwipeableCards({ cards }: SwipeableCardsProps) {
   const removeCard = useCallback(() => {
     setCurrentIndex((prevIndex) => prevIndex + 1);
     position.setValue({ x: 0, y: 0 });
+    setIsFlipped(false);
+    flipAnimation.setValue(0);
+    flipRotation = 0;
   }, [position]);
 
   const panResponder = useRef(
@@ -75,34 +129,69 @@ export default function SwipeableCards({ cards }: SwipeableCardsProps) {
       .map((item, i) => {
         if (i < currentIndex) {
           return null;
+        } else if (i === currentIndex) {
+          return (
+            <View key={item.id}>
+              {isFlipped ? (
+                <Animated.View {...panResponder.panHandlers} style={{ ...rotateAndTranslate2, ...styles.currentCardContainer }}>
+                  <Card text={item.value} style={styles.front} />
+                </Animated.View>
+              ) : (
+                <Animated.View {...panResponder.panHandlers} style={{ ...rotateAndTranslate, ...styles.currentCardContainer }}>
+                  <Card text={item.key} style={styles.back} />
+                </Animated.View>
+              )}
+            </View>
+          );
         } else {
-          const style =
-            i === currentIndex
-              ? { ...rotateAndTranslate, ...styles.cardContainerTop }
-              : { opacity: nextCardOpacity, transform: [{ scale: nextCardScale }], ...styles.cardContainerBack };
-          const dragHandlers = i === currentIndex ? panResponder.panHandlers : {};
-          // @ts-expect-error type mismatch todo fix later
-          return <Card key={item.id} item={item} dragHandlers={dragHandlers} containerStyle={style} />;
+          return (
+            <Animated.View key={item.id} style={{ opacity: nextCardOpacity, transform: [{ scale: nextCardScale }], ...styles.incomingCardContainer }}>
+              <Card />
+            </Animated.View>
+          );
         }
       })
       .reverse();
-  }, [currentIndex]);
+  }, [currentIndex, isFlipped]);
 
-  return <View>{renderCards()}</View>;
+  return (
+    <View>
+      {renderCards()}
+      <Button
+        title="Reveal"
+        onPress={() => {
+          flipRotation ? flipToBack() : flipToFront();
+          setIsFlipped((p) => !p);
+        }}
+      />
+    </View>
+  );
 }
 
 const useStyles = makeStyles(() => ({
   card: { flex: 1, height: '100%', width: '100%', resizeMode: 'cover', borderRadius: 20 },
-  cardContainerTop: {
+  currentCardContainer: {
     height: SCREEN_HEIGHT - 120,
     width: SCREEN_WIDTH,
     padding: 10,
     position: 'absolute',
+    alignItems: 'center',
+    marginTop: 30,
   },
-  cardContainerBack: {
+  incomingCardContainer: {
     height: SCREEN_HEIGHT - 120,
     width: SCREEN_WIDTH,
     padding: 10,
     position: 'absolute',
+    alignItems: 'center',
+    marginTop: 30,
+  },
+  front: {
+    backgroundColor: '#D8D9CF',
+  },
+  back: {
+    backgroundColor: '#FF8787',
+    backfaceVisibility: 'hidden',
+    zIndex: 10,
   },
 }));
