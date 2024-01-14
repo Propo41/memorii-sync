@@ -21,19 +21,14 @@ export default function SwipeableCards({ cards }: SwipeableCardsProps) {
 
   const flipAnimation = useRef(new Animated.Value(0)).current;
   let flipRotation = 0;
-  flipAnimation.addListener(({ value }) => {
-    flipRotation = value;
-    console.log(value);
-  });
+  flipAnimation.addListener(({ value }) => (flipRotation = value));
 
   const flipToFront = () => {
     Animated.timing(flipAnimation, {
       toValue: 180,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => {
-      // setIsFlipped((p) => !p);
-    });
+    }).start();
   };
 
   const flipToBack = () => {
@@ -41,9 +36,7 @@ export default function SwipeableCards({ cards }: SwipeableCardsProps) {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => {
-      // setIsFlipped(true);
-    });
+    }).start();
   };
 
   const rotate = position.x.interpolate({
@@ -53,9 +46,11 @@ export default function SwipeableCards({ cards }: SwipeableCardsProps) {
   });
 
   const rotateAndTranslate = {
+    transform: [{ rotate }, ...position.getTranslateTransform()],
+  };
+
+  const flipToFrontStyle = {
     transform: [
-      { rotate },
-      ...position.getTranslateTransform(),
       {
         rotateY: flipAnimation.interpolate({
           inputRange: [0, 180],
@@ -65,10 +60,8 @@ export default function SwipeableCards({ cards }: SwipeableCardsProps) {
     ],
   };
 
-  const rotateAndTranslate2 = {
+  const flipToBackStyle = {
     transform: [
-      { rotate },
-      ...position.getTranslateTransform(),
       {
         rotateY: flipAnimation.interpolate({
           inputRange: [0, 180],
@@ -130,23 +123,31 @@ export default function SwipeableCards({ cards }: SwipeableCardsProps) {
         if (i < currentIndex) {
           return null;
         } else if (i === currentIndex) {
+          const backfaceStyle = { backfaceVisibility: 'hidden' };
           return (
             <View key={item.id}>
-              {isFlipped ? (
-                <Animated.View {...panResponder.panHandlers} style={{ ...rotateAndTranslate2, ...styles.currentCardContainer }}>
-                  <Card text={item.value} style={styles.front} />
-                </Animated.View>
-              ) : (
-                <Animated.View {...panResponder.panHandlers} style={{ ...rotateAndTranslate, ...styles.currentCardContainer }}>
-                  <Card text={item.key} style={styles.back} />
-                </Animated.View>
-              )}
+              <Animated.View
+                {...panResponder.panHandlers}
+                style={{ transform: [...rotateAndTranslate.transform, ...flipToBackStyle.transform], ...styles.currentCardContainer }}
+              >
+                <Card text={item.value} style={styles.front} />
+              </Animated.View>
+              <Animated.View
+                {...panResponder.panHandlers}
+                style={{
+                  transform: [...rotateAndTranslate.transform, ...flipToFrontStyle.transform],
+                  ...styles.currentCardContainer,
+                  ...backfaceStyle,
+                }}
+              >
+                <Card text={item.key} style={styles.back} />
+              </Animated.View>
             </View>
           );
         } else {
           return (
             <Animated.View key={item.id} style={{ opacity: nextCardOpacity, transform: [{ scale: nextCardScale }], ...styles.incomingCardContainer }}>
-              <Card />
+              <Card text={item.key} />
             </Animated.View>
           );
         }
@@ -191,7 +192,7 @@ const useStyles = makeStyles(() => ({
   },
   back: {
     backgroundColor: '#FF8787',
-    backfaceVisibility: 'hidden',
+
     zIndex: 10,
   },
 }));
