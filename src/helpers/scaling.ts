@@ -23,7 +23,6 @@ export function toFont(fontSize: number) {
   const deviceHeight = Platform.OS === 'android' ? standardLength - offset : standardLength;
 
   const heightPercent = (fontSize * deviceHeight) / baseLineHeight;
-  console.log(heightPercent);
 
   return Math.round(heightPercent);
 }
