@@ -1,86 +1,64 @@
-import { Text } from '@rneui/themed';
-import React from 'react';
-import { useRef } from 'react';
-import { Animated, StyleSheet, Pressable } from 'react-native';
+import React, { useRef } from 'react';
+import { Animated, View, StyleSheet, PanResponder, Text } from 'react-native';
 
 const TestScreen = () => {
-  const flipAnimation = useRef(new Animated.Value(0)).current;
-  let flipRotation = 0;
+  const pan = useRef(new Animated.ValueXY()).current;
 
-  flipAnimation.addListener(({ value }) => {
-    flipRotation = value;
-    console.log(value);
+  const backgroundColor = pan.x.interpolate({
+    inputRange: [-500, 0, 500],
+    outputRange: ['rgba(255, 255, 0, 1)', 'rgba(255, 255, 255, 1)', 'rgba(128, 0, 128, 1)'],
+    extrapolate: 'clamp',
   });
 
-  const flipToFrontStyle = {
-    transform: [
-      {
-        rotateY: flipAnimation.interpolate({
-          inputRange: [0, 180],
-          outputRange: ['0deg', '180deg'],
-        }),
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, { dx, dy }) => {
+        pan.setValue({ x: dx, y: dy });
       },
-    ],
-  };
-  const flipToBackStyle = {
-    transform: [
-      {
-        rotateY: flipAnimation.interpolate({
-          inputRange: [0, 180],
-          outputRange: ['180deg', '360deg'],
-        }),
+      onPanResponderRelease: () => {
+        Animated.spring(pan, {
+          toValue: { x: 0, y: 0 },
+          useNativeDriver: false,
+        }).start();
       },
-    ],
-  };
-
-  const flipToFront = () => {
-    Animated.timing(flipAnimation, {
-      toValue: 180,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const flipToBack = () => {
-    Animated.timing(flipAnimation, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  };
+    })
+  ).current;
 
   return (
-    <Pressable onPress={() => (flipRotation ? flipToBack() : flipToFront())}>
-      <Animated.View style={{ ...Styles.front, ...flipToBackStyle }}>
-        <Text>Front View</Text>
+    <View style={styles.container}>
+      <Animated.View style={{ backgroundColor: backgroundColor }}>
+        <Text style={styles.titleText}>Drag & Release this box!</Text>
       </Animated.View>
-      <Animated.View style={{ ...Styles.back, ...flipToFrontStyle }}>
-        <Text>Back</Text>
+      <Animated.View
+        style={{
+          transform: [{ translateX: pan.x }, { translateY: pan.y }],
+        }}
+        {...panResponder.panHandlers}
+      >
+        <View style={styles.box} />
       </Animated.View>
-    </Pressable>
+    </View>
   );
 };
 
-export default TestScreen;
-
-const Styles = StyleSheet.create({
-  front: {
-    height: 400,
-    width: 250,
-    backgroundColor: '#D8D9CF',
-    borderRadius: 16,
-    position: 'absolute',
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  back: {
-    height: 400,
-    width: 250,
-    backgroundColor: '#FF8787',
-    borderRadius: 16,
-    backfaceVisibility: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
+  titleText: {
+    fontSize: 14,
+    lineHeight: 24,
+    fontWeight: 'bold',
+  },
+  box: {
+    height: 150,
+    width: 150,
+    backgroundColor: 'blue',
+    borderRadius: 5,
   },
 });
+
+export default TestScreen;

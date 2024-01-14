@@ -9,7 +9,6 @@ import TitleBar from '../components/TitleBar';
 import { iconSize, margins } from '../config';
 import { NavProps } from '../config/routes';
 import { getAppState } from '../database';
-import { toSize } from '../helpers/scaling';
 
 type MenuProps = {
   title: string;
@@ -65,14 +64,14 @@ export default function SettingsScreen({ navigation }: NavProps) {
       <Menu
         title="Language"
         subtitle={language}
-        Icon1={<Icon name="language" style={styles.icon1} color={theme.colors.text} size={toSize(iconSize.sm)} />}
-        Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(iconSize.sm)} />}
+        Icon1={<Icon name="language" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
+        Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
         onPress={() => setDialogOpen(true)}
       />
       <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
         title="Dark Mode"
-        Icon1={<Icon name="wb-sunny" style={styles.icon1} color={theme.colors.text} size={toSize(iconSize.sm)} />}
+        Icon1={<Icon name="wb-sunny" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
         Icon2={
           <Switch
             value={darkModeSwitch}
@@ -88,14 +87,14 @@ export default function SettingsScreen({ navigation }: NavProps) {
       <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
         title="Help & Support"
-        Icon1={<Icon name="help" style={styles.icon1} color={theme.colors.text} size={toSize(iconSize.sm)} />}
-        Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(iconSize.sm)} />}
+        Icon1={<Icon name="help" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
+        Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
       />
       <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
         title="Log out of all sessions"
-        Icon1={<Icon name="logout" style={styles.icon1} color={theme.colors.orange} size={toSize(iconSize.sm)} />}
-        Icon2={<Icon name="navigate-next" style={styles.icon} size={toSize(iconSize.sm)} />}
+        Icon1={<Icon name="logout" style={styles.icon1} color={theme.colors.orange} size={iconSize.sm} />}
+        Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
       />
       {/* dialogs */}
       <ChangeLanguageDialog dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} language={language} setLanguage={setLanguage} />

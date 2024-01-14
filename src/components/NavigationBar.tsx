@@ -1,5 +1,5 @@
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { View } from 'react-native';
+import { View, ViewStyle } from 'react-native';
 import { Button, Text, makeStyles } from '@rneui/themed';
 import { toSize } from '../helpers/scaling';
 import { useNavigation } from '@react-navigation/native';
@@ -8,9 +8,10 @@ import { margins } from '../config';
 
 type NavigationBarProps = {
   title: string;
+  style?: ViewStyle;
 };
 
-const NavigationBar = ({ title }: NavigationBarProps) => {
+const NavigationBar = ({ title, style }: NavigationBarProps) => {
   const styles = useStyles();
   const navigation = useNavigation();
 
@@ -19,7 +20,7 @@ const NavigationBar = ({ title }: NavigationBarProps) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={{ ...styles.container, ...style }}>
       <Button title="Clear" type="clear" buttonStyle={styles.iconButton} onPress={onBackPress}>
         <Icon name="navigate-before" style={styles.icon} size={toSize(30)} />
       </Button>
