@@ -8,9 +8,8 @@ const TestScreen = () => {
   let flipRotation = 0;
 
   flipAnimation.addListener(({ value }) => {
-    flipRotation = value
+    flipRotation = value;
     console.log(value);
-    
   });
 
   const flipToFrontStyle = {
@@ -41,7 +40,7 @@ const TestScreen = () => {
       useNativeDriver: true,
     }).start();
   };
-  
+
   const flipToBack = () => {
     Animated.timing(flipAnimation, {
       toValue: 0,
@@ -71,7 +70,8 @@ const Styles = StyleSheet.create({
     backgroundColor: '#D8D9CF',
     borderRadius: 16,
     position: 'absolute',
-    
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   back: {
     height: 400,
@@ -79,6 +79,8 @@ const Styles = StyleSheet.create({
     backgroundColor: '#FF8787',
     borderRadius: 16,
     backfaceVisibility: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
     zIndex: 10,
   },
 });
