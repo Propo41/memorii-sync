@@ -26,6 +26,7 @@ declare module '@rneui/themed' {
     green?: string;
     darkRed?: string;
     transparent?: string;
+    cardsBackground?: string;
   }
 
   export interface ComponentTheme {
