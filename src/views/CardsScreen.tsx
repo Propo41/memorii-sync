@@ -1,5 +1,5 @@
 import NavigationBar from '../components/NavigationBar';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import React, { View, Animated, PanResponder } from 'react-native';
 import { FAB, LinearProgress, makeStyles, Text, useTheme } from '@rneui/themed';
 import { SCREEN_WIDTH, toSize } from '../helpers/scaling';
@@ -14,6 +14,16 @@ const cards = [
   { id: '3', key: 'elephant', value: 'an spotted a mysterious being with magical powers', completed: false },
   { id: '4', key: 'lion', value: 'an brown a mysterious being with magical powers', completed: false },
   { id: '5', key: 'cat', value: 'an spotted a fascinating creature from the imaginary world', completed: false },
+  { id: '6', key: 'dog', value: 'an brown a fascinating creature from the imaginary world', completed: false },
+  { id: '7', key: 'monkey', value: 'an gray a mysterious being with magical powers', completed: false },
+  { id: '8', key: 'elephant', value: 'an spotted a mysterious being with magical powers', completed: false },
+  { id: '9', key: 'lion', value: 'an brown a mysterious being with magical powers', completed: false },
+  { id: '10', key: 'cat', value: 'an spotted a fascinating creature from the imaginary world', completed: false },
+  { id: '11', key: 'dog', value: 'an brown a fascinating creature from the imaginary world', completed: false },
+  { id: '12', key: 'monkey', value: 'an gray a mysterious being with magical powers', completed: false },
+  { id: '13', key: 'elephant', value: 'an spotted a mysterious being with magical powers', completed: false },
+  { id: '14', key: 'lion', value: 'an brown a mysterious being with magical powers', completed: false },
+  { id: '15', key: 'cat', value: 'an spotted a fascinating creature from the imaginary world', completed: false },
 ];
 
 type ControlsProps = {
@@ -50,13 +60,22 @@ const Controls = ({ onPressCross, onPressRotate, onPressCheck }: ControlsProps) 
 };
 
 const CardsScreen = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentCard, setCurrentCard] = useState({ index: 0, isCorrect: false });
+  const [progress, setProgress] = useState(0);
   const position = useRef(new Animated.ValueXY()).current;
   const styles = useStyles();
   const { theme } = useTheme();
   const flipAnimation = useRef(new Animated.Value(0)).current;
   let flipRotation = 0;
   flipAnimation.addListener(({ value }) => (flipRotation = value));
+
+  useEffect(() => {
+    if (currentCard.index === 0) return;
+    console.log('card swiped: ', currentCard.index);
+
+    setProgress(currentCard.index / cards.length);
+    cards[currentCard.index - 1].completed = currentCard.isCorrect;
+  }, [currentCard]);
 
   const flipToFront = () => {
     Animated.timing(flipAnimation, {
@@ -126,7 +145,7 @@ const CardsScreen = () => {
 
   const backgroundColor = position.x.interpolate({
     inputRange: [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
-    outputRange: ['rgba(255, 132, 132, 1)', 'rgba(124, 130, 255, 1)', 'rgba(132, 255, 144, 1)'],
+    outputRange: ['rgba(255, 132, 132, 1)', theme.colors.cardsBackground!, 'rgba(132, 255, 144, 1)'],
     extrapolate: 'clamp',
   });
 
@@ -136,32 +155,27 @@ const CardsScreen = () => {
     extrapolate: 'clamp',
   });
 
-  const removeCard = () => {
-    setCurrentIndex((prevIndex) => prevIndex + 1);
+  const removeCard = (isCorrect: boolean) => {
+    setCurrentCard((prevCard) => ({ index: prevCard.index + 1, isCorrect }));
     position.setValue({ x: 0, y: 0 });
     flipAnimation.setValue(0);
     flipRotation = 0;
-    console.log('currentIndex: ', currentIndex);
   };
 
   const onWrongGuess = (dy = 0, duration = 400) => {
-    console.log('wrong guess: ', cards[currentIndex].key);
-
     Animated.timing(position, {
       toValue: { x: -1 * (SCREEN_WIDTH + 100), y: dy },
       useNativeDriver: false,
       duration: duration,
-    }).start(removeCard);
+    }).start(() => removeCard(false));
   };
 
   const onCorrectGuess = (dy = 0, duration = 400) => {
-    console.log('correct guess: ', cards[currentIndex].key);
-
     Animated.timing(position, {
       toValue: { x: 1 * (SCREEN_WIDTH + 100), y: dy },
       useNativeDriver: false,
       duration: duration,
-    }).start(removeCard);
+    }).start(() => removeCard(true));
   };
 
   const panResponder = useRef(
@@ -218,9 +232,9 @@ const CardsScreen = () => {
   const renderCards = useCallback(() => {
     return cards
       .map((item, i) => {
-        if (i < currentIndex) {
+        if (i < currentCard.index) {
           return null;
-        } else if (i === currentIndex) {
+        } else if (i === currentCard.index) {
           return (
             <View key={item.id}>
               {backView(item.value)}
@@ -237,7 +251,7 @@ const CardsScreen = () => {
         }
       })
       .reverse();
-  }, [currentIndex]);
+  }, [currentCard.index]);
 
   return (
     // @ts-expect-error package resolution warning
@@ -264,7 +278,7 @@ const CardsScreen = () => {
             flipRotation ? flipToBack() : flipToFront();
           }}
         />
-        <LinearProgress value={0.6} variant="determinate" style={styles.progress} color={theme.colors.white} />
+        <LinearProgress value={progress} variant="determinate" style={styles.progress} color={theme.colors.white} />
       </View>
     </Animated.View>
   );
@@ -319,7 +333,7 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: toSize(110),
   },
   back: {
-    backgroundColor: '#DDDEFF',
+    backgroundColor: '#EDEEFF',
   },
   front: {
     backgroundColor: theme.colors.white,

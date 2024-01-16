@@ -24,6 +24,7 @@ const palette: ColorPalette = {
     green: '#75F94C',
     darkRed: '#8B1A10',
     transparent: 'transparent',
+    cardsBackground: '#7C82FF'
   },
   dark: {
     background: '#371D58',
@@ -42,6 +43,7 @@ const palette: ColorPalette = {
     green: '#75F94C',
     darkRed: '#8B1A10',
     transparent: 'transparent',
+    cardsBackground: '#371D58'
   },
 };
 
