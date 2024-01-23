@@ -26,8 +26,6 @@ export default function App() {
     return null;
   }
 
-  console.log(fontsLoaded);
-
   return (
     <GestureHandlerRootView style={styles.container}>
       <ThemeProvider theme={theme}>
