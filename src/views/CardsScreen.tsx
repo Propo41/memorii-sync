@@ -7,6 +7,7 @@ import Card from '../components/Card';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import EntypoIcons from 'react-native-vector-icons/Entypo';
 import { iconSize } from '../config';
+import firestore from '@react-native-firebase/firestore';
 
 const cards = [
   { id: '1', key: 'dog', value: 'an brown a fascinating creature from the imaginary world', completed: false },
@@ -68,6 +69,13 @@ const CardsScreen = () => {
   const flipAnimation = useRef(new Animated.Value(0)).current;
   let flipRotation = 0;
   flipAnimation.addListener(({ value }) => (flipRotation = value));
+
+  useEffect(() => {
+    firestore().collection('users').doc('L6aY5b9imyIuYE72Sumb').onSnapshot(snap => {
+      console.log(snap.data());
+    })
+  }, [])
+  
 
   useEffect(() => {
     if (currentCard.index === 0) return;
