@@ -21,6 +21,7 @@
     },
     "android": {
       "googleServicesFile": "./google-services.json",
+      "versionCode": 1,
       "package": "com.pixiuemstudios.flashcards",
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
@@ -40,6 +41,11 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4daa868a-4137-4a02-83be-51e4e22033e7"
+      }
+    }
   }
 }

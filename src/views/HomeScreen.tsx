@@ -1,6 +1,6 @@
 import { Avatar, makeStyles, useTheme } from '@rneui/themed';
 import React from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, StatusBar, View } from 'react-native';
 import Deck from '../components/Deck';
 import TitleBar from '../components/TitleBar';
 import { iconSize } from '../config';
@@ -24,6 +24,7 @@ export default function HomeScreen({ navigation }: NavProps) {
 
   return (
     <View>
+      <StatusBar backgroundColor={theme.colors.background} />
       <ScrollView showsVerticalScrollIndicator={false}>
         <TitleBar
           title="Decks"
