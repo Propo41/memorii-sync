@@ -1,6 +1,6 @@
 import NavigationBar from '../components/NavigationBar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import React, { View, Animated, PanResponder } from 'react-native';
+import React, { View, Animated, PanResponder, StatusBar } from 'react-native';
 import { FAB, LinearProgress, makeStyles, Text, useTheme } from '@rneui/themed';
 import { SCREEN_WIDTH, toSize } from '../helpers/scaling';
 import Card from '../components/Card';
@@ -71,11 +71,13 @@ const CardsScreen = () => {
   flipAnimation.addListener(({ value }) => (flipRotation = value));
 
   useEffect(() => {
-    firestore().collection('users').doc('L6aY5b9imyIuYE72Sumb').onSnapshot(snap => {
-      console.log(snap.data());
-    })
-  }, [])
-  
+    firestore()
+      .collection('users')
+      .doc('L6aY5b9imyIuYE72Sumb')
+      .onSnapshot((snap) => {
+        console.log(snap.data());
+      });
+  }, []);
 
   useEffect(() => {
     if (currentCard.index === 0) return;
@@ -264,6 +266,7 @@ const CardsScreen = () => {
   return (
     // @ts-expect-error package resolution warning
     <Animated.View style={{ ...styles.container, backgroundColor: backgroundColor }}>
+      <StatusBar backgroundColor={theme.colors.cardsBackground} />
       <NavigationBar title="" style={{ backgroundColor: theme.colors.transparent }} />
       {/* @ts-expect-error package resolution warning */}
       <Animated.View style={{ ...styles.wrongGuess, opacity: wrongGuessOpacity }}>
