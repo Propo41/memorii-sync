@@ -8,6 +8,21 @@ import { NavProps, NavRoutes } from '../config/routes';
 import { getDecks, getUser } from '../database';
 import { toSize } from '../helpers/scaling';
 
+// const fetchData = () => {
+//   firestore()
+//     .collection('decks')
+//     .doc('1jX55p9H0BFsTSXWbRJR')
+//     .get()
+//     .then((documentSnapshot) => {
+//       console.log('Deck exists: ', documentSnapshot.exists);
+
+//       if (documentSnapshot.exists) {
+//         const deck = DeckModel.transform(documentSnapshot.data() as typeof Deck);
+//         console.log('Deck data: ', deck);
+//       }
+//     });
+// };
+
 export default function HomeScreen({ navigation }: NavProps) {
   const styles = useStyles();
   const { theme } = useTheme();
