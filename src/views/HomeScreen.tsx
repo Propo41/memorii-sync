@@ -5,36 +5,76 @@ import Deck from '../components/Deck';
 import TitleBar from '../components/TitleBar';
 import { iconSize } from '../config';
 import { NavProps, NavRoutes } from '../config/routes';
-import { getDecks, getUser } from '../database';
 import { toSize } from '../helpers/scaling';
+import { Cache } from '../models/Cache';
+import { _Deck, _User } from '../models/dto';
+import { FirebaseApp } from '../models/FirebaseApp';
 
-// const fetchData = () => {
-//   firestore()
-//     .collection('decks')
-//     .doc('1jX55p9H0BFsTSXWbRJR')
-//     .get()
-//     .then((documentSnapshot) => {
-//       console.log('Deck exists: ', documentSnapshot.exists);
+const fetchAndSaveDeck = async (deckId: string) => {
+  const deck = await FirebaseApp.getInstance().getDeck(deckId);
+  if (deck) {
+    await Cache.getInstance().saveDeck(deckId, deck);
+    return deck;
+  }
+  return null;
+};
 
-//       if (documentSnapshot.exists) {
-//         const deck = DeckModel.transform(documentSnapshot.data() as typeof Deck);
-//         console.log('Deck data: ', deck);
-//       }
-//     });
-// };
+const getCompletionCount = async (userId: string, deckId: string) => {
+  return await FirebaseApp.getInstance().getDeckStatus(userId, deckId);
+};
+
+const calculateDeckProgress = async (decksList: _Deck[]) => {
+  for (const deck of decksList) {
+    const total = deck.sets.reduce((acc, set) => acc + (set.cards?.length || 0), 0);
+    const completed = await getCompletionCount(userId, deck!.id!);
+    const progress = completed / total;
+    deck._progress = progress;
+  }
+};
+
+const userId = `SDBk0R01TxrTHF839qoL`;
 
 export default function HomeScreen({ navigation }: NavProps) {
   const styles = useStyles();
   const { theme } = useTheme();
-  const [decks, setDecks] = React.useState([]);
-  const [user, setUser] = React.useState([]);
+  const [decks, setDecks] = React.useState<_Deck[]>([]);
+  const [user, setUser] = React.useState<_User>();
 
   React.useEffect(() => {
-    const decks = getDecks();
-    setDecks(decks);
+    const fetchData = async () => {
+      // get user id from firebase.auth()
+      const user = await Cache.getInstance().getUser(userId);
+      console.log(user);
+      
+      setUser(user!);
 
-    const user = getUser();
-    setUser(user);
+      const decksList: _Deck[] = [];
+
+      if (user?.decksPurchased) {
+        for (const deckId of user.decksPurchased) {
+          const deck = await fetchAndSaveDeck(deckId);
+          if (deck) {
+            deck.id = deckId;
+            decksList.push(deck);
+          }
+        }
+      }
+
+      if (user?.decksCreated) {
+        for (const deckId of user.decksCreated) {
+          const deck = await fetchAndSaveDeck(deckId);
+          if (deck) {
+            deck.id = deckId;
+            decksList.push(deck);
+          }
+        }
+      }
+
+      await calculateDeckProgress(decksList);
+      setDecks(decksList);
+    };
+
+    fetchData();
   }, []);
 
   return (
@@ -44,33 +84,27 @@ export default function HomeScreen({ navigation }: NavProps) {
         <TitleBar
           title="Decks"
           subtitle="Your available decks"
-          icon={<Avatar size={iconSize.lg} rounded source={{ uri: user.avatar }} containerStyle={styles.avatar} />}
+          icon={<Avatar size={iconSize.lg} rounded source={{ uri: user?.profilePicture }} containerStyle={styles.avatar} />}
         />
         <View style={{ marginTop: theme.spacing.lg }}>
           {decks.map((deck, index) => {
-            const { containerBgColor, pbColor, pbBackgroundColor, textColor } = deck.styles;
-
-            let completed = 0;
-            let total = 0;
-            for (const set of deck.sets) {
-              total += set.cards.length;
-              completed += set.completed;
-            }
-            const progress = completed / total;
+            const { bgColor, fgColor, trackColor, textColor } = deck.appearance;
 
             return (
               <Deck
                 key={index}
                 name={deck.name}
-                progress={progress}
+                progress={deck._progress || 0}
                 mt={index > 0 ? 8 : 0}
                 mb={index === decks.length - 1 ? 70 : 0}
-                containerBgColor={containerBgColor}
-                pbColor={pbColor}
-                pbBackgroundColor={pbBackgroundColor}
+                containerBgColor={bgColor}
+                pbColor={fgColor}
+                pbBackgroundColor={trackColor!}
                 textColor={textColor}
                 onDeckPress={() => {
-                  navigation.push(NavRoutes.Sets);
+                  navigation.push(NavRoutes.Sets, {
+                    deckId: deck.id
+                  });
                 }}
               />
             );
@@ -81,7 +115,7 @@ export default function HomeScreen({ navigation }: NavProps) {
   );
 }
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
   avatar: {
     marginVertical: toSize(15),
   },

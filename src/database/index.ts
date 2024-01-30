@@ -3,6 +3,62 @@ const AppState = {
   colorMode: 'dark',
 };
 
+function generateRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+
+  return color;
+}
+
+const decknames = ['English', 'IELTS', 'Biology', 'Moller'];
+
+export const dummyDecks = decknames.map((name, i) => {
+  return {
+    name: name + i,
+    appearance: {
+      bgColor: '#FF9497',
+      fgColor: '#ED6468',
+      trackColor: '#FFCACB',
+    },
+    isDisabled: false,
+    sets: [...Array(3)].map((_, i) => {
+      return {
+        name: `Set-${i}`,
+        appearance: {
+          bgColor: generateRandomColor(),
+          fgColor: generateRandomColor(),
+        },
+        cards: [...Array(10)].map((_, i) => {
+          return {
+            id: i,
+            front: 'Cat' + i,
+            back: 'this is a cat' + i,
+          };
+        }),
+      };
+    }),
+  };
+});
+
+export const dummyUser = {
+  name: 'Ahnaf',
+  email: 'aliahnaf@gmail.com',
+  profilePicture: 'https://api.dicebear.com/7.x/pixel-art/svg',
+  preferences: {
+    isDarkMode: true,
+    locale: 'EN',
+    cardAppearance: {
+      bgColor: '',
+      fgColor: '',
+    },
+  },
+  decksPurchased: []
+};
+
 const decks = [...Array(10)].map(() => {
   return {
     name: 'English',
