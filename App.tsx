@@ -4,41 +4,45 @@ import { createTheme, ThemeProvider } from '@rneui/themed';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import firestore from '@react-native-firebase/firestore';
+import { dummyDecks, dummyUser } from './src/database';
+import { Cache } from './src/models/Cache';
+import { FirebaseApp } from './src/models/FirebaseApp';
 
 import { AppNavigator } from './src/navigation';
 import { palette, typography } from './src/theme';
 
-// const createDummyData = async () => {
-//   const user = new User('ahnaf1233', 'ahnaf@gmail.com', 'https://api.dicebear.com/7.x/pixel-art/svg');
+const userId = 'SDBk0R01TxrTHF839qoL';
 
-//   const preference = new UserPreference();
-//   preference.isDarkMode = true;
-//   user.preferences = preference;
+const createDummyData = async () => {
+  // create dummy decks
+  const deckIds = [];
+  for (const deck of dummyDecks) {
+    const deckId = await FirebaseApp.getInstance().createDeck(deck);
+    deckIds.push(deckId);
+  }
 
-//   const cards = [
-//     new Card('1', 'dog', 'this is a dog'),
-//     new Card('2', 'dog', 'this is a dog'),
-//     new Card('2', 'dog', 'this is a dog'),
-//     new Card('2', 'dog', 'this is a dog'),
-//   ];
+  // create dummy user
+  // @ts-expect-error bla ba
+  dummyUser.decksPurchased.push(...deckIds);
+  const userId = await FirebaseApp.getInstance().createUser(dummyUser);
+  console.log('dummy user id: ', userId);
 
-//   const deck = new Deck('English');
-//   const set1 = new Set('Beginner')
-//   set1.cards = cards;
+  Cache.getInstance().saveUser(userId, dummyUser)
+};
 
-//   const set2 = new Set('Intermediate')
-//   set2.cards = cards;
+const createCompleted = async () => {
+  const status = new Map<string, boolean>([
+    ['0', true],
+    ['1', true],
+    ['2', false],
+  ]);
+  await FirebaseApp.getInstance().updateCardStatuses(userId, 'MPtAu9SrzAKIu3WZ3qzO', '1', status);
+};
 
-//   deck.sets = [set1, set2]
-
-//   try {
-//     await firestore().collection('users').doc('L6aY5b9imyIuYE72Sumb').update(user);
-//     await firestore().collection('decks').doc('1jX55p9H0BFsTSXWbRJR').update(deck);
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
+const getUser = async (userId: string) => {
+  const user = await FirebaseApp.getInstance().getUser(userId);
+  return user;
+};
 
 const theme = createTheme({
   lightColors: palette['light'],
@@ -54,12 +58,16 @@ export default function App() {
     JosefinSans_700Bold,
   });
 
-  firestore().settings({
-    ignoreUndefinedProperties: true,
-  });
+  React.useEffect(() => {
+  //  createDummyData();
 
-  // check if user is authenticated and store the userid in asyncstorage
- // createDummyData();
+    // check if user is authenticated and store the userid in asyncstorage
+    getUser(userId).then((user) => {
+      if (user) {
+        Cache.getInstance().saveUser(userId, user);
+      }
+    });
+  }, []);
 
   if (!fontsLoaded) {
     return null;

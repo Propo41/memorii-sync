@@ -6,4 +6,4 @@ import { UserPreference } from './UserPreference';
 import { User } from './User';
 import { Appearance } from './Appearance';
 
-export { Appearance, User, UserPreference, Deck, Card, Set, Market };
+export { Appearance as _Appearance, User as _User, UserPreference as _UserPreference, Deck as _Deck, Card as _Card, Set as _Set, Market as _Market };

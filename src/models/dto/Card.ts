@@ -1,10 +1,10 @@
 export class Card {
-  id: string;
+  id: number;
   front: string;
   back: string;
   back_locale?: { locale: string; value: string };
 
-  constructor(id: string, front: string, back: string) {
+  constructor(id: number, front: string, back: string) {
     this.id = id;
     this.front = front;
     this.back = back;

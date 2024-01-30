@@ -1,31 +1,16 @@
 import NavigationBar from '../components/NavigationBar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import React, { View, Animated, PanResponder, StatusBar } from 'react-native';
+import React, { View, Animated, PanResponder, StatusBar, AppState } from 'react-native';
 import { FAB, LinearProgress, makeStyles, Text, useTheme } from '@rneui/themed';
 import { SCREEN_WIDTH, toSize } from '../helpers/scaling';
 import Card from '../components/Card';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import EntypoIcons from 'react-native-vector-icons/Entypo';
 import { iconSize } from '../config';
-import firestore from '@react-native-firebase/firestore';
-
-const cards = [
-  { id: '1', key: 'dog', value: 'an brown a fascinating creature from the imaginary world', completed: false },
-  { id: '2', key: 'monkey', value: 'an gray a mysterious being with magical powers', completed: false },
-  { id: '3', key: 'elephant', value: 'an spotted a mysterious being with magical powers', completed: false },
-  { id: '4', key: 'lion', value: 'an brown a mysterious being with magical powers', completed: false },
-  { id: '5', key: 'cat', value: 'an spotted a fascinating creature from the imaginary world', completed: false },
-  { id: '6', key: 'dog', value: 'an brown a fascinating creature from the imaginary world', completed: false },
-  { id: '7', key: 'monkey', value: 'an gray a mysterious being with magical powers', completed: false },
-  { id: '8', key: 'elephant', value: 'an spotted a mysterious being with magical powers', completed: false },
-  { id: '9', key: 'lion', value: 'an brown a mysterious being with magical powers', completed: false },
-  { id: '10', key: 'cat', value: 'an spotted a fascinating creature from the imaginary world', completed: false },
-  { id: '11', key: 'dog', value: 'an brown a fascinating creature from the imaginary world', completed: false },
-  { id: '12', key: 'monkey', value: 'an gray a mysterious being with magical powers', completed: false },
-  { id: '13', key: 'elephant', value: 'an spotted a mysterious being with magical powers', completed: false },
-  { id: '14', key: 'lion', value: 'an brown a mysterious being with magical powers', completed: false },
-  { id: '15', key: 'cat', value: 'an spotted a fascinating creature from the imaginary world', completed: false },
-];
+import { _Card } from '../models/dto';
+import { FirebaseApp } from '../models/FirebaseApp';
+import { NavProps } from '../config/routes';
+import { Cache } from '../models/Cache';
 
 type ControlsProps = {
   onPressCross: () => void;
@@ -60,31 +45,80 @@ const Controls = ({ onPressCross, onPressRotate, onPressCheck }: ControlsProps) 
   );
 };
 
-const CardsScreen = () => {
+type CardsScreenProps = {
+  cards: _Card[];
+  deckId: string;
+  setId: string;
+};
+
+const userId = `SDBk0R01TxrTHF839qoL`;
+
+const CardsScreen = ({ route }: NavProps) => {
   const [currentCard, setCurrentCard] = useState({ index: 0, isCorrect: false });
   const [progress, setProgress] = useState(0);
+  const [cardStatuses, setCardStatuses] = useState<Record<number, boolean>>({});
   const position = useRef(new Animated.ValueXY()).current;
   const styles = useStyles();
   const { theme } = useTheme();
+  const { cards, deckId, setId }: CardsScreenProps = route.params!;
+  const [appState, setAppState] = useState<string>(AppState.currentState);
+  const [loading, setLoading] = useState(true);
+
+  const saveCardStatuses = () => {
+    Cache.getInstance()
+      .getCardStatuses(userId, deckId, setId)
+      .then(async (statuses) => {
+        if (statuses !== null) {
+          await FirebaseApp.getInstance().updateCardStatuses(userId, deckId, setId, statuses);
+        }
+      });
+  };
+
+  const onPause = (nextAppState: string) => {
+    if (appState === 'active' && nextAppState.match(/inactive|background/)) {
+      console.log('App has gone to the background!');
+      saveCardStatuses();
+    }
+    setAppState(nextAppState);
+  };
+
+  useEffect(() => {
+    // on create
+    const subscriptionInactive = AppState.addEventListener('change', onPause);
+    const subscriptionMemoryWarning = AppState.addEventListener('memoryWarning', onPause);
+
+    return () => {
+      // on destroy
+      saveCardStatuses();
+
+      subscriptionInactive.remove();
+      subscriptionMemoryWarning.remove();
+    };
+  }, []);
+
   const flipAnimation = useRef(new Animated.Value(0)).current;
   let flipRotation = 0;
   flipAnimation.addListener(({ value }) => (flipRotation = value));
 
   useEffect(() => {
-    firestore()
-      .collection('users')
-      .doc('L6aY5b9imyIuYE72Sumb')
-      .onSnapshot((snap) => {
-        console.log(snap.data());
-      });
+    const fetchData = async () => {
+      const cardStatuses = await FirebaseApp.getInstance().getCardStatuses(userId, deckId, setId);
+      if (cardStatuses) {
+        setCardStatuses(cardStatuses);
+      }
+      setLoading(false);
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {
     if (currentCard.index === 0) return;
-    console.log('card swiped: ', currentCard.index);
-
     setProgress(currentCard.index / cards.length);
-    cards[currentCard.index - 1].completed = currentCard.isCorrect;
+    setCardStatuses((prev) => {
+      const statuses = { ...prev, [cards[currentCard.index - 1].id]: currentCard.isCorrect };
+      Cache.getInstance().saveCardStatuses(userId, deckId, setId, statuses);
+      return statuses;
+    });
   }, [currentCard]);
 
   const flipToFront = () => {
@@ -210,7 +244,7 @@ const CardsScreen = () => {
     })
   ).current;
 
-  const frontView = (text: string) => {
+  const frontView = (text: string, isCompleted: boolean) => {
     return (
       // @ts-expect-error package resolution warning
       <Animated.View
@@ -222,46 +256,47 @@ const CardsScreen = () => {
           ...styles.front,
         }}
       >
-        <Card text={text} isTopView={true} />
+        <Card text={text} isTopView={true} isCompleted={isCompleted} />
       </Animated.View>
     );
   };
 
-  const backView = (text: string) => {
+  const backView = (text: string, isCompleted: boolean) => {
     return (
       // @ts-expect-error package resolution warning
       <Animated.View
         {...panResponder.panHandlers}
         style={{ transform: [...rotateAndTranslate.transform, ...flipToBackStyle.transform], ...styles.cardContainer, ...styles.back }}
       >
-        <Card text={text} isTopView={false} />
+        <Card text={text} isTopView={false} isCompleted={isCompleted} />
       </Animated.View>
     );
   };
 
   const renderCards = useCallback(() => {
-    return cards
-      .map((item, i) => {
-        if (i < currentCard.index) {
-          return null;
-        } else if (i === currentCard.index) {
-          return (
-            <View key={item.id}>
-              {backView(item.value)}
-              {frontView(item.key)}
-            </View>
-          );
-        } else {
-          return (
-            // @ts-expect-error package resolution warning
-            <Animated.View key={item.id} style={{ opacity: nextCardOpacity, transform: [{ scale: nextCardScale }], ...styles.cardContainer }}>
-              <Card text={item.key} />
-            </Animated.View>
-          );
-        }
-      })
-      .reverse();
-  }, [currentCard.index]);
+    if (currentCard.index >= cards.length) {
+      return null;
+    }
+
+    const isCompleted = !!cardStatuses[cards[currentCard.index].id];
+    const firstCard = cards[currentCard.index];
+    const secondCard = currentCard.index + 1 >= cards.length ? null : cards[currentCard.index + 1];
+
+    return (
+      <>
+        {secondCard && (
+          /* @ts-expect-error package resolution warning */
+          <Animated.View key={secondCard.id} style={{ opacity: nextCardOpacity, transform: [{ scale: nextCardScale }], ...styles.cardContainer }}>
+            <Card text={secondCard.front} isCompleted={isCompleted} />
+          </Animated.View>
+        )}
+        <View>
+          {backView(firstCard.back, isCompleted)}
+          {frontView(firstCard.front, isCompleted)}
+        </View>
+      </>
+    );
+  }, [currentCard.index, loading]);
 
   return (
     // @ts-expect-error package resolution warning
@@ -281,16 +316,18 @@ const CardsScreen = () => {
         </Text>
       </Animated.View>
       <View>{renderCards()}</View>
-      <View style={styles.controlsContainer}>
-        <Controls
-          onPressCheck={() => onCorrectGuess()}
-          onPressCross={() => onWrongGuess()}
-          onPressRotate={() => {
-            flipRotation ? flipToBack() : flipToFront();
-          }}
-        />
-        <LinearProgress value={progress} variant="determinate" style={styles.progress} color={theme.colors.white} />
-      </View>
+      {currentCard.index < cards.length && (
+        <View style={styles.controlsContainer}>
+          <Controls
+            onPressCheck={() => onCorrectGuess()}
+            onPressCross={() => onWrongGuess()}
+            onPressRotate={() => {
+              flipRotation ? flipToBack() : flipToFront();
+            }}
+          />
+          <LinearProgress value={progress} variant="determinate" style={styles.progress} color={theme.colors.white} />
+        </View>
+      )}
     </Animated.View>
   );
 };
@@ -308,8 +345,6 @@ const useStyles = makeStyles((theme) => ({
     marginRight: toSize(25),
     padding: 10,
     position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
     borderRadius: 10,
     backgroundColor: theme.colors.white,
   },

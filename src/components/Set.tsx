@@ -9,11 +9,12 @@ import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type DeckProps = {
   name: string;
-  progress: number; // ranges from 0-1
   fgColor: string;
   bgColor: string;
   mt?: number;
   mb?: number;
+  completed: number;
+  total: number;
   onSetPress: () => void;
 };
 
@@ -35,9 +36,10 @@ const Status = ({ text, icon }: StatusProps) => {
   );
 };
 
-const Set = ({ name, progress, fgColor, bgColor, mt, mb, onSetPress }: DeckProps) => {
+const Set = ({ name, fgColor, bgColor, mt, mb, onSetPress, completed, total }: DeckProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
+  const progress = completed / total;
 
   return (
     <View style={{ ...styles.container, backgroundColor: bgColor, marginTop: mt || 0, marginBottom: mb || 0 }}>
@@ -48,8 +50,8 @@ const Set = ({ name, progress, fgColor, bgColor, mt, mb, onSetPress }: DeckProps
           </Text>
           <LinearProgress style={{ ...styles.progressBar, backgroundColor: fgColor }} color={bgColor} value={progress} variant="determinate" />
           <View style={styles.statusContainer}>
-            <Status text={30} icon={<Icon name="check-circle" style={styles.statusIcon} color={theme.colors.green} />} />
-            <Status text={100} icon={<Icon2 name="cards-playing" style={styles.statusIcon} color={theme.colors.darkRed} />} />
+            <Status text={completed} icon={<Icon name="check-circle" style={styles.statusIcon} color={theme.colors.green} />} />
+            <Status text={total} icon={<Icon2 name="cards-playing" style={styles.statusIcon} color={theme.colors.darkRed} />} />
           </View>
         </View>
       </TouchableNativeFeedback>
