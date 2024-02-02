@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { makeStyles, useTheme } from '@rneui/themed';
+import { useTheme } from '@rneui/themed';
 import { NavProps, NavRoutes } from '../config/routes';
 import NavigationBar from '../components/NavigationBar';
 import Set from '../components/Set';
@@ -34,7 +34,6 @@ export default function SetsScreen({ navigation, route }: NavProps) {
       setDeckId(deckId);
 
       console.log('in focus');
-      
 
       // You can check for conditions or execute code when returning from another view
       // For example, check for changes in state or props
@@ -63,6 +62,7 @@ export default function SetsScreen({ navigation, route }: NavProps) {
                 fgColor={fgColor}
                 bgColor={bgColor}
                 onSetPress={() => {
+                  // @ts-expect-error cant fix this ts error
                   navigation.push(NavRoutes.Cards, {
                     deckId: deckId,
                     setId: index,
@@ -77,11 +77,3 @@ export default function SetsScreen({ navigation, route }: NavProps) {
     </View>
   );
 }
-
-const useStyles = makeStyles((theme) => ({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-}));

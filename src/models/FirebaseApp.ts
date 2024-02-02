@@ -29,7 +29,7 @@ export class FirebaseApp implements FirebaseAppInterface {
   constructor() {
     firestore().settings({
       ignoreUndefinedProperties: true,
-      persistence: true,
+      cacheSizeBytes: firestore.CACHE_SIZE_UNLIMITED,
     });
   }
 
@@ -41,10 +41,15 @@ export class FirebaseApp implements FirebaseAppInterface {
   }
 
   async getUser(userId: string): Promise<_User | null> {
-    const snapshot = await firestore().collection(this.collections.users).doc(userId).get();
-    if (snapshot.exists) {
-      return _User.transform(snapshot.data() as InstanceType<typeof _User>);
+    try {
+      const snapshot = await firestore().collection(this.collections.users).doc(userId).get();
+      if (snapshot.exists) {
+        return _User.transform(snapshot.data() as InstanceType<typeof _User>);
+      }
+    } catch (error) {
+      return null;
     }
+
     return null;
   }
 
@@ -63,10 +68,11 @@ export class FirebaseApp implements FirebaseAppInterface {
   }
 
   async getDeck(deckId: string): Promise<_Deck | null> {
-    const snapshot = await firestore().collection(this.collections.decks).doc(deckId).get();
+    const snapshot = await firestore().collection(this.collections.decks).doc(deckId).get({ source: 'cache' });
     if (snapshot.exists) {
       return _Deck.transform(snapshot.data() as InstanceType<typeof _Deck>);
     }
+
     return null;
   }
 
@@ -85,7 +91,9 @@ export class FirebaseApp implements FirebaseAppInterface {
   }
 
   async getSet(setId: string): Promise<_Set | null> {
-    const snapshot = await firestore().collection(this.collections.sets).doc(setId).get();
+    const snapshot = await firestore().collection(this.collections.sets).doc(setId).get({
+      source: 'cache',
+    });
     if (snapshot.exists) {
       return _Set.transform(snapshot.data() as InstanceType<typeof _Set>);
     }
@@ -114,7 +122,9 @@ export class FirebaseApp implements FirebaseAppInterface {
   }
 
   async getCardStatuses(userId: string, deckId: string, setId: string): Promise<Record<number, boolean> | null> {
-    const snapshot = await firestore().collection(this.collections.completed).doc(`${userId}.${deckId}`).get();
+    const snapshot = await firestore().collection(this.collections.completed).doc(`${userId}.${deckId}`).get({
+      source: 'cache',
+    });
     if (snapshot.exists) {
       return snapshot.data()![setId];
     }
@@ -124,7 +134,9 @@ export class FirebaseApp implements FirebaseAppInterface {
 
   // returns the count of true values in completed/$userid.deckid
   async getDeckStatus(userId: string, deckId: string): Promise<number> {
-    const snapshot = await firestore().collection(this.collections.completed).doc(`${userId}.${deckId}`).get();
+    const snapshot = await firestore().collection(this.collections.completed).doc(`${userId}.${deckId}`).get({
+      source: 'cache',
+    });
     let count = 0;
 
     if (snapshot.exists) {
@@ -144,7 +156,9 @@ export class FirebaseApp implements FirebaseAppInterface {
 
   // returns the count of true values in completed/$userid.deckid
   async getSetStatuses(userId: string, deckId: string): Promise<Map<string, number>> {
-    const snapshot = await firestore().collection(this.collections.completed).doc(`${userId}.${deckId}`).get();
+    const snapshot = await firestore().collection(this.collections.completed).doc(`${userId}.${deckId}`).get({
+      source: 'cache',
+    });
     const statuses: Map<string, number> = new Map<string, number>();
 
     if (snapshot.exists) {

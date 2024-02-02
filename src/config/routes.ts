@@ -5,7 +5,8 @@ export enum NavRoutes {
   App = 'App', // contains the bottom nav bar
   Sets = 'Sets',
   Cards = 'Cards',
-  Test = 'Test'
+  Test = 'Test',
+  Login = 'Login',
 }
 
 export enum BottomNavRoutes {

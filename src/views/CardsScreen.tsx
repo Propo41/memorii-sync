@@ -11,6 +11,7 @@ import { _Card } from '../models/dto';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { NavProps } from '../config/routes';
 import { Cache } from '../models/Cache';
+import LottieView from 'lottie-react-native';
 
 type ControlsProps = {
   onPressCross: () => void;
@@ -63,6 +64,9 @@ const CardsScreen = ({ route }: NavProps) => {
   const { cards, deckId, setId }: CardsScreenProps = route.params!;
   const [appState, setAppState] = useState<string>(AppState.currentState);
   const [loading, setLoading] = useState(true);
+  const animationRef = useRef<LottieView>(null);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const saveCardStatuses = () => {
     Cache.getInstance()
@@ -91,7 +95,9 @@ const CardsScreen = ({ route }: NavProps) => {
       // on destroy
       saveCardStatuses();
 
+      // @ts-expect-error remove() does exit
       subscriptionInactive.remove();
+      // @ts-expect-error remove() does exit
       subscriptionMemoryWarning.remove();
     };
   }, []);
@@ -119,7 +125,18 @@ const CardsScreen = ({ route }: NavProps) => {
       Cache.getInstance().saveCardStatuses(userId, deckId, setId, statuses);
       return statuses;
     });
+    console.log('(currentCard.index', currentCard.index);
+    if (currentCard.index === cards.length) {
+      setIsCompleted(true);
+      fadeIn();
+    }
   }, [currentCard]);
+
+  useEffect(() => {
+    if (isCompleted) {
+      animationRef.current?.play();
+    }
+  }, [isCompleted]);
 
   const flipToFront = () => {
     Animated.timing(flipAnimation, {
@@ -222,6 +239,15 @@ const CardsScreen = ({ route }: NavProps) => {
     }).start(() => removeCard(true));
   };
 
+  const fadeIn = () => {
+    // Will change fadeAnim value to 1 in 5 seconds
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 2000,
+      useNativeDriver: false,
+    }).start();
+  };
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -282,6 +308,8 @@ const CardsScreen = ({ route }: NavProps) => {
     const firstCard = cards[currentCard.index];
     const secondCard = currentCard.index + 1 >= cards.length ? null : cards[currentCard.index + 1];
 
+    console.log('firstCard');
+
     return (
       <>
         {secondCard && (
@@ -303,6 +331,26 @@ const CardsScreen = ({ route }: NavProps) => {
     <Animated.View style={{ ...styles.container, backgroundColor: backgroundColor }}>
       <StatusBar backgroundColor={theme.colors.cardsBackground} />
       <NavigationBar title="" style={{ backgroundColor: theme.colors.transparent }} />
+      {isCompleted && (
+        <>
+          <LottieView ref={animationRef} loop={false} source={require('../assets/confettin-animation.json')} style={styles.confetti} />
+          {/* @ts-expect-error package resolution warning */}
+          <Animated.View
+            style={{
+              opacity: fadeAnim,
+            }}
+          >
+            <View style={styles.completionCardContainer}>
+              <View style={styles.completionCard}>
+                <Text body1_bold>Congratulations!</Text>
+                <Text body2 style={styles.pt}>
+                  Keep it up
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+        </>
+      )}
       {/* @ts-expect-error package resolution warning */}
       <Animated.View style={{ ...styles.wrongGuess, opacity: wrongGuessOpacity }}>
         <Text body1_bold style={{ color: theme.colors.white }}>
@@ -336,6 +384,29 @@ const useStyles = makeStyles((theme) => ({
   container: {
     flex: 1,
   },
+  confetti: {
+    width: '100%',
+    height: '70%',
+    position: 'absolute',
+    marginTop: 100,
+    zIndex: 1000,
+  },
+  pt: {
+    paddingTop: 10,
+  },
+  completionCardContainer: {
+    marginTop: '50%',
+  },
+  completionCard: {
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: theme.colors.white,
+    alignItems: 'center',
+    marginLeft: 30,
+    marginRight: 30,
+    paddingTop: 30,
+    paddingBottom: 30,
+  },
   cardContainer: {
     height: toSize(400),
     left: 0,
@@ -350,12 +421,12 @@ const useStyles = makeStyles((theme) => ({
   },
   correctGuess: {
     position: 'absolute',
-    top: toSize(80),
+    top: toSize(70),
     left: SCREEN_WIDTH / 2 - 50,
   },
   wrongGuess: {
     position: 'absolute',
-    top: toSize(80),
+    top: toSize(70),
     left: SCREEN_WIDTH / 2 - 75,
   },
   progress: {
