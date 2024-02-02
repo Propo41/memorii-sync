@@ -1,3 +1,4 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { Avatar, makeStyles, useTheme } from '@rneui/themed';
 import React from 'react';
 import { ScrollView, StatusBar, View } from 'react-native';
@@ -16,6 +17,7 @@ const fetchAndSaveDeck = async (deckId: string) => {
     await Cache.getInstance().saveDeck(deckId, deck);
     return deck;
   }
+
   return null;
 };
 
@@ -40,42 +42,44 @@ export default function HomeScreen({ navigation }: NavProps) {
   const [decks, setDecks] = React.useState<_Deck[]>([]);
   const [user, setUser] = React.useState<_User>();
 
-  React.useEffect(() => {
-    const fetchData = async () => {
-      // get user id from firebase.auth()
-      const user = await Cache.getInstance().getUser(userId);
-      console.log(user);
-      
-      setUser(user!);
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('in focus');
 
-      const decksList: _Deck[] = [];
+      const fetchData = async () => {
+        // get user id from firebase.auth()
+        const user = await Cache.getInstance().getUser(userId);
+        setUser(user!);
 
-      if (user?.decksPurchased) {
-        for (const deckId of user.decksPurchased) {
-          const deck = await fetchAndSaveDeck(deckId);
-          if (deck) {
-            deck.id = deckId;
-            decksList.push(deck);
+        const decksList: _Deck[] = [];
+
+        if (user?.decksPurchased) {
+          for (const deckId of user.decksPurchased) {
+            const deck = await fetchAndSaveDeck(deckId);
+            if (deck) {
+              deck.id = deckId;
+              decksList.push(deck);
+            }
           }
         }
-      }
 
-      if (user?.decksCreated) {
-        for (const deckId of user.decksCreated) {
-          const deck = await fetchAndSaveDeck(deckId);
-          if (deck) {
-            deck.id = deckId;
-            decksList.push(deck);
+        if (user?.decksCreated) {
+          for (const deckId of user.decksCreated) {
+            const deck = await fetchAndSaveDeck(deckId);
+            if (deck) {
+              deck.id = deckId;
+              decksList.push(deck);
+            }
           }
         }
-      }
 
-      await calculateDeckProgress(decksList);
-      setDecks(decksList);
-    };
+        await calculateDeckProgress(decksList);
+        setDecks(decksList);
+      };
 
-    fetchData();
-  }, []);
+      fetchData();
+    }, [])
+  );
 
   return (
     <View>
@@ -102,8 +106,9 @@ export default function HomeScreen({ navigation }: NavProps) {
                 pbBackgroundColor={trackColor!}
                 textColor={textColor}
                 onDeckPress={() => {
+                  // @ts-expect-error cant fix this ts error
                   navigation.push(NavRoutes.Sets, {
-                    deckId: deck.id
+                    deckId: deck.id,
                   });
                 }}
               />

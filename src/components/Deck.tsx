@@ -37,7 +37,7 @@ const Deck = ({ name, progress, containerBgColor, pbColor, pbBackgroundColor, te
               Completion
             </Text>
             <Text style={{ color: textColor || styles.text.color }} body2>
-              {progress * 100}%
+              {(progress * 100).toFixed(0)}%
             </Text>
           </View>
         </View>

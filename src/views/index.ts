@@ -3,6 +3,7 @@ import MyDecksScreen from './MyDecksScreen';
 import SetsScreen from './SetsScreen';
 import SettingsScreen from './SettingsScreen';
 import StoreScreen from './StoreScreen';
-import SwipeableCards from './CardsScreen';
+import CardsScreen from './CardsScreen';
+import LoginScreen from './LoginScreen';
 
-export { HomeScreen, MyDecksScreen, SetsScreen, SettingsScreen, StoreScreen, SwipeableCards as CardsScreen };
+export { HomeScreen, MyDecksScreen, SetsScreen, SettingsScreen, StoreScreen, CardsScreen, LoginScreen };
