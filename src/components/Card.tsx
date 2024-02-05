@@ -1,25 +1,36 @@
 import React from 'react';
-import { View, ViewStyle } from 'react-native';
-import { makeStyles, Text } from '@rneui/themed';
+import { View } from 'react-native';
+import { makeStyles, Text, useTheme } from '@rneui/themed';
 import { toFont } from '../helpers/scaling';
 import { FF_BOLD, FF_REGULAR } from '../theme/typography';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
 
 type CardProps = {
   text: string;
-  style?: ViewStyle;
   isTopView?: boolean;
   isCompleted?: boolean;
+  example?: string | null;
 };
 
-export default function Card({ text, style, isTopView = true, isCompleted }: CardProps) {
+export default function Card({ text, isTopView = true, isCompleted, example }: CardProps) {
   const styles = useStyles();
+  const { t } = useTranslation();
+  const { theme } = useTheme();
+
+  const textStyle = isTopView ? { ...styles.topViewText } : { ...styles.backViewText, marginTop: isCompleted ? '10%' : theme.spacing.md };
 
   return (
     <View>
       {isCompleted && <Icon name="check-circle" style={styles.statusIcon} size={20} />}
-      <View style={{ ...styles.container, ...style }}>
-        <Text style={isTopView ? styles.topViewText : styles.backViewText}>{text}</Text>
+      <View style={styles.container}>
+        <Text style={textStyle}>{text}</Text>
+        {example && (
+          <View style={styles.exampleContainer}>
+            <Text style={styles.exampleTextTitle}>{t('screens.cards.example')}</Text>
+            <Text style={styles.exampleText}>{example}</Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -27,15 +38,15 @@ export default function Card({ text, style, isTopView = true, isCompleted }: Car
 
 const useStyles = makeStyles((theme) => ({
   container: {
-    marginTop: '50%',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+    height: '100%',
   },
   statusIcon: {
     marginRight: theme.spacing.sm,
     color: theme.colors.green,
-    position: 'absolute'
+    position: 'absolute',
   },
   topViewText: {
     fontSize: toFont(25),
@@ -47,8 +58,37 @@ const useStyles = makeStyles((theme) => ({
   backViewText: {
     fontSize: toFont(22),
     fontFamily: FF_REGULAR,
-    textAlign: 'center',
     paddingLeft: 10,
     paddingRight: 10,
+    textAlign: 'left',
+    position: 'absolute',
+    justifyContent: 'center',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  exampleContainer: {
+    alignSelf: 'flex-start',
+    position: 'absolute',
+    bottom: 0,
+    justifyContent: 'center',
+    paddingBottom: 10,
+  },
+  exampleTextTitle: {
+    fontSize: toFont(18),
+    fontFamily: FF_BOLD,
+    textAlign: 'left',
+    paddingLeft: 10,
+    paddingRight: 10,
+    marginBottom: 3,
+  },
+  exampleText: {
+    fontSize: toFont(18),
+    fontFamily: FF_REGULAR,
+    textAlign: 'left',
+    paddingLeft: 10,
+    paddingRight: 10,
+    color: theme.colors.purple,
   },
 }));

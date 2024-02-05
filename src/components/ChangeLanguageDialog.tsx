@@ -22,10 +22,6 @@ const ChangeLanguageDialog = ({ language, onLanguageChange, setDialogOpen, dialo
   const styles = useStyles();
   const { t } = useTranslation();
 
-  const handleSheetChanges = useCallback((index: number) => {
-    console.log('handleSheetChanges', index);
-  }, []);
-
   if (dialogOpen) {
     bottomSheetRef.current?.snapToIndex(0);
   }
@@ -58,7 +54,6 @@ const ChangeLanguageDialog = ({ language, onLanguageChange, setDialogOpen, dialo
       index={-1}
       animationConfigs={animationConfigs}
       snapPoints={snapPoints}
-      onChange={handleSheetChanges}
       backgroundStyle={styles.background}
       handleStyle={styles.handle}
       backdropComponent={renderBackdrop}

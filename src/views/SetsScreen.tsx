@@ -77,9 +77,7 @@ export default function SetsScreen({ navigation, route }: NavProps) {
                     mb={index === sets.length - 1 ? 70 : 0}
                     fgColor={fgColor}
                     bgColor={bgColor}
-                    onSetPress={() => {
-                      console.log(set.localesSupported);
-                      
+                    onSetPress={() => {                      
                       // @ts-expect-error cant fix this ts error
                       navigation.push(NavRoutes.Cards, {
                         deckId: deckId,
@@ -96,7 +94,7 @@ export default function SetsScreen({ navigation, route }: NavProps) {
           )}
         </View>
       </ScrollView>
-      {loading && <LottieView ref={animationRef} loop={true} source={require('../assets/loading-animation.json')} style={styles.loading} />}
+      {loading && <LottieView ref={animationRef} loop={true} source={require('../assets/animation/loading-animation.json')} style={styles.loading} />}
     </View>
   );
 }

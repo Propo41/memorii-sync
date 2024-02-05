@@ -27,7 +27,7 @@ const LocaleSwitch = ({ onValueChange, value, mb, value1, value2 }: LocaleSwitch
         <View style={{ ...styles.switch1, backgroundColor: isActive ? styles.active.backgroundColor : styles.inActive.backgroundColor }}>
           <Text style={styles.switch1Text}>{value1}</Text>
         </View>
-        <View style={{ ...styles.switch1, backgroundColor: isActive ? styles.inActive.backgroundColor : styles.active.backgroundColor }}>
+        <View style={{ ...styles.switch2, backgroundColor: isActive ? styles.inActive.backgroundColor : styles.active.backgroundColor }}>
           <Text style={styles.switch2Text}>{value2}</Text>
         </View>
       </View>
@@ -52,18 +52,26 @@ const useStyles = makeStyles((theme) => ({
   },
   switch1: {
     padding: 5,
+    borderTopLeftRadius: 5,
+    borderBottomLeftRadius: 5,
+    width: 40,
   },
   switch2: {
     padding: 5,
     marginLeft: 7,
+    borderTopRightRadius: 5,
+    borderBottomRightRadius: 5,
+    width: 40,
   },
   switch1Text: {
     color: theme.colors.white,
-    fontSize: toFont(15),
+    fontSize: toFont(13),
+    alignSelf: 'center',
   },
   switch2Text: {
     color: theme.colors.white,
-    fontSize: toFont(15),
+    fontSize: toFont(13),
+    alignSelf: 'center',
   },
 }));
 

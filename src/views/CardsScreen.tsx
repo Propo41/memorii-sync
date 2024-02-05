@@ -14,14 +14,16 @@ import { Cache } from '../models/Cache';
 import LottieView from 'lottie-react-native';
 import { useTranslation } from 'react-i18next';
 import LocaleSwitch from '../components/LocaleSwitch';
+import { showToast } from '../components/CustomToast';
 
 type ControlsProps = {
   onPressCross: () => void;
   onPressRotate: () => void;
   onPressCheck: () => void;
+  onPressShuffle: () => void;
 };
 
-const Controls = ({ onPressCross, onPressRotate, onPressCheck }: ControlsProps) => {
+const Controls = ({ onPressCross, onPressRotate, onPressCheck, onPressShuffle }: ControlsProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
 
@@ -36,6 +38,13 @@ const Controls = ({ onPressCross, onPressRotate, onPressCheck }: ControlsProps) 
           color: 'white',
         }}
         onPress={onPressRotate}
+      />
+      <FAB
+        size="large"
+        icon={<MaterialCommunityIcons name="shuffle" color={theme.colors.white} size={iconSize.sm} />}
+        color={theme.colors.purple}
+        style={{ marginLeft: theme.spacing.lg }}
+        onPress={onPressShuffle}
       />
       <FAB
         size="large"
@@ -89,11 +98,17 @@ const CardsScreen = ({ route }: NavProps) => {
 
   const onPause = (nextAppState: string) => {
     if (appState === 'active' && nextAppState.match(/inactive|background/)) {
-      console.log('App has gone to the background!');
       saveCardStatuses();
     }
     setAppState(nextAppState);
   };
+
+  function shuffleCards() {
+    for (let i = cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cards[i], cards[j]] = [cards[j], cards[i]];
+    }
+  }
 
   useEffect(() => {
     // on create
@@ -275,7 +290,7 @@ const CardsScreen = ({ route }: NavProps) => {
     })
   ).current;
 
-  const frontView = (text: string, isCompleted: boolean) => {
+  const frontView = (text: string, isCompleted: boolean, example?: string) => {
     return (
       // @ts-expect-error package resolution warning
       <Animated.View
@@ -287,19 +302,19 @@ const CardsScreen = ({ route }: NavProps) => {
           ...styles.front,
         }}
       >
-        <Card text={text} isTopView={true} isCompleted={isCompleted} />
+        <Card text={text} isTopView={true} isCompleted={isCompleted} example={example} />
       </Animated.View>
     );
   };
 
-  const backView = (text: string, isCompleted: boolean) => {
+  const backView = (text: string, isCompleted: boolean, example: string | null = null) => {
     return (
       // @ts-expect-error package resolution warning
       <Animated.View
         {...panResponder.panHandlers}
         style={{ transform: [...rotateAndTranslate.transform, ...flipToBackStyle.transform], ...styles.cardContainer, ...styles.back }}
       >
-        <Card text={text} isTopView={false} isCompleted={isCompleted} />
+        <Card text={text} isTopView={false} isCompleted={isCompleted} example={example} />
       </Animated.View>
     );
   };
@@ -313,8 +328,6 @@ const CardsScreen = ({ route }: NavProps) => {
     const firstCard = cards[currentCard.index];
     const secondCard = currentCard.index + 1 >= cards.length ? null : cards[currentCard.index + 1];
 
-    console.log('firstCard');
-
     return (
       <>
         {secondCard && (
@@ -324,7 +337,7 @@ const CardsScreen = ({ route }: NavProps) => {
           </Animated.View>
         )}
         <View>
-          {backView(localeSwitch ? firstCard.backLocale : firstCard.back, isCompleted)}
+          {backView(localeSwitch ? firstCard.backLocale : firstCard.back, isCompleted, firstCard.example)}
           {frontView(firstCard.front, isCompleted)}
         </View>
       </>
@@ -338,7 +351,7 @@ const CardsScreen = ({ route }: NavProps) => {
       <NavigationBar title="" style={{ backgroundColor: theme.colors.transparent }} />
       {isCompleted && (
         <>
-          <LottieView ref={animationRef} loop={false} source={require('../assets/confetti-animation.json')} style={styles.confetti} />
+          <LottieView ref={animationRef} loop={false} source={require('../assets/animation/confetti-animation.json')} style={styles.confetti} />
           {/* @ts-expect-error package resolution warning */}
           <Animated.View
             style={{
@@ -377,6 +390,11 @@ const CardsScreen = ({ route }: NavProps) => {
             onPressRotate={() => {
               flipRotation ? flipToBack() : flipToFront();
             }}
+            onPressShuffle={() => {
+              shuffleCards();
+              showToast(t('screens.cards.shuffle'));
+              setCurrentCard({ index: 0, isCorrect: false });
+            }}
           />
 
           <View style={styles.switchProgressContainer}>
@@ -384,7 +402,6 @@ const CardsScreen = ({ route }: NavProps) => {
               <LocaleSwitch
                 value={true}
                 onValueChange={(value: boolean) => {
-                  console.log(!value);
                   setLocalSwtich(!value);
                 }}
                 mb={theme.spacing.lg}
@@ -475,7 +492,7 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: toSize((SCREEN_HEIGHT - (460 + STATUSBAR_HEIGHT + 80)) / 2),
   },
   back: {
-    backgroundColor: '#EDEEFF',
+    backgroundColor: '#FDFFB4',
   },
   front: {
     backgroundColor: theme.colors.white,

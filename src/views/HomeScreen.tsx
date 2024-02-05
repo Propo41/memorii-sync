@@ -49,7 +49,7 @@ export default function HomeScreen({ navigation }: NavProps) {
   // app state
   const { setMode } = useThemeMode();
   const [_, setLanguage] = useState<string>('English');
-  const { t, i18n } = useTranslation(); //i18n instance
+  const { t, i18n } = useTranslation(); // i18n instance
 
   // fetch user
   useEffect(() => {
@@ -75,7 +75,7 @@ export default function HomeScreen({ navigation }: NavProps) {
       const loadingTimer = setTimeout(() => {
         setLoading(true);
         animationRef.current?.play();
-      }, 500);
+      }, 800);
 
       const fetchData = async (id: string) => {
         const user = await FirebaseApp.getInstance().getUser(id);
@@ -125,7 +125,7 @@ export default function HomeScreen({ navigation }: NavProps) {
 
   return (
     <View>
-      <StatusBar backgroundColor={theme.colors.background} />
+      <StatusBar backgroundColor={theme.colors.background} hidden={false} />
       <ScrollView showsVerticalScrollIndicator={false}>
         <TitleBar
           title={t('screens.home.title')}
@@ -162,7 +162,7 @@ export default function HomeScreen({ navigation }: NavProps) {
           </>
         )}
       </ScrollView>
-      {loading && <LottieView ref={animationRef} loop={true} source={require('../assets/loading-animation.json')} style={styles.loading} />}
+      {loading && <LottieView ref={animationRef} loop={true} source={require('../assets/animation/loading-animation.json')} style={styles.loading} />}
     </View>
   );
 }

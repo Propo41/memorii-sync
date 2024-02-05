@@ -65,7 +65,7 @@ export default function LoginScreen({ navigation }: NavProps) {
     setLoading(true);
 
     if (!res) {
-      showToast('Something went wrong while signing in!');
+      showToast('Failed to login!');
       return;
     }
 
