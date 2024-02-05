@@ -1,0 +1,44 @@
+{
+    "language": "Bangla",
+    "screens": {
+        "login": {
+            "title": "Get\nstarted",
+            "subtitle": "Unlock your learning journey\nwith a single click",
+            "terms&Conditions": "By signing in, you accept the terms and conditions",
+            "signinButton": "Sign in with google"
+        },
+        "home": {
+            "title": "Decks",
+            "subtitle": "Your available decks",
+            "decksEmpty": {
+                "title": "No available decks",
+                "subtitle": "But the shop has many. Hurry up!"
+            }
+        },
+        "sets": {
+            "title": "Sets"
+        },
+        "settings": {
+            "title": "Settings",
+            "language": "ভাষা",
+            "darkMode": "Dark Mode",
+            "logout": "Log out",
+            "helpAndSupport": "Help & support",
+            "languageSelect": "Choose language"
+        },
+        "cards": {
+            "correctGuess": "I got it right",
+            "incorrectGuess": "Didn't get it right",
+            "completed": {
+                "title": "Congratulations!",
+                "subtitle": "Keep it up"
+            }
+        },
+        "myDecks": {},
+        "store": {},
+        "toast": {
+            "sessionExpired": "Session expired. Please login again.",
+            "cacheExpired": "Data was deleted. Try restaring the app!"
+        }
+    }
+}

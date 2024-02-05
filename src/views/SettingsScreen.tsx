@@ -1,29 +1,38 @@
-import { makeStyles, Text, ThemeMode, useTheme, useThemeMode } from '@rneui/themed';
+import { makeStyles, Text, useTheme, useThemeMode } from '@rneui/themed';
 import { Divider } from '@rneui/themed';
 import { Switch } from '@rneui/themed';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ColorValue, TouchableNativeFeedback, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ChangeLanguageDialog from '../components/ChangeLanguageDialog';
 import TitleBar from '../components/TitleBar';
-import { iconSize, margins } from '../config';
-import { NavProps } from '../config/routes';
-import { getAppState } from '../database';
+import { iconSize, Language, margins } from '../config';
+import { NavProps, NavRoutes } from '../config/routes';
+import auth from '@react-native-firebase/auth';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { FirebaseApp } from '../models/FirebaseApp';
+import { showToast } from '../components/CustomToast';
+import { useTranslation } from 'react-i18next';
+import { UserPreference } from '../models/dto/UserPreference';
 
 type MenuProps = {
   title: string;
   Icon1: React.ReactElement;
   subtitle?: string;
   Icon2?: React.ReactElement;
-  onPress?: () => void;
+  onPress: () => void;
 };
 
 const Menu = ({ Icon1, title, subtitle, Icon2, onPress }: MenuProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
 
+  const onClick = () => {
+    onPress();
+  };
+
   return (
-    <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple(theme.colors.touchable as ColorValue, false)} onPress={onPress}>
+    <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple(theme.colors.touchable as ColorValue, false)} onPress={onClick}>
       <View style={styles.menuContainer}>
         {Icon1}
         <Text body1_bold style={styles.menuTitle}>
@@ -44,25 +53,64 @@ export default function SettingsScreen({ navigation }: NavProps) {
   const { theme } = useTheme();
   const [darkModeSwitch, setDarkModeSwitch] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [language, setLanguage] = useState('English');
+  const [language, setLanguage] = useState<Language>('English');
+  const { t, i18n } = useTranslation(); //i18n instance
 
-  React.useEffect(() => {
-    const { language, colorMode } = getAppState();
-    setLanguage(language);
-    setMode(colorMode as ThemeMode);
-    setDarkModeSwitch(colorMode === 'dark' ? true : false);
+  useEffect(() => {
+    const getData = async () => {
+      const currentUser = auth().currentUser;
+      const user = await FirebaseApp.getInstance().getUser(currentUser!.uid);
+      if (!user) {
+        showToast(t('screens.toast.sessionExpired'), 'error');
+        navigation.replace(NavRoutes.Login);
+        return;
+      }
+
+      const { locale, isDarkMode } = user.preferences;
+      setLanguage(locale);
+      setMode(isDarkMode ? 'dark' : 'light');
+      setDarkModeSwitch(isDarkMode ? true : false);
+    };
+
+    getData();
   }, []);
 
-  const toggleDarkMode = () => {
+  const toggleDarkMode = async () => {
     setMode(mode === 'dark' ? 'light' : 'dark');
     setDarkModeSwitch(darkModeSwitch ? false : true);
+
+    await updatePreference(mode !== 'dark', language);
+  };
+
+  const onLanguageChange = async (lang: Language) => {
+    i18n.changeLanguage(lang);
+    setLanguage(lang);
+
+    await updatePreference(mode === 'dark', lang);
+  };
+
+  const updatePreference = async (isDarkMode: boolean, locale: Language) => {
+    const currentUser = auth().currentUser;
+    if (!currentUser) return;
+    await FirebaseApp.getInstance().updateUserPreference(currentUser.uid, new UserPreference(isDarkMode, locale));
+  };
+
+  const onSignOutClick = async () => {
+    try {
+      await auth().signOut();
+      await GoogleSignin.revokeAccess();
+      console.log('signed out');
+      navigation.replace(NavRoutes.Login);
+    } catch (error) {
+      console.log('error signing out.', error);
+    }
   };
 
   return (
     <>
-      <TitleBar title="Settings" />
+      <TitleBar title={t('screens.settings.title')} />
       <Menu
-        title="Language"
+        title={t('screens.settings.language')}
         subtitle={language}
         Icon1={<Icon name="language" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
         Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
@@ -70,7 +118,8 @@ export default function SettingsScreen({ navigation }: NavProps) {
       />
       <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
-        title="Dark Mode"
+        title={t('screens.settings.darkMode')}
+        onPress={toggleDarkMode}
         Icon1={<Icon name="wb-sunny" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
         Icon2={
           <Switch
@@ -85,19 +134,20 @@ export default function SettingsScreen({ navigation }: NavProps) {
         }
       />
       <Divider style={styles.divider} color={theme.colors.touchable} />
-      <Menu
-        title="Help & Support"
+      {/* todo <Menu
+        title={t('screens.settings.helpAndSupport')}
+        onPress={() => {}}
         Icon1={<Icon name="help" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
         Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
       />
-      <Divider style={styles.divider} color={theme.colors.touchable} />
+      <Divider style={styles.divider} color={theme.colors.touchable} /> */}
       <Menu
-        title="Log out of all sessions"
-        Icon1={<Icon name="logout" style={styles.icon1} color={theme.colors.orange} size={iconSize.sm} />}
-        Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
+        title={t('screens.settings.logout')}
+        onPress={onSignOutClick}
+        Icon1={<Icon name="logout" style={styles.icon1} color={theme.colors.orange} size={iconSize.sm} onPress={toggleDarkMode} />}
       />
       {/* dialogs */}
-      <ChangeLanguageDialog dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} language={language} setLanguage={setLanguage} />
+      <ChangeLanguageDialog dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} language={language} onLanguageChange={onLanguageChange} />
     </>
   );
 }

@@ -2,16 +2,18 @@ import NavigationBar from '../components/NavigationBar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import React, { View, Animated, PanResponder, StatusBar, AppState } from 'react-native';
 import { FAB, LinearProgress, makeStyles, Text, useTheme } from '@rneui/themed';
-import { SCREEN_WIDTH, toSize } from '../helpers/scaling';
+import { SCREEN_HEIGHT, SCREEN_WIDTH, toSize } from '../helpers/scaling';
 import Card from '../components/Card';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import EntypoIcons from 'react-native-vector-icons/Entypo';
-import { iconSize } from '../config';
+import { LANGUAGE_CODE, STATUSBAR_HEIGHT, iconSize } from '../config';
 import { _Card } from '../models/dto';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { NavProps } from '../config/routes';
 import { Cache } from '../models/Cache';
 import LottieView from 'lottie-react-native';
+import { useTranslation } from 'react-i18next';
+import LocaleSwitch from '../components/LocaleSwitch';
 
 type ControlsProps = {
   onPressCross: () => void;
@@ -50,23 +52,30 @@ type CardsScreenProps = {
   cards: _Card[];
   deckId: string;
   setId: string;
+  userId: string;
+  localesSupported: string[];
 };
 
-const userId = `SDBk0R01TxrTHF839qoL`;
-
 const CardsScreen = ({ route }: NavProps) => {
+  const { cards, deckId, setId, userId, localesSupported }: CardsScreenProps = route.params!;
+
   const [currentCard, setCurrentCard] = useState({ index: 0, isCorrect: false });
   const [progress, setProgress] = useState(0);
   const [cardStatuses, setCardStatuses] = useState<Record<number, boolean>>({});
-  const position = useRef(new Animated.ValueXY()).current;
   const styles = useStyles();
   const { theme } = useTheme();
-  const { cards, deckId, setId }: CardsScreenProps = route.params!;
   const [appState, setAppState] = useState<string>(AppState.currentState);
   const [loading, setLoading] = useState(true);
-  const animationRef = useRef<LottieView>(null);
   const [isCompleted, setIsCompleted] = useState(false);
+  const { t } = useTranslation();
+  const [localeSwitch, setLocalSwtich] = useState<boolean>(false);
+  // animation
+  const animationRef = useRef<LottieView>(null);
+  const position = useRef(new Animated.ValueXY()).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const flipAnimation = useRef(new Animated.Value(0)).current;
+  let flipRotation = 0;
+  flipAnimation.addListener(({ value }) => (flipRotation = value));
 
   const saveCardStatuses = () => {
     Cache.getInstance()
@@ -102,10 +111,6 @@ const CardsScreen = ({ route }: NavProps) => {
     };
   }, []);
 
-  const flipAnimation = useRef(new Animated.Value(0)).current;
-  let flipRotation = 0;
-  flipAnimation.addListener(({ value }) => (flipRotation = value));
-
   useEffect(() => {
     const fetchData = async () => {
       const cardStatuses = await FirebaseApp.getInstance().getCardStatuses(userId, deckId, setId);
@@ -125,7 +130,7 @@ const CardsScreen = ({ route }: NavProps) => {
       Cache.getInstance().saveCardStatuses(userId, deckId, setId, statuses);
       return statuses;
     });
-    console.log('(currentCard.index', currentCard.index);
+
     if (currentCard.index === cards.length) {
       setIsCompleted(true);
       fadeIn();
@@ -319,12 +324,12 @@ const CardsScreen = ({ route }: NavProps) => {
           </Animated.View>
         )}
         <View>
-          {backView(firstCard.back, isCompleted)}
+          {backView(localeSwitch ? firstCard.backLocale : firstCard.back, isCompleted)}
           {frontView(firstCard.front, isCompleted)}
         </View>
       </>
     );
-  }, [currentCard.index, loading]);
+  }, [currentCard.index, loading, localeSwitch]);
 
   return (
     // @ts-expect-error package resolution warning
@@ -333,7 +338,7 @@ const CardsScreen = ({ route }: NavProps) => {
       <NavigationBar title="" style={{ backgroundColor: theme.colors.transparent }} />
       {isCompleted && (
         <>
-          <LottieView ref={animationRef} loop={false} source={require('../assets/confettin-animation.json')} style={styles.confetti} />
+          <LottieView ref={animationRef} loop={false} source={require('../assets/confetti-animation.json')} style={styles.confetti} />
           {/* @ts-expect-error package resolution warning */}
           <Animated.View
             style={{
@@ -342,9 +347,9 @@ const CardsScreen = ({ route }: NavProps) => {
           >
             <View style={styles.completionCardContainer}>
               <View style={styles.completionCard}>
-                <Text body1_bold>Congratulations!</Text>
+                <Text body1_bold>{t('screens.cards.completed.title')}</Text>
                 <Text body2 style={styles.pt}>
-                  Keep it up
+                  {t('screens.cards.completed.subtitle')}
                 </Text>
               </View>
             </View>
@@ -354,13 +359,13 @@ const CardsScreen = ({ route }: NavProps) => {
       {/* @ts-expect-error package resolution warning */}
       <Animated.View style={{ ...styles.wrongGuess, opacity: wrongGuessOpacity }}>
         <Text body1_bold style={{ color: theme.colors.white }}>
-          Didn&apos;t get it right
+          {t('screens.cards.incorrectGuess')}
         </Text>
       </Animated.View>
       {/* @ts-expect-error package resolution warning */}
       <Animated.View style={{ ...styles.correctGuess, opacity: correctGuessOpacity }}>
         <Text body1_bold style={{ color: theme.colors.white }}>
-          I got it right
+          {t('screens.cards.correctGuess')}
         </Text>
       </Animated.View>
       <View>{renderCards()}</View>
@@ -373,7 +378,22 @@ const CardsScreen = ({ route }: NavProps) => {
               flipRotation ? flipToBack() : flipToFront();
             }}
           />
-          <LinearProgress value={progress} variant="determinate" style={styles.progress} color={theme.colors.white} />
+
+          <View style={styles.switchProgressContainer}>
+            {localesSupported.length >= 2 && (
+              <LocaleSwitch
+                value={true}
+                onValueChange={(value: boolean) => {
+                  console.log(!value);
+                  setLocalSwtich(!value);
+                }}
+                mb={theme.spacing.lg}
+                value1={LANGUAGE_CODE[localesSupported[0]]}
+                value2={LANGUAGE_CODE[localesSupported[1]]}
+              />
+            )}
+            <LinearProgress value={progress} variant="determinate" style={styles.progress} color={theme.colors.white} />
+          </View>
         </View>
       )}
     </Animated.View>
@@ -429,9 +449,14 @@ const useStyles = makeStyles((theme) => ({
     top: toSize(70),
     left: SCREEN_WIDTH / 2 - 75,
   },
-  progress: {
+  switchProgressContainer: {
     position: 'absolute',
     bottom: 0,
+    right: 0,
+    left: 0,
+    alignItems: 'center',
+  },
+  progress: {
     marginBottom: 20,
     height: toSize(7),
     backgroundColor: '#ADB0FF',
@@ -447,7 +472,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: toSize(110),
+    marginBottom: toSize((SCREEN_HEIGHT - (460 + STATUSBAR_HEIGHT + 80)) / 2),
   },
   back: {
     backgroundColor: '#EDEEFF',

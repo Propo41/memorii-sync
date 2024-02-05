@@ -1,8 +1,9 @@
 import { NativeModules, Platform } from 'react-native';
 import { toSize } from '../helpers/scaling';
+import i18n from './i18n';
 const { StatusBarManager } = NativeModules;
 
-const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 20 : Platform.OS === 'web' ? 20 : StatusBarManager.HEIGHT;
+export const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 20 : Platform.OS === 'web' ? 20 : StatusBarManager.HEIGHT;
 
 export const margins = {
   window_hor: toSize(12),
@@ -15,3 +16,12 @@ export const iconSize = {
   md: 30,
   lg: 50,
 };
+
+export type Language = 'English' | 'Bangla';
+
+export const LANGUAGE_CODE: Record<string, string> = {
+  English: 'EN',
+  Bangla: 'BN',
+};
+
+export { i18n };

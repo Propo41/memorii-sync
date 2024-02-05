@@ -74,3 +74,7 @@ web-build/
 dist/
 
 # @end expo-cli
+
+**/google-services.json
+**/conf.ts
+google-services.json

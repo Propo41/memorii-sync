@@ -5,19 +5,22 @@ import { View } from 'react-native';
 import { Easing } from 'react-native-reanimated';
 
 import AppButton from './AppButton';
+import { Language } from '../config';
+import { useTranslation } from 'react-i18next';
 
 type ChangeLanguageDialogProp = {
   language: string;
-  setLanguage: (language: string) => void;
+  onLanguageChange: (language: Language) => void;
   dialogOpen: boolean;
   setDialogOpen: (state: boolean) => void;
 };
 
-const ChangeLanguageDialog = ({ language, setLanguage, setDialogOpen, dialogOpen }: ChangeLanguageDialogProp) => {
+const ChangeLanguageDialog = ({ language, onLanguageChange, setDialogOpen, dialogOpen }: ChangeLanguageDialogProp) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['31%'], []);
   const { theme } = useTheme();
   const styles = useStyles();
+  const { t } = useTranslation();
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
@@ -27,14 +30,14 @@ const ChangeLanguageDialog = ({ language, setLanguage, setDialogOpen, dialogOpen
     bottomSheetRef.current?.snapToIndex(0);
   }
 
-  const onDialogClose = (language?: string) => {
-    console.log('onDialogClose: ', language);
+  const onDialogClose = (language?: Language) => {
     bottomSheetRef.current?.close();
     setDialogOpen(false);
-    language ? setLanguage(language) : null;
+
+    language ? onLanguageChange(language) : null;
   };
 
-  const languages = ['English', 'Bangla'];
+  const languages: Language[] = ['English', 'Bangla'];
 
   const renderBackdrop = useCallback(
     (
@@ -63,7 +66,7 @@ const ChangeLanguageDialog = ({ language, setLanguage, setDialogOpen, dialogOpen
     >
       <View style={styles.contentContainer}>
         <Text body1_bold style={{ marginBottom: theme.spacing.lg, color: theme.colors.text }}>
-          Choose language
+          {t('screens.settings.languageSelect')}
         </Text>
         {languages.map((lang, index) => (
           <AppButton

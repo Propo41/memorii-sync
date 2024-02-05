@@ -1,3 +1,4 @@
+import { log } from '../helpers/logger';
 import { _Deck, _User } from './dto';
 import EncryptedStorage from 'react-native-encrypted-storage';
 
@@ -22,8 +23,8 @@ export class Cache implements CacheInterface {
   async saveDeck(deckId: string, deck: _Deck): Promise<void> {
     try {
       await EncryptedStorage.setItem(deckId, JSON.stringify(deck));
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      log(error.message);
     }
   }
 
@@ -33,8 +34,8 @@ export class Cache implements CacheInterface {
       if (deck) {
         return _Deck.transform(JSON.parse(deck));
       }
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      log(error.message);
     }
     return null;
   }
@@ -45,8 +46,8 @@ export class Cache implements CacheInterface {
       if (user) {
         return _User.transform(JSON.parse(user));
       }
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      log(error.message);
     }
     return null;
   }
@@ -54,16 +55,16 @@ export class Cache implements CacheInterface {
   async saveUser(userId: string, user: _User): Promise<void> {
     try {
       await EncryptedStorage.setItem(userId, JSON.stringify(user));
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      log(error.message);
     }
   }
 
   async saveCardStatuses(userId: string, deckId: string, setId: string, cardStatuses: Record<number, boolean>): Promise<void> {
     try {
       await EncryptedStorage.setItem(`${deckId}:${userId}:${setId}`, JSON.stringify(cardStatuses));
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      log(error.message);
     }
   }
 
@@ -73,8 +74,8 @@ export class Cache implements CacheInterface {
       if (user) {
         return JSON.parse(user);
       }
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      log(error.message);
     }
     return null;
   }

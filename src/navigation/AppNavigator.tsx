@@ -7,11 +7,15 @@ import React from 'react';
 
 const RootStack = createNativeStackNavigator<NavParamList>();
 
-export default function AppNavigator() {
+type AppNavigatorProps = {
+  initialRoute: string;
+};
+
+export default function AppNavigator({ initialRoute }: AppNavigatorProps) {
   const styles = useStyles();
   return (
     <RootStack.Navigator
-      initialRouteName={NavRoutes.Login}
+      initialRouteName={initialRoute}
       screenOptions={{ animationDuration: 10, headerShown: false, presentation: 'transparentModal', animation: 'slide_from_right' }}
     >
       <RootStack.Screen name={NavRoutes.App} component={BottomNavigator} />
