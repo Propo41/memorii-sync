@@ -32,7 +32,9 @@
             "completed": {
                 "title": "Congratulations!",
                 "subtitle": "Keep it up"
-            }
+            },
+            "example": "Example",
+            "shuffle": "Shuffled the cards!"
         },
         "myDecks": {},
         "store": {},

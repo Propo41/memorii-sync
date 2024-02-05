@@ -14,6 +14,7 @@ import { FirebaseApp } from '../models/FirebaseApp';
 import { showToast } from '../components/CustomToast';
 import { useTranslation } from 'react-i18next';
 import { UserPreference } from '../models/dto/UserPreference';
+import { log } from '../helpers/logger';
 
 type MenuProps = {
   title: string;
@@ -99,10 +100,9 @@ export default function SettingsScreen({ navigation }: NavProps) {
     try {
       await auth().signOut();
       await GoogleSignin.revokeAccess();
-      console.log('signed out');
       navigation.replace(NavRoutes.Login);
-    } catch (error) {
-      console.log('error signing out.', error);
+    } catch (error: any) {
+      log('error signing out.', error);
     }
   };
 

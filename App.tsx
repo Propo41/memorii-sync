@@ -26,7 +26,6 @@ import CustomToast from './src/components/CustomToast';
 //   // @ts-expect-error bla ba
 //   dummyUser.decksPurchased.push(...deckIds);
 //   const userId = await FirebaseApp.getInstance().createUser(dummyUser);
-//   console.log('dummy user id: ', userId);
 
 //   Cache.getInstance().saveUser(userId, dummyUser);
 // };

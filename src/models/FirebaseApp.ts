@@ -1,6 +1,7 @@
 import { log } from '../helpers/logger';
 import { _Deck, _Set, _User, _UserPreference } from './dto';
 import firestore from '@react-native-firebase/firestore';
+import { fetch } from '@react-native-community/netinfo';
 
 interface FirebaseAppInterface {
   getUser(userId: string): Promise<_User | null>;
@@ -39,14 +40,17 @@ export class FirebaseApp implements FirebaseAppInterface {
     if (!FirebaseApp.instance) {
       FirebaseApp.instance = new FirebaseApp();
     }
+
     return FirebaseApp.instance;
   }
 
   async getUser(userId: string): Promise<_User | null> {
     try {
+      const { isConnected } = await fetch();
       const snapshot = await firestore().collection(this.collections.users).doc(userId).get({
-        source: 'cache',
+        source: isConnected? 'default' : 'cache',
       });
+      
       if (snapshot.exists) {
         return _User.transform(snapshot.data() as InstanceType<typeof _User>);
       }
@@ -96,7 +100,11 @@ export class FirebaseApp implements FirebaseAppInterface {
 
   async getDeck(deckId: string): Promise<_Deck | null> {
     try {
-      const snapshot = await firestore().collection(this.collections.decks).doc(deckId).get({ source: 'cache' });
+      const { isConnected } = await fetch();
+      const snapshot = await firestore().collection(this.collections.decks).doc(deckId).get({
+        source: isConnected? 'default' : 'cache',
+       });
+
       if (snapshot.exists) {
         return _Deck.transform(snapshot.data() as InstanceType<typeof _Deck>);
       }
