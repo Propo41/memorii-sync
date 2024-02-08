@@ -8,12 +8,13 @@ import { useTranslation } from 'react-i18next';
 
 type CardProps = {
   text: string;
+  type?: string;
   isTopView?: boolean;
   isCompleted?: boolean;
   example?: string | null;
 };
 
-export default function Card({ text, isTopView = true, isCompleted, example }: CardProps) {
+export default function Card({ text, type, isTopView = true, isCompleted, example }: CardProps) {
   const styles = useStyles();
   const { t } = useTranslation();
   const { theme } = useTheme();
@@ -25,7 +26,8 @@ export default function Card({ text, isTopView = true, isCompleted, example }: C
       {isCompleted && <Icon name="check-circle" style={styles.statusIcon} size={20} />}
       <View style={styles.container}>
         <Text style={textStyle}>{text}</Text>
-        {example && (
+        {type && isTopView && <Text style={styles.type}>{type}</Text>}
+        {!isTopView && example && (
           <View style={styles.exampleContainer}>
             <Text style={styles.exampleTextTitle}>{t('screens.cards.example')}</Text>
             <Text style={styles.exampleText}>{example}</Text>
@@ -42,6 +44,13 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+  },
+  type: {
+    fontSize: toFont(15),
+    fontFamily: FF_REGULAR,
+    textAlign: 'center',
+    paddingLeft: 10,
+    paddingRight: 10,
   },
   statusIcon: {
     marginRight: theme.spacing.sm,

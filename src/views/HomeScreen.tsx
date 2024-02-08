@@ -1,6 +1,6 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Avatar, makeStyles, useTheme, useThemeMode } from '@rneui/themed';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { ScrollView, StatusBar, View } from 'react-native';
 import Deck from '../components/Deck';
 import TitleBar from '../components/TitleBar';
@@ -15,6 +15,7 @@ import LottieView from 'lottie-react-native';
 import { showToast } from '../components/CustomToast';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useTranslation } from 'react-i18next';
+import * as NavigationBar from 'expo-navigation-bar';
 
 const fetchAndSaveDeck = async (deckId: string) => {
   const deck = await FirebaseApp.getInstance().getDeck(deckId);
@@ -51,47 +52,32 @@ export default function HomeScreen({ navigation }: NavProps) {
   const [_, setLanguage] = useState<string>('English');
   const { t, i18n } = useTranslation(); // i18n instance
 
-  // fetch user
-  useEffect(() => {
-    const getData = async () => {
-      const currentUser = auth().currentUser;
-      if (!currentUser) return;
+  const setUserPreference = async (user: _User) => {
+    const { locale, isDarkMode } = user.preferences;
+    setLanguage(locale);
+    i18n.changeLanguage(locale);
 
-      const user = await FirebaseApp.getInstance().getUser(currentUser!.uid);
-      if (!user) return;
+    setMode(isDarkMode ? 'dark' : 'light');
+    await NavigationBar.setBackgroundColorAsync(isDarkMode ? theme.colors.violetShade! : theme.colors.white);
+  };
 
-      const { locale, isDarkMode } = user.preferences;
-      setLanguage(locale);
-      i18n.changeLanguage(locale);
-
-      setMode(isDarkMode ? 'dark' : 'light');
-    };
-
-    getData();
-  }, []);
+  const kickUser = async () => {
+    try {
+      showToast(t('screens.toast.sessionExpired'), 'error');
+      await auth().signOut();
+      await GoogleSignin.revokeAccess();
+      navigation.replace(NavRoutes.Login);
+    } catch (error) {
+      navigation.replace(NavRoutes.Login);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
-      const loadingTimer = setTimeout(() => {
-        setLoading(true);
-        animationRef.current?.play();
-      }, 800);
-
-      const fetchData = async (id: string) => {
-        const user = await FirebaseApp.getInstance().getUser(id);
-        if (!user) {
-          showToast(t('screens.toast.sessionExpired'), 'error');
-          await auth().signOut();
-          await GoogleSignin.revokeAccess();
-          navigation.replace(NavRoutes.Login);
-
-          return;
-        }
-
-        setUser(user);
+      const fetchDecks = async (user: _User) => {
         const decksList: _Deck[] = [];
 
-        if (user?.decksPurchased) {
+        if (user.decksPurchased) {
           for (const deckId of user.decksPurchased) {
             const deck = await fetchAndSaveDeck(deckId);
             if (deck) {
@@ -101,7 +87,7 @@ export default function HomeScreen({ navigation }: NavProps) {
           }
         }
 
-        if (user?.decksCreated) {
+        if (user.decksCreated) {
           for (const deckId of user.decksCreated) {
             const deck = await fetchAndSaveDeck(deckId);
             if (deck) {
@@ -111,15 +97,41 @@ export default function HomeScreen({ navigation }: NavProps) {
           }
         }
 
-        await calculateDeckProgress(id, decksList);
+        await calculateDeckProgress(user.id, decksList);
         setDecks(decksList);
-        setLoading(false);
-        clearTimeout(loadingTimer);
+        // clearTimeout(loadingTimer);
         animationRef.current?.pause();
       };
 
-      const user = auth().currentUser;
-      fetchData(user!.uid);
+      const currentUser = auth().currentUser;
+      if (!currentUser) {
+        kickUser();
+        return;
+      }
+
+      FirebaseApp.getInstance()
+        .getUser(currentUser.uid)
+        .then(async (user) => {
+          if (!user) {
+            await kickUser();
+            return;
+          }
+
+          const loadingTimer = setTimeout(() => {
+            setLoading(true);
+            animationRef.current?.play();
+          }, 200);
+
+          setUser(user);
+          setUserPreference(user);
+          if (decks.length === 0) {
+            fetchDecks(user);
+          } else {
+            await calculateDeckProgress(user.id, decks);
+          }
+          clearTimeout(loadingTimer);
+          setLoading(false);
+        });
     }, [])
   );
 

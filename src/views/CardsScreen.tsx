@@ -1,7 +1,7 @@
 import NavigationBar from '../components/NavigationBar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import React, { View, Animated, PanResponder, StatusBar, AppState } from 'react-native';
-import { FAB, LinearProgress, makeStyles, Text, useTheme } from '@rneui/themed';
+import { Button, FAB, LinearProgress, makeStyles, Text, useTheme } from '@rneui/themed';
 import { SCREEN_HEIGHT, SCREEN_WIDTH, toSize } from '../helpers/scaling';
 import Card from '../components/Card';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -15,21 +15,34 @@ import LottieView from 'lottie-react-native';
 import { useTranslation } from 'react-i18next';
 import LocaleSwitch from '../components/LocaleSwitch';
 import { showToast } from '../components/CustomToast';
+import * as SystemNavigationBar from 'expo-navigation-bar';
+import { Audio } from 'expo-av';
+import { Sound } from 'expo-av/build/Audio';
+import { log } from '../helpers/logger';
 
 type ControlsProps = {
   onPressCross: () => void;
   onPressRotate: () => void;
   onPressCheck: () => void;
-  onPressShuffle: () => void;
+  onPlayAudio: () => void;
 };
 
-const Controls = ({ onPressCross, onPressRotate, onPressCheck, onPressShuffle }: ControlsProps) => {
+const MARGIN_TOP = 10;
+
+const Controls = ({ onPressCross, onPressRotate, onPressCheck, onPlayAudio }: ControlsProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
 
   return (
     <View style={styles.controls}>
       <FAB size="large" color="white" icon={<EntypoIcons name="cross" color="#FF3636" size={iconSize.sm} />} onPress={onPressCross} />
+      <FAB
+        size="large"
+        icon={<EntypoIcons name="sound" color={theme.colors.white} size={iconSize.sm} />}
+        color={theme.mode === 'dark' ? theme.colors.purple : theme.colors.orange}
+        style={{ marginLeft: theme.spacing.lg }}
+        onPress={onPlayAudio}
+      />
       <FAB
         style={{ marginLeft: theme.spacing.lg }}
         size="large"
@@ -38,13 +51,6 @@ const Controls = ({ onPressCross, onPressRotate, onPressCheck, onPressShuffle }:
           color: 'white',
         }}
         onPress={onPressRotate}
-      />
-      <FAB
-        size="large"
-        icon={<MaterialCommunityIcons name="shuffle" color={theme.colors.white} size={iconSize.sm} />}
-        color={theme.colors.purple}
-        style={{ marginLeft: theme.spacing.lg }}
-        onPress={onPressShuffle}
       />
       <FAB
         size="large"
@@ -86,29 +92,17 @@ const CardsScreen = ({ route }: NavProps) => {
   let flipRotation = 0;
   flipAnimation.addListener(({ value }) => (flipRotation = value));
 
-  const saveCardStatuses = () => {
-    Cache.getInstance()
-      .getCardStatuses(userId, deckId, setId)
-      .then(async (statuses) => {
-        if (statuses !== null) {
-          await FirebaseApp.getInstance().updateCardStatuses(userId, deckId, setId, statuses);
+  // audio
+  const [sound, setSound] = useState<Sound>();
+
+  useEffect(() => {
+    return sound
+      ? () => {
+          console.log('Unloading Sound');
+          sound.unloadAsync();
         }
-      });
-  };
-
-  const onPause = (nextAppState: string) => {
-    if (appState === 'active' && nextAppState.match(/inactive|background/)) {
-      saveCardStatuses();
-    }
-    setAppState(nextAppState);
-  };
-
-  function shuffleCards() {
-    for (let i = cards.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [cards[i], cards[j]] = [cards[j], cards[i]];
-    }
-  }
+      : undefined;
+  }, [sound]);
 
   useEffect(() => {
     // on create
@@ -123,6 +117,7 @@ const CardsScreen = ({ route }: NavProps) => {
       subscriptionInactive.remove();
       // @ts-expect-error remove() does exit
       subscriptionMemoryWarning.remove();
+      SystemNavigationBar.setBackgroundColorAsync(theme.colors.background);
     };
   }, []);
 
@@ -134,7 +129,9 @@ const CardsScreen = ({ route }: NavProps) => {
       }
       setLoading(false);
     };
+
     fetchData();
+    SystemNavigationBar.setBackgroundColorAsync(theme.colors.cardsBackground!);
   }, []);
 
   useEffect(() => {
@@ -157,6 +154,19 @@ const CardsScreen = ({ route }: NavProps) => {
       animationRef.current?.play();
     }
   }, [isCompleted]);
+
+  const playSound = async (path: string) => {
+    try {
+      const { sound } = await Audio.Sound.createAsync({ uri: path });
+      setSound(sound);
+      log('Playing sound');
+
+      await sound.playAsync();
+    } catch (error: any) {
+      log(error.message);
+      showToast("Couldn't play the audio. Network issue?", 'error');
+    }
+  };
 
   const flipToFront = () => {
     Animated.timing(flipAnimation, {
@@ -259,6 +269,30 @@ const CardsScreen = ({ route }: NavProps) => {
     }).start(() => removeCard(true));
   };
 
+  const saveCardStatuses = () => {
+    Cache.getInstance()
+      .getCardStatuses(userId, deckId, setId)
+      .then(async (statuses) => {
+        if (statuses !== null) {
+          await FirebaseApp.getInstance().updateCardStatuses(userId, deckId, setId, statuses);
+        }
+      });
+  };
+
+  const onPause = (nextAppState: string) => {
+    if (appState === 'active' && nextAppState.match(/inactive|background/)) {
+      saveCardStatuses();
+    }
+    setAppState(nextAppState);
+  };
+
+  function shuffleCards() {
+    for (let i = cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cards[i], cards[j]] = [cards[j], cards[i]];
+    }
+  }
+
   const fadeIn = () => {
     // Will change fadeAnim value to 1 in 5 seconds
     Animated.timing(fadeAnim, {
@@ -290,7 +324,7 @@ const CardsScreen = ({ route }: NavProps) => {
     })
   ).current;
 
-  const frontView = (text: string, isCompleted: boolean, example?: string) => {
+  const frontView = (text: string, isCompleted: boolean, example?: string, type?: string) => {
     return (
       // @ts-expect-error package resolution warning
       <Animated.View
@@ -302,7 +336,7 @@ const CardsScreen = ({ route }: NavProps) => {
           ...styles.front,
         }}
       >
-        <Card text={text} isTopView={true} isCompleted={isCompleted} example={example} />
+        <Card text={text} isTopView={true} isCompleted={isCompleted} example={example} type={type} />
       </Animated.View>
     );
   };
@@ -333,12 +367,12 @@ const CardsScreen = ({ route }: NavProps) => {
         {secondCard && (
           /* @ts-expect-error package resolution warning */
           <Animated.View key={secondCard.id} style={{ opacity: nextCardOpacity, transform: [{ scale: nextCardScale }], ...styles.cardContainer }}>
-            <Card text={secondCard.front} isCompleted={isCompleted} />
+            <Card text={secondCard.front} isCompleted={isCompleted} type={secondCard.type} />
           </Animated.View>
         )}
         <View>
           {backView(localeSwitch ? firstCard.backLocale : firstCard.back, isCompleted, firstCard.example)}
-          {frontView(firstCard.front, isCompleted)}
+          {frontView(firstCard.front, isCompleted, firstCard.example, firstCard.type)}
         </View>
       </>
     );
@@ -349,6 +383,21 @@ const CardsScreen = ({ route }: NavProps) => {
     <Animated.View style={{ ...styles.container, backgroundColor: backgroundColor }}>
       <StatusBar backgroundColor={theme.colors.cardsBackground} />
       <NavigationBar title="" style={{ backgroundColor: theme.colors.transparent }} />
+      <View style={styles.shuffleButtonContainer}>
+        <Button
+          radius={'xs'}
+          size={'lg'}
+          type="solid"
+          onPress={() => {
+            shuffleCards();
+            showToast(t('screens.cards.shuffle'));
+            setCurrentCard({ index: 0, isCorrect: false });
+          }}
+          buttonStyle={styles.shuffleButton}
+        >
+          <MaterialCommunityIcons name="shuffle" color={theme.colors.white} size={iconSize.sm} />
+        </Button>
+      </View>
       {isCompleted && (
         <>
           <LottieView ref={animationRef} loop={false} source={require('../assets/animation/confetti-animation.json')} style={styles.confetti} />
@@ -390,10 +439,13 @@ const CardsScreen = ({ route }: NavProps) => {
             onPressRotate={() => {
               flipRotation ? flipToBack() : flipToFront();
             }}
-            onPressShuffle={() => {
-              shuffleCards();
-              showToast(t('screens.cards.shuffle'));
-              setCurrentCard({ index: 0, isCorrect: false });
+            onPlayAudio={() => {
+              const audio = cards[currentCard.index].audio;
+              if (audio) {
+                playSound(audio);
+              } else {
+                showToast('No pronounciation exists for this card.', 'error');
+              }
             }}
           />
 
@@ -420,6 +472,18 @@ const CardsScreen = ({ route }: NavProps) => {
 const useStyles = makeStyles((theme) => ({
   container: {
     flex: 1,
+  },
+  shuffleButtonContainer: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    marginBottom: toSize((SCREEN_HEIGHT - (460 + STATUSBAR_HEIGHT + 80)) / 4 - MARGIN_TOP),
+  },
+  shuffleButton: {
+    backgroundColor: theme.mode === 'dark' ? '#744FA3' : '#5B61FF',
+    borderRadius: 0,
+    borderTopLeftRadius: 5,
+    borderBottomLeftRadius: 5,
   },
   confetti: {
     width: '100%',
@@ -448,7 +512,7 @@ const useStyles = makeStyles((theme) => ({
     height: toSize(400),
     left: 0,
     right: 0,
-    marginTop: toSize(60),
+    marginTop: toSize(60 - MARGIN_TOP),
     marginLeft: toSize(25),
     marginRight: toSize(25),
     padding: 10,
@@ -458,12 +522,12 @@ const useStyles = makeStyles((theme) => ({
   },
   correctGuess: {
     position: 'absolute',
-    top: toSize(70),
+    top: toSize(70 - MARGIN_TOP),
     left: SCREEN_WIDTH / 2 - 50,
   },
   wrongGuess: {
     position: 'absolute',
-    top: toSize(70),
+    top: toSize(70 - MARGIN_TOP),
     left: SCREEN_WIDTH / 2 - 75,
   },
   switchProgressContainer: {
@@ -489,7 +553,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: toSize((SCREEN_HEIGHT - (460 + STATUSBAR_HEIGHT + 80)) / 2),
+    marginBottom: toSize((SCREEN_HEIGHT - (460 + STATUSBAR_HEIGHT + 80) + MARGIN_TOP) / 2),
   },
   back: {
     backgroundColor: '#FDFFB4',
