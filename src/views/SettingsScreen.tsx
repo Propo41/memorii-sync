@@ -15,6 +15,7 @@ import { showToast } from '../components/CustomToast';
 import { useTranslation } from 'react-i18next';
 import { UserPreference } from '../models/dto/UserPreference';
 import { log } from '../helpers/logger';
+import * as NavigationBar from 'expo-navigation-bar';
 
 type MenuProps = {
   title: string;
@@ -81,6 +82,7 @@ export default function SettingsScreen({ navigation }: NavProps) {
     setDarkModeSwitch(darkModeSwitch ? false : true);
 
     await updatePreference(mode !== 'dark', language);
+    await NavigationBar.setBackgroundColorAsync(mode !== 'dark' ? theme.colors.violetShade! : theme.colors.white);
   };
 
   const onLanguageChange = async (lang: Language) => {
@@ -100,10 +102,11 @@ export default function SettingsScreen({ navigation }: NavProps) {
     try {
       await auth().signOut();
       await GoogleSignin.revokeAccess();
-      navigation.replace(NavRoutes.Login);
+      showToast('See you later!');
     } catch (error: any) {
       log('error signing out.', error);
     }
+    navigation.replace(NavRoutes.Login);
   };
 
   return (

@@ -18,7 +18,7 @@ export default function CustomToast({ position }: CustomToastProps) {
     error: (props: any) => <ErrorToast {...props} style={styles.errorStyle} text1Style={styles.errorText1} text2Style={styles.errorText2} />,
   };
 
-  return <Toast config={toastConfig} position={position} visibilityTime={5000} />;
+  return <Toast config={toastConfig} position={position} visibilityTime={3000} />;
 }
 
 export const showToast = (message: string, type: 'success' | 'error' = 'success') => {

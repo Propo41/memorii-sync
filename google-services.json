@@ -1,0 +1,39 @@
+{
+    "project_info": {
+        "project_number": "817622206422",
+        "project_id": "flashcards-7d7a3",
+        "storage_bucket": "flashcards-7d7a3.appspot.com"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:817622206422:android:f5e42fa39e4b2df3190677",
+                "android_client_info": {
+                    "package_name": "com.pixiuemstudios.flashcards"
+                }
+            },
+            "oauth_client": [
+                {
+                    "client_id": "817622206422-1fq5sa3glr5ejtunm6s7l5q7tpjrdhl1.apps.googleusercontent.com",
+                    "client_type": 3
+                }
+            ],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyDu5gpqOzSHF5FzaNXSDZE9Hhx4wg7TXXE"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": [
+                        {
+                            "client_id": "817622206422-1fq5sa3glr5ejtunm6s7l5q7tpjrdhl1.apps.googleusercontent.com",
+                            "client_type": 3
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}

@@ -11,6 +11,7 @@ import { FirebaseApp } from '../models/FirebaseApp';
 import { showToast } from '../components/CustomToast';
 import { log } from '../helpers/logger';
 import { useTranslation } from 'react-i18next';
+import * as NavigationBar from 'expo-navigation-bar';
 
 async function onGoogleButtonPress() {
   try {
@@ -25,6 +26,11 @@ async function onGoogleButtonPress() {
     // Sign-in the user with the credential
     return auth().signInWithCredential(googleCredential);
   } catch (error: any) {
+    if (error.message === 'NETWORK_ERROR') {
+      showToast("Couldn't sign in. Network issues?", 'error');
+    } else {
+      showToast(error.message, 'error');
+    }
     log('LoginScreen: onGoogleButtonPress', error);
   }
 
@@ -58,14 +64,18 @@ export default function LoginScreen({ navigation }: NavProps) {
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
 
-  useFocusEffect(React.useCallback(() => {}, []));
+  useFocusEffect(
+    React.useCallback(() => {
+      NavigationBar.setBackgroundColorAsync(theme.colors.background);
+    }, [])
+  );
 
   const onSignInPress = async () => {
     const res = await onGoogleButtonPress();
     setLoading(true);
 
     if (!res) {
-      showToast('Failed to login!');
+      setLoading(false);
       return;
     }
 
@@ -75,7 +85,7 @@ export default function LoginScreen({ navigation }: NavProps) {
         const { user } = res;
         const userDto = new User(user.uid, user.displayName!, user.email!, user.photoURL!, user.emailVerified, user.metadata?.creationTime);
 
-        userDto.decksPurchased = ['W1IOzaESOgZJRjsyOdVO', 'cIjHAzdFMZhZsErnSDn9', 'wScY3QOGTjM0cX7CLQV4', 'xY0fBfVJsioLPSoqoF4o'];
+        // userDto.decksPurchased = ['W1IOzaESOgZJRjsyOdVO', 'cIjHAzdFMZhZsErnSDn9', 'wScY3QOGTjM0cX7CLQV4', 'xY0fBfVJsioLPSoqoF4o'];
         await FirebaseApp.getInstance().createUser(user.uid, userDto);
         navigation.replace(NavRoutes.App);
       } else {
@@ -179,7 +189,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'row',
     textAlign: 'center',
     justifyContent: 'flex-start',
-    marginRight: 90,
     borderRadius: 20,
+    width: 300,
   },
 }));

@@ -67,20 +67,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged((user: FirebaseAuthTypes.User | null) => {
-      if (user) {
-        // signed in
-        setUser(user);
-      } else {
-        // signed out
-        setUser(null);
-      }
-      if (initializing) {
-        setInitializing(false);
-      }
-    });
-
-    return subscriber; // unsubscribe on unmount
+    const _user = auth().currentUser;
+    setUser(_user);
+    setInitializing(false);
   }, []);
 
   if (!fontsLoaded && initializing) {

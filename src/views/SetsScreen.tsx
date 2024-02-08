@@ -60,7 +60,7 @@ export default function SetsScreen({ navigation, route }: NavProps) {
     <View>
       <ScrollView showsVerticalScrollIndicator={false}>
         <NavigationBar title={t('screens.sets.title')} />
-        <View style={{ marginTop: theme.spacing.sm }}>
+        <View style={{ marginTop: theme.spacing.xs }}>
           {!loading && (
             <>
               {sets.map((set, index) => {
