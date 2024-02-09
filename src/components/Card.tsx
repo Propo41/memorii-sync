@@ -5,6 +5,7 @@ import { toFont } from '../helpers/scaling';
 import { FF_BOLD, FF_REGULAR } from '../theme/typography';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTranslation } from 'react-i18next';
+import Markdown from 'react-native-markdown-display';
 
 type CardProps = {
   text: string;
@@ -30,7 +31,7 @@ export default function Card({ text, type, isTopView = true, isCompleted, exampl
         {!isTopView && example && (
           <View style={styles.exampleContainer}>
             <Text style={styles.exampleTextTitle}>{t('screens.cards.example')}</Text>
-            <Text style={styles.exampleText}>{example}</Text>
+            <Markdown style={{ body: styles.exampleText }}>{example}</Markdown>
           </View>
         )}
       </View>
