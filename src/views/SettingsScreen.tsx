@@ -14,8 +14,8 @@ import { FirebaseApp } from '../models/FirebaseApp';
 import { showToast } from '../components/CustomToast';
 import { useTranslation } from 'react-i18next';
 import { UserPreference } from '../models/dto/UserPreference';
-import { log } from '../helpers/logger';
 import * as NavigationBar from 'expo-navigation-bar';
+import { log } from '../helpers/utility';
 
 type MenuProps = {
   title: string;

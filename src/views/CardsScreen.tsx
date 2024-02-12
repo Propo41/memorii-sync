@@ -18,7 +18,7 @@ import { showToast } from '../components/CustomToast';
 import * as SystemNavigationBar from 'expo-navigation-bar';
 import { Audio } from 'expo-av';
 import { Sound } from 'expo-av/build/Audio';
-import { log } from '../helpers/logger';
+import { log } from '../helpers/utility';
 
 type ControlsProps = {
   onPressCross: () => void;

@@ -1,7 +1,7 @@
-import { log } from '../helpers/logger';
 import { _Deck, _Set, _User, _UserPreference } from './dto';
 import firestore from '@react-native-firebase/firestore';
 import { fetch } from '@react-native-community/netinfo';
+import { log } from '../helpers/utility';
 
 interface FirebaseAppInterface {
   getUser(userId: string): Promise<_User | null>;
@@ -23,6 +23,8 @@ interface FirebaseAppInterface {
   getDeckStatus(userId: string, deckId: string): Promise<number | null>;
   getCardStatuses(userId: string, deckId: string, setId: string): Promise<Record<number, boolean> | null>;
   getSetStatuses(userId: string, deckId: string): Promise<Map<string, number>>;
+
+  addDeckToUser(deckId: string, userId: string): Promise<void>;
 }
 
 export class FirebaseApp implements FirebaseAppInterface {
@@ -47,10 +49,13 @@ export class FirebaseApp implements FirebaseAppInterface {
   async getUser(userId: string): Promise<_User | null> {
     try {
       const { isConnected } = await fetch();
-      const snapshot = await firestore().collection(this.collections.users).doc(userId).get({
-        source: isConnected? 'default' : 'cache',
-      });
-      
+      const snapshot = await firestore()
+        .collection(this.collections.users)
+        .doc(userId)
+        .get({
+          source: isConnected ? 'default' : 'cache',
+        });
+
       if (snapshot.exists) {
         return _User.transform(snapshot.data() as InstanceType<typeof _User>);
       }
@@ -101,9 +106,12 @@ export class FirebaseApp implements FirebaseAppInterface {
   async getDeck(deckId: string): Promise<_Deck | null> {
     try {
       const { isConnected } = await fetch();
-      const snapshot = await firestore().collection(this.collections.decks).doc(deckId).get({
-        source: isConnected? 'default' : 'cache',
-       });
+      const snapshot = await firestore()
+        .collection(this.collections.decks)
+        .doc(deckId)
+        .get({
+          source: isConnected ? 'default' : 'cache',
+        });
 
       if (snapshot.exists) {
         return _Deck.transform(snapshot.data() as InstanceType<typeof _Deck>);
@@ -261,5 +269,18 @@ export class FirebaseApp implements FirebaseAppInterface {
       log(error.message);
     }
     return statuses;
+  }
+
+  async addDeckToUser(deckId: string, userId: string) {
+    try {
+      await firestore()
+        .collection(this.collections.users)
+        .doc(userId)
+        .update({
+          decksCreated: firestore.FieldValue.arrayUnion(deckId),
+        });
+    } catch (error: any) {
+      log(error.message);
+    }
   }
 }

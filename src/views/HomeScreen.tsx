@@ -1,5 +1,5 @@
 import { useFocusEffect } from '@react-navigation/native';
-import { Avatar, makeStyles, useTheme, useThemeMode } from '@rneui/themed';
+import { Avatar, Image, Text, makeStyles, useTheme, useThemeMode } from '@rneui/themed';
 import React, { useCallback, useRef, useState } from 'react';
 import { ScrollView, StatusBar, View } from 'react-native';
 import Deck from '../components/Deck';
@@ -12,10 +12,9 @@ import { _Deck, _User } from '../models/dto';
 import { FirebaseApp } from '../models/FirebaseApp';
 import auth from '@react-native-firebase/auth';
 import LottieView from 'lottie-react-native';
-import { showToast } from '../components/CustomToast';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useTranslation } from 'react-i18next';
 import * as NavigationBar from 'expo-navigation-bar';
+import { kickUser } from '../helpers/utility';
 
 const fetchAndSaveDeck = async (deckId: string) => {
   const deck = await FirebaseApp.getInstance().getDeck(deckId);
@@ -51,6 +50,7 @@ export default function HomeScreen({ navigation }: NavProps) {
   const { setMode } = useThemeMode();
   const [_, setLanguage] = useState<string>('English');
   const { t, i18n } = useTranslation(); // i18n instance
+  const [isEmpty, setIsEmpty] = useState(false);
 
   const setUserPreference = async (user: _User) => {
     const { locale, isDarkMode } = user.preferences;
@@ -59,17 +59,6 @@ export default function HomeScreen({ navigation }: NavProps) {
 
     setMode(isDarkMode ? 'dark' : 'light');
     await NavigationBar.setBackgroundColorAsync(isDarkMode ? theme.colors.violetShade! : theme.colors.white);
-  };
-
-  const kickUser = async () => {
-    try {
-      showToast(t('screens.toast.sessionExpired'), 'error');
-      await auth().signOut();
-      await GoogleSignin.revokeAccess();
-      navigation.replace(NavRoutes.Login);
-    } catch (error) {
-      navigation.replace(NavRoutes.Login);
-    }
   };
 
   useFocusEffect(
@@ -99,13 +88,14 @@ export default function HomeScreen({ navigation }: NavProps) {
 
         await calculateDeckProgress(user.id, decksList);
         setDecks(decksList);
-        // clearTimeout(loadingTimer);
         animationRef.current?.pause();
+
+        return decksList;
       };
 
       const currentUser = auth().currentUser;
       if (!currentUser) {
-        kickUser();
+        kickUser(navigation, t);
         return;
       }
 
@@ -113,22 +103,25 @@ export default function HomeScreen({ navigation }: NavProps) {
         .getUser(currentUser.uid)
         .then(async (user) => {
           if (!user) {
-            await kickUser();
+            await kickUser(navigation, t);
             return;
           }
 
           const loadingTimer = setTimeout(() => {
             setLoading(true);
             animationRef.current?.play();
-          }, 200);
+          }, 500);
 
           setUser(user);
           setUserPreference(user);
-          if (decks.length === 0) {
-            fetchDecks(user);
-          } else {
-            await calculateDeckProgress(user.id, decks);
+
+          const res = await fetchDecks(user);
+          await calculateDeckProgress(user.id, decks);
+
+          if (res.length === 0) {
+            setIsEmpty(true);
           }
+
           clearTimeout(loadingTimer);
           setLoading(false);
         });
@@ -144,6 +137,14 @@ export default function HomeScreen({ navigation }: NavProps) {
           subtitle={t('screens.home.subtitle')}
           icon={<Avatar size={iconSize.lg} rounded source={{ uri: user?.profilePicture }} containerStyle={styles.avatar} />}
         />
+        {isEmpty && (
+          <View style={styles.notFoundContainer}>
+            <Image source={require('../assets/not-found.png')} style={styles.notFoundImage} />
+            <Text body1 style={styles.notFoundText}>
+              No decks yet. Buy one from the market or create one yourself!
+            </Text>
+          </View>
+        )}
         {!loading && (
           <>
             <View style={{ marginTop: theme.spacing.lg }}>
@@ -179,7 +180,7 @@ export default function HomeScreen({ navigation }: NavProps) {
   );
 }
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme) => ({
   avatar: {
     marginVertical: toSize(15),
   },
@@ -196,5 +197,11 @@ const useStyles = makeStyles(() => ({
   notFoundImage: {
     width: toSize(197),
     height: toSize(192),
+  },
+  notFoundText: {
+    textAlign: 'center',
+    color: theme.colors.text,
+    paddingHorizontal: 30,
+    marginTop: 10,
   },
 }));

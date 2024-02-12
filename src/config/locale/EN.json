@@ -36,8 +36,41 @@
             "example": "Example",
             "shuffle": "Shuffled the cards!"
         },
-        "myDecks": {},
-        "store": {},
+        "myDecks": {
+            "title": "My Decks",
+            "subtitle": "Edit or create decks",
+            "create_deck": "Create Deck",
+            "input": {
+                "enter_name": "Enter name",
+                "enter_bg_color": "Enter bg color",
+                "enter_fg_color": "Enter fg color",
+                "enter_track_color": "Enter track color",
+                "upload_tsv_file": "Upload .tsv file",
+                "updating_set_cards_alert": "Uploading again will replace the existing one."
+            },
+            "deck_appr": "Deck Appearance",
+            "set_appr": "Set Appearance",
+            "cards": "Cards",
+            "sets": "Sets",
+            "instructions": "See the instructions on how to make a .tsv file",
+            "instructions2": "See the instructions",
+            "empty_my_decks": "No decks yet. Press the button below to create one yourself!",
+            "empty_sets": "No sets added yet!",
+            "create_set": "Create Set",
+            "update_set": "Update Set"
+        },
+        "store": {
+            "view": "View",
+            "description": "Description",
+            "price": "Price",
+            "sample": "Sample",
+            "word": "Word",
+            "meaning": "Meaning",
+            "meaning_2": "Meaning 2",
+            "example": "Example",
+            "audio": "Audio",
+            "purchase": "Purchase"
+        },
         "toast": {
             "sessionExpired": "Session expired. Please login again.",
             "cacheExpired": "Data was deleted. Try restaring the app!"

@@ -8,8 +8,9 @@ export class User {
   isEmailVerified: boolean = false;
   createdAt?: string;
   preferences: UserPreference = new UserPreference();
-  decksCreated?: string[] = [];
-  decksPurchased?: string[] = [];
+  decksCreated: string[] = [];
+  decksPurchased: string[] = [];
+  isPremium: boolean = false;
 
   constructor(id: string, name: string, email: string, profilePicture: string, isEmailVerified?: boolean, createdAt?: string) {
     this.id = id;

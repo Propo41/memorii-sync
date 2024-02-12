@@ -7,16 +7,20 @@ export enum NavRoutes {
   Cards = 'Cards',
   Test = 'Test',
   Login = 'Login',
+  Store = 'Store',
+  CreateDeck = 'CreateDeck',
 }
 
 export enum BottomNavRoutes {
   Home = 'Home',
-  Store = 'Store',
+  Stores = 'Stores',
   MyDecks = 'MyDecks',
   Settings = 'Settings',
 }
 
 const NavProps: Record<string, undefined> = Object.keys(NavRoutes).reduce((obj, key) => ({ ...obj, [key]: undefined }), {});
+
+export type NavScreenProps<RouteName extends keyof NavParamList> = NativeStackScreenProps<NavParamList, RouteName>;
 
 const BottomTabProps: Record<string, undefined> = Object.keys(BottomNavRoutes).reduce((obj, key) => ({ ...obj, [key]: undefined }), {});
 

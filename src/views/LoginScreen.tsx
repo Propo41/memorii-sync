@@ -9,9 +9,9 @@ import auth from '@react-native-firebase/auth';
 import { User } from '../models/dto/User';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { showToast } from '../components/CustomToast';
-import { log } from '../helpers/logger';
 import { useTranslation } from 'react-i18next';
 import * as NavigationBar from 'expo-navigation-bar';
+import { log } from '../helpers/utility';
 
 async function onGoogleButtonPress() {
   try {

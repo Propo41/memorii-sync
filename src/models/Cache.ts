@@ -1,4 +1,4 @@
-import { log } from '../helpers/logger';
+import { log } from '../helpers/utility';
 import { _Deck, _User } from './dto';
 import EncryptedStorage from 'react-native-encrypted-storage';
 
