@@ -1,6 +1,5 @@
 import { readFile, writeFile } from 'fs';
 import axios from 'axios';
-import convert from 'xml-js';
 
 const readFromFile = (path) => {
   return new Promise((resolve, reject) => {

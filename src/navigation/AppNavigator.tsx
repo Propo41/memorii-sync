@@ -1,9 +1,10 @@
-import { CardsScreen, LoginScreen, SetsScreen } from '../views';
+import { CardsScreen, LoginScreen, SetsScreen, StoreScreen } from '../views';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BottomNavigator from './BottomNavigator';
 import { NavParamList, NavRoutes } from '../config/routes';
 import { makeStyles } from '@rneui/themed';
 import React from 'react';
+import CreateDeckScreen from '../views/CreateDeckScreen';
 
 const RootStack = createNativeStackNavigator<NavParamList>();
 
@@ -22,6 +23,8 @@ export default function AppNavigator({ initialRoute }: AppNavigatorProps) {
       <RootStack.Screen name={NavRoutes.Sets} component={SetsScreen} options={styles} />
       <RootStack.Screen name={NavRoutes.Cards} component={CardsScreen} options={styles} />
       <RootStack.Screen name={NavRoutes.Login} component={LoginScreen} options={styles} />
+      <RootStack.Screen name={NavRoutes.Store} component={StoreScreen} options={styles} />
+      <RootStack.Screen name={NavRoutes.CreateDeck} component={CreateDeckScreen} options={styles} />
     </RootStack.Navigator>
   );
 }
