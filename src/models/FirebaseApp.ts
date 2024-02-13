@@ -14,11 +14,6 @@ interface FirebaseAppInterface {
   updateDeck(deckId: string, deck: _Deck): Promise<void>;
   deleteDeck(userId: string, deckId: string): Promise<void>;
 
-  createSet(set: _Set): Promise<string | null>;
-  getSet(setId: string): Promise<_Set | null>;
-  updateSet(setId: string, set: _Set): Promise<void>;
-  deleteSet(userId: string, deckId: string, setId: string): Promise<void>;
-
   updateCardStatuses(userId: string, deckId: string, setId: string, statuses: Record<number, boolean>): Promise<void>;
   getDeckStatus(userId: string, deckId: string): Promise<number | null>;
   getCardStatuses(userId: string, deckId: string, setId: string): Promise<Record<number, boolean> | null>;
@@ -53,7 +48,7 @@ export class FirebaseApp implements FirebaseAppInterface {
         .collection(this.collections.users)
         .doc(userId)
         .get({
-          source: isConnected ? 'default' : 'cache',
+          source: isConnected ? 'server' : 'cache',
         });
 
       if (snapshot.exists) {
@@ -114,7 +109,9 @@ export class FirebaseApp implements FirebaseAppInterface {
         });
 
       if (snapshot.exists) {
-        return _Deck.transform(snapshot.data() as InstanceType<typeof _Deck>);
+        const d = _Deck.transform(snapshot.data() as InstanceType<typeof _Deck>);
+        d.id = deckId;
+        return d;
       }
     } catch (error: any) {
       log(error.message);
@@ -149,43 +146,6 @@ export class FirebaseApp implements FirebaseAppInterface {
     }
 
     return null;
-  }
-
-  async getSet(setId: string): Promise<_Set | null> {
-    try {
-      const snapshot = await firestore().collection(this.collections.sets).doc(setId).get({
-        source: 'cache',
-      });
-      if (snapshot.exists) {
-        return _Set.transform(snapshot.data() as InstanceType<typeof _Set>);
-      }
-    } catch (error: any) {
-      log(error.message);
-    }
-
-    return null;
-  }
-
-  async updateSet(setId: string, set: _Set): Promise<void> {
-    try {
-      await firestore().collection(this.collections.sets).doc(setId).update(set);
-    } catch (error: any) {
-      log(error.message);
-    }
-  }
-
-  async deleteSet(userId: string, deckId: string, setId: string): Promise<void> {
-    try {
-      await firestore().collection(this.collections.decks).doc(setId).delete();
-      await firestore()
-        .collection(this.collections.completed)
-        .doc(`${userId}.${deckId}`)
-        .update({
-          [setId]: firestore.FieldValue.delete(),
-        });
-    } catch (error: any) {
-      log(error.message);
-    }
   }
 
   async updateCardStatuses(userId: string, deckId: string, setId: string, statuses: Record<number, boolean>): Promise<void> {

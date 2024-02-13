@@ -48,6 +48,7 @@
                 "upload_tsv_file": "Upload .tsv file",
                 "updating_set_cards_alert": "Uploading again will replace the existing one."
             },
+            "edit_deck": "Edit Deck",
             "deck_appr": "Deck Appearance",
             "set_appr": "Set Appearance",
             "cards": "Cards",

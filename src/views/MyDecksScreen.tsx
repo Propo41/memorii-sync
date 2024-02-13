@@ -163,7 +163,7 @@ export default function MyDecks({ navigation }: NavProps) {
   const [isEmpty, setIsEmpty] = useState(false);
   const animationRef = useRef<LottieView>(null);
   const [user, setUser] = useState<_User>();
-  const [showPricingCard, setShowPricingCard] = useState(true);
+  const [showPricingCard, setShowPricingCard] = useState(false);
 
   const [decks, setDecks] = useState<_Deck[]>([]);
   const { theme } = useTheme();
@@ -200,6 +200,14 @@ export default function MyDecks({ navigation }: NavProps) {
           if (!user) {
             kickUser(navigation, t);
             return;
+          }
+
+          console.log('user.isPremium', user.isPremium);
+
+          if (user.isPremium) {
+            setShowPricingCard(false);
+          } else {
+            setShowPricingCard(true);
           }
 
           const loadingTimer = setTimeout(() => {

@@ -17,7 +17,10 @@ export class Deck {
   static transform(_deck: InstanceType<typeof Deck>): Deck {
     const deck = new Deck(_deck.name);
     deck.appearance = Appearance.transform(_deck.appearance);
-    deck.sets = _deck.sets.map(set => Set.transform(set));
+    deck.sets = _deck.sets.map((set, i) => {
+      set._id = i;
+      return Set.transform(set);
+    });
     deck.isDisabled = _deck.isDisabled;
 
     return deck;

@@ -1,11 +1,11 @@
 import BottomSheet, { BottomSheetBackdrop, useBottomSheetTimingConfigs } from '@gorhom/bottom-sheet';
-import { Button, makeStyles, Text, useTheme } from '@rneui/themed';
+import { Button, FAB, makeStyles, Overlay, Text, useTheme } from '@rneui/themed';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, Linking, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { Easing } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTranslation } from 'react-i18next';
-import { _Appearance, _Set } from '../models/dto';
+import { _Appearance, _Card, _Set } from '../models/dto';
 import CustomTextInput from './CustomTextInput';
 import { margins } from '../config';
 import { FF_REGULAR } from '../theme/typography';
@@ -15,6 +15,8 @@ import * as FileSystem from 'expo-file-system';
 import { showToast } from './CustomToast';
 import { rawToCards } from '../helpers/utility';
 import { instructionUrl } from '../config/conf';
+import ColorPicker from 'react-native-wheel-color-picker';
+import Entypo from 'react-native-vector-icons/Entypo';
 
 type CreateSetDialog = {
   onAddSetClick: (set: _Set) => boolean;
@@ -35,6 +37,61 @@ type File = {
   type: string;
 };
 
+type DummySetItemProps = {
+  name?: string;
+  bgColor?: string;
+  fgColor?: string;
+  mt: number;
+  onEditColorPress: (type: string) => void;
+};
+
+const DummySetItem = ({ name, bgColor, fgColor, mt, onEditColorPress }: DummySetItemProps) => {
+  const { theme } = useTheme();
+  const styles = useStyles();
+  const { t } = useTranslation();
+
+  return (
+    <View
+      style={{
+        marginTop: mt || 0,
+        ...styles.dsContainer,
+      }}
+    >
+      <View style={{ ...styles.dsContainer2, backgroundColor: bgColor || theme.colors.lightAsh }}>
+        <FAB
+          size="small"
+          icon={<Entypo name="palette" color={theme.colors.white} size={toSize(15)} />}
+          color={theme.colors.black}
+          style={styles.dsFab1}
+          onPress={() => {
+            onEditColorPress('bgColor');
+          }}
+        />
+
+        <View
+          style={{
+            backgroundColor: fgColor || theme.colors.ash,
+            ...styles.dsContainer3,
+          }}
+        >
+          <FAB
+            size="small"
+            icon={<Entypo name="palette" color={theme.colors.white} size={toSize(15)} />}
+            color={theme.colors.black}
+            style={styles.dsFab2}
+            onPress={() => {
+              onEditColorPress('fgColor');
+            }}
+          />
+          <Text head3 style={styles.dsText}>
+            {name || t('screens.myDecks.input.enter_name')}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+};
+
 const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDialog) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['63%'], []);
@@ -44,6 +101,17 @@ const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDi
   const [input, setInput] = useState<InputFields>({});
   const [doc, setDoc] = useState<File | null>(null);
   const [isKeyboardShowing, setKeyboardShowing] = useState(false);
+  const [showColorModal, setShowColorModal] = useState({
+    open: false,
+    type: 'bgColor',
+  });
+  const [currentColor, setCurrentColor] = useState('#ffffff'); // Initial color state
+  const pickerRef = useRef(null);
+
+  const onColorChangeComplete = (color: string) => {
+    setCurrentColor(color);
+    onInputChange(showColorModal.type, color);
+  };
 
   useEffect(() => {
     if (dialogOpen.set) {
@@ -116,13 +184,20 @@ const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDi
 
   const onCreateClick = async () => {
     try {
-      if (!doc) {
+      if (!doc && dialogOpen.set?.cards.length === 0) {
         showToast('No card file uploaded.', 'error');
         return;
       }
 
-      const fileContent = await FileSystem.readAsStringAsync(doc.uri);
-      const cards = await rawToCards(fileContent);
+      let cards: _Card[] = [];
+      if (doc) {
+        const fileContent = await FileSystem.readAsStringAsync(doc!.uri);
+        cards = await rawToCards(fileContent);
+      }
+
+      if (dialogOpen.set?.cards.length) {
+        cards = dialogOpen.set.cards;
+      }
 
       const { name, bgColor, fgColor } = input;
       if (!name || !bgColor || !fgColor) {
@@ -135,7 +210,7 @@ const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDi
       newSet.cards = cards;
 
       if (onAddSetClick(newSet) !== false) {
-        showToast(`Total ${cards.length} cards uploaded!`);
+        dialogOpen.editing ? showToast(`Set updated!`) : showToast(`Total ${newSet.cards.length} cards uploaded!`);
         onDialogClose();
         Keyboard.dismiss();
         setInput({});
@@ -145,6 +220,13 @@ const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDi
       showToast(`Something went wrong: ${error.message}`);
       console.log('Error reading file:', error);
     }
+  };
+
+  const onEditColorPress = (type: string) => {
+    setShowColorModal({
+      open: true,
+      type: type,
+    });
   };
 
   return (
@@ -172,20 +254,7 @@ const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDi
             {t('screens.myDecks.set_appr')}
           </Text>
 
-          <CustomTextInput
-            name={'bgColor'}
-            value={input.bgColor!}
-            onChange={onInputChange}
-            placeholder={t('screens.myDecks.input.enter_bg_color')}
-            mt={styles.mt1.marginTop}
-          />
-          <CustomTextInput
-            name={'fgColor'}
-            value={input.fgColor!}
-            onChange={onInputChange}
-            placeholder={t('screens.myDecks.input.enter_fg_color')}
-            mt={styles.mt2.marginTop}
-          />
+          <DummySetItem name={input.name} fgColor={input.fgColor} bgColor={input.bgColor} onEditColorPress={onEditColorPress} mt={theme.spacing.xl} />
 
           <Text body1_bold style={{ color: theme.colors.text, ...styles.mt0 }}>
             {t('screens.myDecks.cards')}
@@ -225,6 +294,32 @@ const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDi
           />
         </View>
       </TouchableWithoutFeedback>
+      <Overlay
+        isVisible={showColorModal.open}
+        onBackdropPress={() => {
+          setShowColorModal({
+            ...showColorModal,
+            open: false,
+          });
+        }}
+        overlayStyle={styles.overlay}
+      >
+        <View style={{ ...styles.modalContainer }}>
+          <ColorPicker
+            ref={pickerRef}
+            color={currentColor}
+            onColorChangeComplete={onColorChangeComplete}
+            thumbSize={30}
+            sliderSize={40}
+            noSnap={true}
+            row={false}
+            useNativeDriver={false}
+            useNativeLayout={false}
+            sliderHidden={true}
+            swatches={false}
+          />
+        </View>
+      </Overlay>
     </BottomSheet>
   );
 };
@@ -295,6 +390,46 @@ const useStyles = makeStyles((theme) => ({
   createBtnTitle: {
     fontFamily: FF_REGULAR,
     fontSize: toFont(18),
+  },
+  modalContainer: {
+    padding: toSize(20),
+    height: toSize(220),
+  },
+  overlay: {
+    borderRadius: 20,
+    backgroundColor: theme.colors.ash,
+  },
+  dsContainer: {
+    borderRadius: 10,
+    height: 80,
+  },
+  dsContainer2: {
+    height: 80,
+    borderRadius: 10,
+  },
+  dsFab1: {
+    marginRight: theme.spacing.lg,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  dsContainer3: {
+    width: 190,
+    height: 80,
+    borderRadius: 10,
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  dsFab2: {
+    marginLeft: theme.spacing.lg,
+    zIndex: 10,
+  },
+  dsText: {
+    color: theme.colors.white,
+    marginHorizontal: 10,
+    marginBottom: 10,
+    marginTop: 10,
   },
 }));
 
