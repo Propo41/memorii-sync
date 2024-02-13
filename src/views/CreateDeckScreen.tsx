@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Keyboard, ScrollView, View } from 'react-native';
-import { Button, FAB, Text, makeStyles, useTheme } from '@rneui/themed';
+import { Button, FAB, Overlay, Text, makeStyles, useTheme } from '@rneui/themed';
 import NavigationBar from '../components/NavigationBar';
 import { _Appearance, _Deck, _Set } from '../models/dto';
 import { useTranslation } from 'react-i18next';
 import CustomTextInput from '../components/CustomTextInput';
 import { margins } from '../config';
 import Entypo from 'react-native-vector-icons/Entypo';
-import { toFont, toSize } from '../helpers/scaling';
+import { SCREEN_HEIGHT, SCREEN_WIDTH, toFont, toSize } from '../helpers/scaling';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { FF_REGULAR } from '../theme/typography';
 import * as SystemNavigationBar from 'expo-navigation-bar';
@@ -17,12 +17,73 @@ import { FirebaseApp } from '../models/FirebaseApp';
 import auth from '@react-native-firebase/auth';
 import { kickUser } from '../helpers/utility';
 import { NavProps } from '../config/routes';
+import ColorPicker from 'react-native-wheel-color-picker';
 
 type InputFields = {
+  id?: string;
   name?: string;
   trackColor?: string;
   bgColor?: string;
   fgColor?: string;
+};
+
+type DummyDeckItemProps = {
+  name?: string;
+  bgColor?: string;
+  fgColor?: string;
+  trackColor?: string;
+  mt?: number;
+  onEditColorPress: (type: string) => void;
+};
+
+const DummyDeckItem = ({ name, bgColor, fgColor, trackColor, mt, onEditColorPress }: DummyDeckItemProps) => {
+  const { theme } = useTheme();
+  const styles = useStyles();
+  const { t } = useTranslation();
+
+  return (
+    <View style={{ ...styles.dummyDeckContainer, backgroundColor: bgColor || theme.colors.ash, marginTop: mt || 0 }}>
+      <FAB
+        size="small"
+        icon={<Entypo name="palette" color={theme.colors.white} size={toSize(15)} />}
+        color={theme.colors.black}
+        style={styles.dummyDeckFab1}
+        onPress={() => {
+          onEditColorPress('bgColor');
+        }}
+      />
+      <Text head3 style={styles.dummyDeckText}>
+        {name || t('screens.myDecks.input.enter_name')}
+      </Text>
+      <View style={{ ...styles.dummyDeckContainer2, backgroundColor: trackColor || theme.colors.white }}>
+        <FAB
+          size="small"
+          icon={<Entypo name="palette" color={theme.colors.white} size={toSize(15)} />}
+          color={theme.colors.black}
+          style={styles.dummyDeckFab2}
+          onPress={() => {
+            onEditColorPress('fgColor');
+          }}
+        />
+        <FAB
+          size="small"
+          icon={<Entypo name="palette" color={theme.colors.white} size={toSize(15)} />}
+          color={theme.colors.black}
+          style={styles.dummyDeckFab3}
+          onPress={() => {
+            onEditColorPress('trackColor');
+          }}
+        />
+
+        <View
+          style={{
+            ...styles.dummyDeckContainer3,
+            backgroundColor: fgColor || theme.colors.grey1,
+          }}
+        />
+      </View>
+    </View>
+  );
 };
 
 type SetItemProps = {
@@ -68,12 +129,31 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     set: null,
   });
   const [isKeyboardShowing, setKeyboardShowing] = useState(false);
+  const [showColorModal, setShowColorModal] = useState({
+    open: false,
+    type: 'bgColor',
+  });
+  const [currentColor, setCurrentColor] = useState('#ffffff'); // Initial color state
+  const pickerRef = useRef(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const onColorChangeComplete = (color: string) => {
+    setCurrentColor(color);
+    onInputChange(showColorModal.type, color);
+  };
 
   useEffect(() => {
     // @ts-expect-error don't know how to fix it
-    const { name, appearance, sets } = route?.params?.deck as _Deck;
-    setInput({ name, bgColor: appearance.bgColor, fgColor: appearance.fgColor, trackColor: appearance.trackColor });
-    setSets(sets);
+    if (route?.params?.deck) {
+      setIsEditing(true);
+
+      // @ts-expect-error don't know how to fix it
+      const { id, name, appearance, sets } = route?.params?.deck as _Deck;
+      console.log('id:', id);
+
+      setInput({ id: id, name, bgColor: appearance.bgColor, fgColor: appearance.fgColor, trackColor: appearance.trackColor });
+      setSets(sets || []);
+    }
 
     SystemNavigationBar.setBackgroundColorAsync(theme.colors.purple!);
 
@@ -97,17 +177,28 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
   };
 
   const onSetAdded = (set: _Set) => {
-    const isSetExist = sets.some((_set) => _set.name === set.name);
-    if (isSetExist) {
-      showToast('Please choose a different set name', 'error');
-      return false;
+    if (!dialogOpen.editing) {
+      const isSetExist = sets.some((_set) => _set.name === set.name);
+      if (isSetExist) {
+        showToast('Please choose a different set name', 'error');
+        return false;
+      }
     }
-    setSets([...sets, set]);
+
+    let updatedSets = [...sets, set];
+    if (dialogOpen.editing) {
+      updatedSets = sets.map((_set) => {
+        return _set._id === set._id ? set : _set;
+      });
+    }
+
+    console.log(set.name);
+
+    setSets(updatedSets);
     return true;
   };
 
   const onCreateDeck = async () => {
-    console.log('creating deck');
     const { name, bgColor, fgColor, trackColor } = input;
 
     if (!name || !bgColor || !fgColor || !trackColor) {
@@ -129,6 +220,12 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
       return;
     }
 
+    if (isEditing) {
+      await FirebaseApp.getInstance().updateDeck(input.id!, newDeck);
+      showToast('Edited deck!');
+      return;
+    }
+
     const deckId = await FirebaseApp.getInstance().createDeck(newDeck);
     if (deckId) {
       await FirebaseApp.getInstance().addDeckToUser(deckId, currentUser.uid);
@@ -138,6 +235,13 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     }
 
     showToast('Added deck!');
+  };
+
+  const onEditColorPress = (type: string) => {
+    setShowColorModal({
+      open: true,
+      type: type,
+    });
   };
 
   return (
@@ -150,26 +254,13 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
             {t('screens.myDecks.deck_appr')}
           </Text>
 
-          <CustomTextInput
-            name={'bgColor'}
-            value={input.bgColor!}
-            onChange={onInputChange}
-            placeholder={t('screens.myDecks.input.enter_bg_color')}
-            mt={styles.mt1.marginTop}
-          />
-          <CustomTextInput
-            name={'fgColor'}
-            value={input.fgColor!}
-            onChange={onInputChange}
-            placeholder={t('screens.myDecks.input.enter_fg_color')}
-            mt={styles.mt2.marginTop}
-          />
-          <CustomTextInput
-            name={'trackColor'}
-            value={input.trackColor!}
-            onChange={onInputChange}
-            placeholder={t('screens.myDecks.input.enter_track_color')}
-            mt={styles.mt2.marginTop}
+          <DummyDeckItem
+            name={input.name}
+            mt={theme.spacing.xl}
+            bgColor={input.bgColor}
+            trackColor={input.trackColor}
+            fgColor={input.fgColor}
+            onEditColorPress={onEditColorPress}
           />
 
           <View style={styles.setTitle}>
@@ -226,7 +317,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
       </ScrollView>
 
       <Button
-        title={t('screens.myDecks.create_deck')}
+        title={isEditing ? t('screens.myDecks.edit_deck') : t('screens.myDecks.create_deck')}
         titleStyle={styles.createBtnTitle}
         buttonStyle={styles.createBtn}
         // eslint-disable-next-line react-native/no-inline-styles
@@ -241,6 +332,33 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
         }}
         onAddSetClick={onSetAdded}
       />
+
+      <Overlay
+        isVisible={showColorModal.open}
+        onBackdropPress={() => {
+          setShowColorModal({
+            ...showColorModal,
+            open: false,
+          });
+        }}
+        overlayStyle={styles.overlayStyle}
+      >
+        <View style={{ ...styles.modalContainer }}>
+          <ColorPicker
+            ref={pickerRef}
+            color={currentColor}
+            onColorChangeComplete={onColorChangeComplete}
+            thumbSize={30}
+            sliderSize={40}
+            noSnap={true}
+            row={false}
+            useNativeDriver={false}
+            useNativeLayout={false}
+            sliderHidden={true}
+            swatches={false}
+          />
+        </View>
+      </Overlay>
     </View>
   );
 }
@@ -298,4 +416,51 @@ const useStyles = makeStyles((theme) => ({
     fontFamily: FF_REGULAR,
     fontSize: toFont(18),
   },
+  modalContainer: {
+    padding: toSize(20),
+    height: toSize(220),
+  },
+  overlayStyle: {
+    borderRadius: 20,
+    backgroundColor: theme.colors.ash,
+  },
+  dummyDeckContainer: {
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+    borderRadius: 10,
+  },
+  dummyDeckFab1: {
+    marginRight: theme.spacing.lg,
+    marginTop: theme.spacing.lg,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    zIndex: 10,
+  },
+  dummyDeckText: {
+    color: theme.colors.white,
+    marginHorizontal: 10,
+    marginBottom: 10,
+  },
+  dummyDeckFab2: {
+    marginLeft: theme.spacing.lg,
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    zIndex: 10,
+  },
+  dummyDeckFab3: {
+    marginRight: theme.spacing.lg,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  dummyDeckContainer3: {
+    width: 150,
+    height: 50,
+    borderRadius: 10,
+  },
+  dummyDeckContainer2: { height: 50, marginHorizontal: 10, borderRadius: 10 },
 }));

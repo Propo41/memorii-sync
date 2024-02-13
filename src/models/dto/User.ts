@@ -27,6 +27,7 @@ export class User {
     user.preferences = UserPreference.transform(_user.preferences);
     user.decksCreated = _user.decksCreated;
     user.decksPurchased = _user.decksPurchased;
+    user.isPremium = _user.isPremium;
 
     return user;
   }

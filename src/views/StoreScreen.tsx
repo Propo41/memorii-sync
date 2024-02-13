@@ -35,6 +35,8 @@ const SampleCard = ({ word, value1, value2, example, audio, onNextClick, onPrevC
   // audio
   const [sound, setSound] = useState<Sound>();
 
+  console.log(word);
+
   useEffect(() => {
     return sound
       ? () => {
@@ -62,7 +64,7 @@ const SampleCard = ({ word, value1, value2, example, audio, onNextClick, onPrevC
 
   return (
     <View style={styles.cardContainer}>
-      <Text body1_bold> {t('screens.store.word')}</Text>
+      <Text body1_bold>{t('screens.store.word')}</Text>
       <Text body1>{word}</Text>
 
       <Text body1_bold style={styles.titleSpacing}>
@@ -210,7 +212,7 @@ const useStyles = makeStyles((theme) => ({
     height: '100%',
   },
   container: {
-    marginHorizontal: margins.window_hor,
+    marginHorizontal: margins.window_hor + 5,
     marginTop: theme.spacing.xs,
     paddingBottom: toSize(80),
   },
