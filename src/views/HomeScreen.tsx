@@ -195,8 +195,8 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: 200,
   },
   notFoundImage: {
-    width: toSize(197),
-    height: toSize(192),
+    width: toSize(150),
+    height: toSize(150),
   },
   notFoundText: {
     textAlign: 'center',

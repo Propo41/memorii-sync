@@ -254,8 +254,8 @@ export default function MyDecks({ navigation }: NavProps) {
         {showPricingCard === true && <PricingCard onPricingSelect={onPricingSelect} />}
         {isEmpty && (
           <View style={styles.notFoundContainer}>
-            <Image source={require('../assets/not-found.png')} style={styles.notFoundImage} />
-            <Text body1 style={styles.notFoundText}>
+            <Image source={require('../assets/not-found.png')} style={styles.emptyImage} />
+            <Text body1 style={styles.emptyText}>
               {t('screens.myDecks.empty_my_decks')}
             </Text>
             <Text
@@ -331,7 +331,7 @@ const useStyles = makeStyles((theme) => ({
     alignSelf: 'center',
     marginBottom: 200,
   },
-  notFoundImage: {
+  emptyImage: {
     width: toSize(150),
     height: toSize(150),
   },
@@ -348,7 +348,7 @@ const useStyles = makeStyles((theme) => ({
     color: theme.colors.text,
     marginTop: 30,
   },
-  notFoundText: {
+  emptyText: {
     textAlign: 'center',
     color: theme.colors.text,
     paddingHorizontal: 30,
