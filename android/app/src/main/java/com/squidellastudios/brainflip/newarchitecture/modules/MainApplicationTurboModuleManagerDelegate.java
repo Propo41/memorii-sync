@@ -1,4 +1,4 @@
-package com.pixiuemstudios.flashcards.newarchitecture.modules;
+package com.squidellastudios.brainflip.newarchitecture.modules;
 
 import com.facebook.jni.HybridData;
 import com.facebook.react.ReactPackage;

@@ -1,4 +1,4 @@
-package com.pixiuemstudios.flashcards;
+package com.squidellastudios.brainflip;
 
 import android.os.Build;
 import android.os.Bundle;
