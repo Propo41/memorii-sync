@@ -77,14 +77,13 @@ export default function SetsScreen({ navigation, route }: NavProps) {
                     mb={index === sets.length - 1 ? 70 : 0}
                     fgColor={fgColor}
                     bgColor={bgColor}
-                    onSetPress={() => {                      
+                    onSetPress={() => {
                       // @ts-expect-error cant fix this ts error
                       navigation.push(NavRoutes.Cards, {
                         deckId: deckId,
                         setId: index,
                         cards: cards,
                         userId: auth().currentUser!.uid,
-                        localesSupported: set.localesSupported,
                       });
                     }}
                   />

@@ -16,7 +16,7 @@ import { useTheme } from '@rneui/themed';
 import { BOTTOM_NAV_HEIGHT, iconSize, margins } from '../config';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
-import { instructionUrl } from '../config/conf';
+import { INSTRUCTION_URL } from '../config/conf';
 import { FF_REGULAR } from '../theme/typography';
 import Icon2 from 'react-native-vector-icons/MaterialIcons';
 
@@ -78,6 +78,28 @@ const PricingCard = ({ onPricingSelect }: PricingCardProps) => {
   const { theme } = useTheme();
   const [selection, setSelection] = useState(0);
   const [pricing, _] = useState<Pricing[]>(getPricingCards());
+
+  // useEffect(() => {
+  //   const setup = async () => {
+  //     // if (Platform.OS == 'android') {
+  //     //   await Purchases.configure({ apiKey: REVENUECAT_GOOGLE_API_KEY, appUserID: REVENUECAT_USER_ID });
+  //     // }
+  //     // const offerings = await Purchases.getProducts(['brainflip.access'], 'NON_SUBSCRIPTION');
+  //     // console.log('offerings', offerings);
+  //     // await Purchases.purchaseStoreProduct(offerings[0]);
+  //     // if (offerings.current !== null && offerings.current.availablePackages.length !== 0) {
+  //     // Display packages for sale
+  //     // }
+  //     // console.log(offerings);
+  //     // setCurrentOffering(offerings.current);
+  //   };
+
+  //   Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+
+  //   setup().catch((e) => {
+  //     console.log(e);
+  //   });
+  // }, []);
 
   return (
     <View style={styles.pricingCardContainer}>
@@ -219,6 +241,8 @@ export default function MyDecks({ navigation }: NavProps) {
           const res = await fetchDecks(user);
           if (res.length === 0) {
             setIsEmpty(true);
+          } else {
+            setIsEmpty(false);
           }
 
           clearTimeout(loadingTimer);
@@ -240,10 +264,13 @@ export default function MyDecks({ navigation }: NavProps) {
       return;
     }
 
-    if (user.decksCreated.length < 2 && !user?.isPremium) {
-      setShowPricingCard(true);
-    } else {
+    if (user.decksCreated.length === 0 && !user?.isPremium) {
+      setShowPricingCard(false);
       navigation.push(NavRoutes.CreateDeck);
+    } else if (user.isPremium) {
+      navigation.push(NavRoutes.CreateDeck);
+    } else {
+      setShowPricingCard(true);
     }
   };
 
@@ -254,15 +281,15 @@ export default function MyDecks({ navigation }: NavProps) {
         {showPricingCard === true && <PricingCard onPricingSelect={onPricingSelect} />}
         {isEmpty && (
           <View style={styles.notFoundContainer}>
-            <Image source={require('../assets/not-found.png')} style={styles.notFoundImage} />
-            <Text body1 style={styles.notFoundText}>
+            <Image source={require('../assets/not-found.png')} style={styles.emptyImage} />
+            <Text body1 style={styles.emptyText}>
               {t('screens.myDecks.empty_my_decks')}
             </Text>
             <Text
               body1_bold
               style={styles.instructions}
               onPress={() => {
-                Linking.openURL(instructionUrl);
+                Linking.openURL(INSTRUCTION_URL);
               }}
             >
               {t('screens.myDecks.instructions2')}
@@ -296,13 +323,15 @@ export default function MyDecks({ navigation }: NavProps) {
           </>
         )}
       </ScrollView>
-      <FAB
-        size="large"
-        icon={<Entypo name="plus" color={theme.colors.white} size={iconSize.sm} />}
-        color={theme.mode === 'dark' ? theme.colors.purple : theme.colors.orange}
-        style={styles.fab}
-        onPress={onCreateDeckClick}
-      />
+      {!showPricingCard && (
+        <FAB
+          size="large"
+          icon={<Entypo name="plus" color={theme.colors.white} size={iconSize.sm} />}
+          color={theme.mode === 'dark' ? theme.colors.purple : theme.colors.orange}
+          style={styles.fab}
+          onPress={onCreateDeckClick}
+        />
+      )}
 
       {loading && <LottieView ref={animationRef} loop={true} source={require('../assets/animation/loading-animation.json')} style={styles.loading} />}
     </View>
@@ -331,7 +360,7 @@ const useStyles = makeStyles((theme) => ({
     alignSelf: 'center',
     marginBottom: 200,
   },
-  notFoundImage: {
+  emptyImage: {
     width: toSize(150),
     height: toSize(150),
   },
@@ -348,7 +377,7 @@ const useStyles = makeStyles((theme) => ({
     color: theme.colors.text,
     marginTop: 30,
   },
-  notFoundText: {
+  emptyText: {
     textAlign: 'center',
     color: theme.colors.text,
     paddingHorizontal: 30,

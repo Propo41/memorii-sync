@@ -1,6 +1,6 @@
 import BottomSheet, { BottomSheetBackdrop, useBottomSheetTimingConfigs } from '@gorhom/bottom-sheet';
 import { Button, FAB, makeStyles, Overlay, Text, useTheme } from '@rneui/themed';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, Linking, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { Easing } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -14,7 +14,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import { showToast } from './CustomToast';
 import { rawToCards } from '../helpers/utility';
-import { instructionUrl } from '../config/conf';
+import { INSTRUCTION_URL } from '../config/conf';
 import ColorPicker from 'react-native-wheel-color-picker';
 import Entypo from 'react-native-vector-icons/Entypo';
 
@@ -22,6 +22,8 @@ type CreateSetDialog = {
   onAddSetClick: (set: _Set) => boolean;
   dialogOpen: { open: boolean; editing: boolean; set?: _Set | null };
   closeDialog: () => void;
+  bottomSheetRef: RefObject<BottomSheet>;
+  isPremium: boolean;
 };
 
 type InputFields = {
@@ -92,8 +94,7 @@ const DummySetItem = ({ name, bgColor, fgColor, mt, onEditColorPress }: DummySet
   );
 };
 
-const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDialog) => {
-  const bottomSheetRef = useRef<BottomSheet>(null);
+const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogOpen, bottomSheetRef }: CreateSetDialog) => {
   const snapPoints = useMemo(() => ['63%'], []);
   const { theme } = useTheme();
   const styles = useStyles();
@@ -116,8 +117,11 @@ const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDi
   useEffect(() => {
     if (dialogOpen.set) {
       const { name, appearance } = dialogOpen.set;
-      const { bgColor, fgColor } = appearance;
+      const { fgColor, bgColor } = appearance;
+
       setInput({ name, bgColor, fgColor });
+    } else {
+      setInput({ name: '', bgColor: '#595959', fgColor: '#A5A5A5' });
     }
   }, [dialogOpen.set]);
 
@@ -129,14 +133,14 @@ const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDi
     Keyboard.addListener('keyboardDidHide', () => {
       setKeyboardShowing(false);
     });
+
+    return () => {
+      Keyboard.removeAllListeners('keyboardDidShow');
+      Keyboard.removeAllListeners('keyboardDidHide');
+    };
   }, []);
 
-  if (dialogOpen.open) {
-    bottomSheetRef.current?.snapToIndex(0);
-  }
-
   const onDialogClose = () => {
-    bottomSheetRef.current?.close();
     closeDialog();
   };
 
@@ -184,15 +188,25 @@ const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDi
 
   const onCreateClick = async () => {
     try {
-      if (!doc && dialogOpen.set?.cards.length === 0) {
+      if (!doc && !dialogOpen.set?.cards) {
         showToast('No card file uploaded.', 'error');
         return;
       }
 
-      let cards: _Card[] = [];
+      let cards: _Card[] | null = [];
       if (doc) {
         const fileContent = await FileSystem.readAsStringAsync(doc!.uri);
-        cards = await rawToCards(fileContent);
+        cards = await rawToCards(fileContent, isPremium);
+
+        if (!cards) {
+          showToast('Please use allowed headers only.', 'error');
+          return;
+        }
+
+        if (cards.length === 0) {
+          showToast('No cards were found in the .tsv file', 'error');
+          return;
+        }
       }
 
       if (dialogOpen.set?.cards.length) {
@@ -200,13 +214,12 @@ const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDi
       }
 
       const { name, bgColor, fgColor } = input;
-      if (!name || !bgColor || !fgColor) {
+      if (!name) {
         showToast('Please input all the fields', 'error');
         return;
       }
-
-      const apperance = new _Appearance(bgColor, fgColor);
-      const newSet = new _Set(name, apperance);
+      const appearance = new _Appearance(bgColor || '#595959', fgColor || '#A5A5A5');
+      const newSet = new _Set(name, appearance);
       newSet.cards = cards;
 
       if (onAddSetClick(newSet) !== false) {
@@ -276,7 +289,7 @@ const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDi
           <Text
             style={styles.instructions}
             onPress={() => {
-              Linking.openURL(instructionUrl);
+              Linking.openURL(INSTRUCTION_URL);
             }}
             body2
           >
@@ -308,6 +321,7 @@ const CreateSetDialog = ({ onAddSetClick, closeDialog, dialogOpen }: CreateSetDi
           <ColorPicker
             ref={pickerRef}
             color={currentColor}
+            onColorChange={onColorChangeComplete}
             onColorChangeComplete={onColorChangeComplete}
             thumbSize={30}
             sliderSize={40}

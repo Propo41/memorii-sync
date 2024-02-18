@@ -26,8 +26,12 @@ async function onGoogleButtonPress() {
     // Sign-in the user with the credential
     return auth().signInWithCredential(googleCredential);
   } catch (error: any) {
+    console.log(error);
+    
     if (error.message === 'NETWORK_ERROR') {
       showToast("Couldn't sign in. Network issues?", 'error');
+    } else if (error.message === 'DEVELOPER_ERROR') {
+      showToast('Something is wrong. Please let us know', 'error');
     } else {
       showToast(error.message, 'error');
     }

@@ -130,6 +130,14 @@ export class FirebaseApp implements FirebaseAppInterface {
 
   async deleteDeck(userId: string, deckId: string): Promise<void> {
     try {
+      // fetch the user's deck id from the database
+      const user = await this.getUser(userId);
+      if (!user) return;
+
+      const updatedList = user?.decksCreated.filter((item) => item !== deckId);
+      user.decksCreated = updatedList;
+
+      await this.updateUser(userId, user);
       await firestore().collection(this.collections.decks).doc(deckId).delete();
       await firestore().collection(this.collections.completed).doc(`${userId}.${deckId}`).delete();
     } catch (error: any) {
