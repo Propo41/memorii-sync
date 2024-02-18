@@ -13,9 +13,24 @@ export default function CustomToast({ position }: CustomToastProps) {
 
   const toastConfig = {
     success: (props: any) => (
-      <BaseToast {...props} style={styles.successStyle} contentContainerStyle={styles.successContainer} text2Style={styles.successText2} />
+      <BaseToast
+        {...props}
+        style={styles.successStyle}
+        text2NumberOfLines={3}
+        contentContainerStyle={styles.container}
+        text2Style={styles.successText2}
+      />
     ),
-    error: (props: any) => <ErrorToast {...props} style={styles.errorStyle} text1Style={styles.errorText1} text2Style={styles.errorText2} />,
+    error: (props: any) => (
+      <ErrorToast
+        {...props}
+        contentContainerStyle={styles.container}
+        style={styles.errorStyle}
+        text1Style={styles.errorText1}
+        text2Style={styles.errorText2}
+        text2NumberOfLines={3}
+      />
+    ),
   };
 
   return <Toast config={toastConfig} position={position} visibilityTime={3000} />;
@@ -35,8 +50,8 @@ const useStyles = makeStyles((theme) => ({
   errorStyle: {
     borderLeftColor: theme.colors.darkRed,
   },
-  successContainer: {
-    paddingHorizontal: 15,
+  container: {
+    paddingHorizontal: 13,
   },
   successText2: {
     fontSize: toFont(17),

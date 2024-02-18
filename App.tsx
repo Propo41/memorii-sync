@@ -9,13 +9,10 @@ import { AppNavigator } from './src/navigation';
 import { palette, typography } from './src/theme';
 import { NavRoutes } from './src/config/routes';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { firebaseWebClientId } from './src/config/conf';
+import { FIREBASE_WEB_CLIENT_ID, REVENUECAT_GOOGLE_API_KEY, REVENUECAT_USER_ID } from './src/config/conf';
 import CustomToast from './src/components/CustomToast';
-import Purchases, { LOG_LEVEL, PurchasesOffering } from 'react-native-purchases';
-
-const APIKeys = {
-  google: 'goog_UOztdiTAHtBuVBuwisNOgzvJFdT',
-};
+import Purchases from 'react-native-purchases';
+import { log } from './src/helpers/utility';
 
 const theme = createTheme({
   lightColors: palette['light'],
@@ -32,31 +29,30 @@ export default function App() {
   });
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>();
-  const [currentOffering, setCurrentOffering] = useState<PurchasesOffering | null>(null);
 
   useEffect(() => {
     GoogleSignin.configure({
-      webClientId: firebaseWebClientId,
+      webClientId: FIREBASE_WEB_CLIENT_ID,
+    });
+
+    const setup = async () => {
+      if (Platform.OS == 'android') {
+        await Purchases.configure({ apiKey: REVENUECAT_GOOGLE_API_KEY, appUserID: REVENUECAT_USER_ID });
+      }
+    };
+
+    Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+
+    setup().catch((e) => {
+      log('Error', e);
     });
   }, []);
 
   useEffect(() => {
     const setup = async () => {
-      // if (Platform.OS == 'android') {
-      //   await Purchases.configure({ apiKey: APIKeys.google, appUserID: 'app1486623cbe' });
-      // }
-
-      // // const offerings = await Purchases.getProducts(['brainflip.access'], 'NON_SUBSCRIPTION');
-      // // console.log('offerings', offerings);
-
-      // // await Purchases.purchaseStoreProduct(offerings[0]);
-
-      // if (offerings.current !== null && offerings.current.availablePackages.length !== 0) {
-      //   // Display packages for sale
-      // }
-      // console.log(offerings);
-
-      // setCurrentOffering(offerings.current);
+      if (Platform.OS == 'android') {
+        await Purchases.configure({ apiKey: REVENUECAT_GOOGLE_API_KEY, appUserID: REVENUECAT_USER_ID });
+      }
     };
 
     Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
@@ -72,7 +68,7 @@ export default function App() {
     setInitializing(false);
   }, []);
 
-  if (!fontsLoaded && initializing && !currentOffering) {
+  if (!fontsLoaded && initializing) {
     return null;
   }
 

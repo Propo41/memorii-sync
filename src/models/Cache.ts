@@ -5,9 +5,6 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 interface CacheInterface {
   saveDeck(deckId: string, deck: _Deck): Promise<void>;
   getDeck(deckId: string): Promise<_Deck | null>;
-
-  getUser(userId: string): Promise<_User | null>;
-  saveUser(userId: string, user: _User): Promise<void>;
 }
 
 export class Cache implements CacheInterface {
@@ -38,26 +35,6 @@ export class Cache implements CacheInterface {
       log(error.message);
     }
     return null;
-  }
-
-  async getUser(userId: string): Promise<_User | null> {
-    try {
-      const user = await EncryptedStorage.getItem(userId);
-      if (user) {
-        return _User.transform(JSON.parse(user));
-      }
-    } catch (error: any) {
-      log(error.message);
-    }
-    return null;
-  }
-
-  async saveUser(userId: string, user: _User): Promise<void> {
-    try {
-      await EncryptedStorage.setItem(userId, JSON.stringify(user));
-    } catch (error: any) {
-      log(error.message);
-    }
   }
 
   async saveCardStatuses(userId: string, deckId: string, setId: string, cardStatuses: Record<number, boolean>): Promise<void> {

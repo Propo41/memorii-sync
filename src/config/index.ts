@@ -7,7 +7,7 @@ export const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 20 : Platform.OS === 'we
 export const BOTTOM_NAV_HEIGHT = toSize(50);
 export const margins = {
   window_hor: toSize(12),
-  window_vert: STATUSBAR_HEIGHT,
+  window_vert: toSize(STATUSBAR_HEIGHT),
   window_hor_w_icon: toSize(10),
 };
 
@@ -18,10 +18,5 @@ export const iconSize = {
 };
 
 export type Language = 'English' | 'Bangla';
-
-export const LANGUAGE_CODE: Record<string, string> = {
-  English: 'EN',
-  Bangla: 'BN',
-};
 
 export { i18n };

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Keyboard, ScrollView, View } from 'react-native';
+import { Alert, BackHandler, Keyboard, ScrollView, View } from 'react-native';
 import { Button, FAB, Overlay, Text, makeStyles, useTheme } from '@rneui/themed';
 import NavigationBar from '../components/NavigationBar';
 import { _Appearance, _Deck, _Set } from '../models/dto';
@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import CustomTextInput from '../components/CustomTextInput';
 import { margins } from '../config';
 import Entypo from 'react-native-vector-icons/Entypo';
-import { SCREEN_HEIGHT, SCREEN_WIDTH, toFont, toSize } from '../helpers/scaling';
+import { toFont, toSize } from '../helpers/scaling';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { FF_REGULAR } from '../theme/typography';
 import * as SystemNavigationBar from 'expo-navigation-bar';
@@ -18,6 +18,7 @@ import auth from '@react-native-firebase/auth';
 import { kickUser } from '../helpers/utility';
 import { NavProps } from '../config/routes';
 import ColorPicker from 'react-native-wheel-color-picker';
+import BottomSheet from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheet/BottomSheet';
 
 type InputFields = {
   id?: string;
@@ -89,17 +90,36 @@ const DummyDeckItem = ({ name, bgColor, fgColor, trackColor, mt, onEditColorPres
 type SetItemProps = {
   name: string;
   mt?: number;
+  totalCards: number;
   onDeleteClick: () => void;
   onEditClick: () => void;
 };
 
-const SetItem = ({ name, mt, onEditClick, onDeleteClick }: SetItemProps) => {
+const showAlert = (title: string, subtitle: string, onConfirm: () => void) =>
+  Alert.alert(
+    title,
+    subtitle,
+    [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      { text: 'Confirm', onPress: onConfirm },
+    ],
+    {
+      cancelable: true,
+    }
+  );
+
+const SetItem = ({ name, totalCards, mt, onEditClick, onDeleteClick }: SetItemProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
 
   return (
     <View style={{ ...styles.setContainer, marginTop: mt || 0 }}>
       <Text>{name}</Text>
+      <Text> : ({totalCards})</Text>
       <View style={styles.flexGrow} />
       <Button radius={'sm'} type="solid" buttonStyle={styles.iconButton} onPress={onEditClick}>
         <Icon name="edit" color={theme.colors.purple} size={toSize(25)} />
@@ -121,7 +141,11 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
   const { theme } = useTheme();
   const styles = useStyles();
   const { t } = useTranslation();
-  const [input, setInput] = useState<InputFields>({});
+  const [input, setInput] = useState<InputFields>({
+    fgColor: '#A5A5A5',
+    bgColor: '#595959',
+    trackColor: '#FFFFFF',
+  });
   const [sets, setSets] = useState<_Set[]>([]);
   const [dialogOpen, setDialogOpen] = useState<DialogState>({
     open: false,
@@ -136,11 +160,27 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
   const [currentColor, setCurrentColor] = useState('#ffffff'); // Initial color state
   const pickerRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const [isPremium, setIsPremium] = useState(false); // Initial color state
 
   const onColorChangeComplete = (color: string) => {
     setCurrentColor(color);
     onInputChange(showColorModal.type, color);
   };
+
+  useEffect(() => {
+    const currentUser = auth().currentUser;
+    if (!currentUser) {
+      return;
+    }
+
+    FirebaseApp.getInstance()
+      .getUser(currentUser.uid)
+      .then((user) => {
+        if (!user) return;
+        setIsPremium(user.isPremium);
+      });
+  }, []);
 
   useEffect(() => {
     // @ts-expect-error don't know how to fix it
@@ -149,8 +189,6 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
 
       // @ts-expect-error don't know how to fix it
       const { id, name, appearance, sets } = route?.params?.deck as _Deck;
-      console.log('id:', id);
-
       setInput({ id: id, name, bgColor: appearance.bgColor, fgColor: appearance.fgColor, trackColor: appearance.trackColor });
       setSets(sets || []);
     }
@@ -168,6 +206,21 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
       SystemNavigationBar.setBackgroundColorAsync(theme.mode === 'dark' ? theme.colors.violetShade! : theme.colors.white);
     };
   }, []);
+
+  useEffect(() => {
+    const backAction = () => {
+      if (dialogOpen.open) {
+        setDialogOpen({ open: false, editing: false });
+        bottomSheetRef.current?.close();
+      } else {
+        navigation.goBack();
+      }
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => backHandler.remove();
+  }, [dialogOpen.open]);
 
   const onInputChange = (name: string, text: string) => {
     setInput({
@@ -223,6 +276,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     if (isEditing) {
       await FirebaseApp.getInstance().updateDeck(input.id!, newDeck);
       showToast('Edited deck!');
+      navigation.goBack();
       return;
     }
 
@@ -235,6 +289,15 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     }
 
     showToast('Added deck!');
+    navigation.goBack();
+  };
+
+  const onDeleteDeck = async () => {
+    const currentUser = auth().currentUser;
+    if (!currentUser) return;
+
+    await FirebaseApp.getInstance().deleteDeck(currentUser.uid!, input!.id!);
+    navigation.goBack();
   };
 
   const onEditColorPress = (type: string) => {
@@ -242,6 +305,20 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
       open: true,
       type: type,
     });
+  };
+
+  const onAddSetClick = () => {
+    if (!isPremium && sets.length >= 3) {
+      showToast('Maximum 3 sets are allowed in free tier', 'error');
+      return;
+    }
+
+    setDialogOpen({
+      open: true,
+      editing: false,
+    });
+
+    bottomSheetRef.current?.snapToIndex(0);
   };
 
   return (
@@ -275,12 +352,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
               icon={<Entypo name="plus" color={theme.colors.white} size={toSize(18)} />}
               color={theme.mode === 'dark' ? theme.colors.purple : theme.colors.orange}
               style={{ marginLeft: theme.spacing.lg }}
-              onPress={() => {
-                setDialogOpen({
-                  open: true,
-                  editing: false,
-                });
-              }}
+              onPress={onAddSetClick}
             />
           </View>
 
@@ -295,11 +367,13 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
               return (
                 <SetItem
                   name={set.name}
+                  totalCards={set.cards.length}
                   key={index}
                   mt={index === 0 ? 10 : 7}
                   onEditClick={() => {
                     // open dialog
                     console.log(`editing: set: ${set.name}`);
+                    bottomSheetRef.current?.snapToIndex(0);
                     setDialogOpen({
                       open: true,
                       editing: true,
@@ -316,21 +390,35 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
         </View>
       </ScrollView>
 
+      {isEditing && (
+        <Button
+          title={t('screens.myDecks.delete_deck_btn')}
+          titleStyle={styles.createBtnTitle}
+          buttonStyle={{ ...styles.createBtn, backgroundColor: theme.colors.orange }}
+          // eslint-disable-next-line react-native/no-inline-styles
+          containerStyle={{ ...styles.deleteBtnContainer, display: isKeyboardShowing ? 'none' : 'flex' }}
+          onPress={() => showAlert(t('screens.myDecks.alerts.delete_title'), t('screens.myDecks.alerts.delete_subtitle'), onDeleteDeck)}
+        />
+      )}
+
       <Button
-        title={isEditing ? t('screens.myDecks.edit_deck') : t('screens.myDecks.create_deck')}
+        title={isEditing ? t('screens.myDecks.edit_deck_btn') : t('screens.myDecks.create_deck_btn')}
         titleStyle={styles.createBtnTitle}
         buttonStyle={styles.createBtn}
         // eslint-disable-next-line react-native/no-inline-styles
-        containerStyle={{ ...styles.createBtnContainer, display: isKeyboardShowing ? 'none' : 'flex' }}
+        containerStyle={{ ...styles.createBtnContainer, width: isEditing ? '50%' : '100%', display: isKeyboardShowing ? 'none' : 'flex' }}
         onPress={onCreateDeck}
       />
 
       <CreateSetDialog
         dialogOpen={dialogOpen}
+        isPremium={isPremium}
         closeDialog={() => {
           setDialogOpen({ open: false, editing: false });
+          bottomSheetRef.current?.close();
         }}
         onAddSetClick={onSetAdded}
+        bottomSheetRef={bottomSheetRef}
       />
 
       <Overlay
@@ -348,6 +436,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
             ref={pickerRef}
             color={currentColor}
             onColorChangeComplete={onColorChangeComplete}
+            onColorChange={onColorChangeComplete}
             thumbSize={30}
             sliderSize={40}
             noSnap={true}
@@ -403,14 +492,21 @@ const useStyles = makeStyles((theme) => ({
   },
   createBtn: {
     borderRadius: 0,
-    paddingVertical: 10,
+    paddingVertical: 15,
     backgroundColor: theme.colors.purple,
   },
   createBtnContainer: {
     position: 'absolute',
     bottom: 0,
-    left: 0,
     right: 0,
+    borderRadius: 0,
+  },
+  deleteBtnContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: '50%',
+    borderRadius: 0,
   },
   createBtnTitle: {
     fontFamily: FF_REGULAR,

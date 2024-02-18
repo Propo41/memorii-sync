@@ -6,16 +6,14 @@ export class Set {
   name: string;
   appearance: Appearance;
   cards: Card[] = [];
-  localesSupported: string[];
 
-  constructor(name: string, appearance?: Appearance, localesSupported?: string[]) {
+  constructor(name: string, appearance?: Appearance) {
     this.name = name;
     this.appearance = appearance || new Appearance('#F48B8E', '#F35B60');
-    this.localesSupported = localesSupported || [];
   }
 
   static transform(_set: InstanceType<typeof Set>): Set {
-    const set = new Set(_set.name, Appearance.transform(_set.appearance), _set.localesSupported || []);
+    const set = new Set(_set.name, Appearance.transform(_set.appearance));
     set.cards = _set.cards?.map((card) => Card.transform(card));
     set._id = _set._id;
 
