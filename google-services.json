@@ -1,39 +1,47 @@
 {
-    "project_info": {
-        "project_number": "817622206422",
-        "project_id": "flashcards-7d7a3",
-        "storage_bucket": "flashcards-7d7a3.appspot.com"
-    },
-    "client": [
-        {
-            "client_info": {
-                "mobilesdk_app_id": "1:817622206422:android:f5e42fa39e4b2df3190677",
-                "android_client_info": {
-                    "package_name": "com.pixiuemstudios.flashcards"
-                }
-            },
-            "oauth_client": [
-                {
-                    "client_id": "817622206422-1fq5sa3glr5ejtunm6s7l5q7tpjrdhl1.apps.googleusercontent.com",
-                    "client_type": 3
-                }
-            ],
-            "api_key": [
-                {
-                    "current_key": "AIzaSyDu5gpqOzSHF5FzaNXSDZE9Hhx4wg7TXXE"
-                }
-            ],
-            "services": {
-                "appinvite_service": {
-                    "other_platform_oauth_client": [
-                        {
-                            "client_id": "817622206422-1fq5sa3glr5ejtunm6s7l5q7tpjrdhl1.apps.googleusercontent.com",
-                            "client_type": 3
-                        }
-                    ]
-                }
-            }
+  "project_info": {
+    "project_number": "274432102559",
+    "project_id": "brain-flip-app",
+    "storage_bucket": "brain-flip-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:274432102559:android:eaa3125994723958ad52aa",
+        "android_client_info": {
+          "package_name": "com.squidellastudios.brainflip"
         }
-    ],
-    "configuration_version": "1"
+      },
+      "oauth_client": [
+        {
+          "client_id": "274432102559-jinakf9kgnkvfghlji3e3namhql9e7su.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.squidellastudios.brainflip",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "274432102559-idceoidhn4otap52smau02gliackgc34.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpk4AEFLw49OTP2lDL8Z9e-enhCRh2b0g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "274432102559-idceoidhn4otap52smau02gliackgc34.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
 }

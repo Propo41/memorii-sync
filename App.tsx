@@ -2,47 +2,17 @@ import { JosefinSans_400Regular, JosefinSans_700Bold, useFonts } from '@expo-goo
 import { NavigationContainer } from '@react-navigation/native';
 import { createTheme, ThemeProvider } from '@rneui/themed';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-// import { dummyDecks, dummyUser } from './src/database';
-// import { FirebaseApp } from './src/models/FirebaseApp';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { AppNavigator } from './src/navigation';
 import { palette, typography } from './src/theme';
 import { NavRoutes } from './src/config/routes';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { firebaseWebClientId } from './src/config/conf';
+import { FIREBASE_WEB_CLIENT_ID, REVENUECAT_GOOGLE_API_KEY, REVENUECAT_USER_ID } from './src/config/conf';
 import CustomToast from './src/components/CustomToast';
-
-// const createDummyData = async () => {
-//   // create dummy decks
-//   const deckIds = [];
-//   for (const deck of dummyDecks) {
-//     const deckId = await FirebaseApp.getInstance().createDeck(deck);
-//     deckIds.push(deckId);
-//   }
-
-//   // create dummy user
-//   // @ts-expect-error bla ba
-//   dummyUser.decksPurchased.push(...deckIds);
-//   const userId = await FirebaseApp.getInstance().createUser(dummyUser);
-
-//   Cache.getInstance().saveUser(userId, dummyUser);
-// };
-
-// const createCompleted = async () => {
-//   const status = new Map<string, boolean>([
-//     ['0', true],
-//     ['1', true],
-//     ['2', false],
-//   ]);
-//   await FirebaseApp.getInstance().updateCardStatuses(userId, 'MPtAu9SrzAKIu3WZ3qzO', '1', status);
-// };
-
-// const getUser = async (userId: string) => {
-//   const user = await FirebaseApp.getInstance().getUser(userId);
-//   return user;
-// };
+import Purchases from 'react-native-purchases';
+import { log } from './src/helpers/utility';
 
 const theme = createTheme({
   lightColors: palette['light'],
@@ -62,7 +32,33 @@ export default function App() {
 
   useEffect(() => {
     GoogleSignin.configure({
-      webClientId: firebaseWebClientId,
+      webClientId: FIREBASE_WEB_CLIENT_ID,
+    });
+
+    const setup = async () => {
+      if (Platform.OS == 'android') {
+        await Purchases.configure({ apiKey: REVENUECAT_GOOGLE_API_KEY, appUserID: REVENUECAT_USER_ID });
+      }
+    };
+
+    Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+
+    setup().catch((e) => {
+      log('Error', e);
+    });
+  }, []);
+
+  useEffect(() => {
+    const setup = async () => {
+      if (Platform.OS == 'android') {
+        await Purchases.configure({ apiKey: REVENUECAT_GOOGLE_API_KEY, appUserID: REVENUECAT_USER_ID });
+      }
+    };
+
+    Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+
+    setup().catch((e) => {
+      console.log(e);
     });
   }, []);
 

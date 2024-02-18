@@ -1,4 +1,4 @@
-package com.pixiuemstudios.flashcards.newarchitecture;
+package com.squidellastudios.brainflip.newarchitecture;
 
 import android.app.Application;
 import androidx.annotation.NonNull;
@@ -20,9 +20,9 @@ import com.facebook.react.fabric.EmptyReactNativeConfig;
 import com.facebook.react.fabric.FabricJSIModuleProvider;
 import com.facebook.react.fabric.ReactNativeConfig;
 import com.facebook.react.uimanager.ViewManagerRegistry;
-import com.pixiuemstudios.flashcards.BuildConfig;
-import com.pixiuemstudios.flashcards.newarchitecture.components.MainComponentsRegistry;
-import com.pixiuemstudios.flashcards.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
+import com.squidellastudios.brainflip.BuildConfig;
+import com.squidellastudios.brainflip.newarchitecture.components.MainComponentsRegistry;
+import com.squidellastudios.brainflip.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
 import java.util.ArrayList;
 import java.util.List;
 

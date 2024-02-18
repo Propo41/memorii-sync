@@ -1,4 +1,4 @@
-package com.pixiuemstudios.flashcards.newarchitecture.components;
+package com.squidellastudios.brainflip.newarchitecture.components;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;

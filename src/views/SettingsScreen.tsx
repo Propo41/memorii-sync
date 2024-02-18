@@ -107,6 +107,7 @@ export default function SettingsScreen({ navigation }: NavProps) {
       log('error signing out.', error);
     }
     navigation.replace(NavRoutes.Login);
+    await NavigationBar.setBackgroundColorAsync(theme.colors.white);
   };
 
   return (
