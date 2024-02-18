@@ -6,7 +6,7 @@ import { SCREEN_HEIGHT, SCREEN_WIDTH, toSize } from '../helpers/scaling';
 import Card from '../components/Card';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import EntypoIcons from 'react-native-vector-icons/Entypo';
-import { LANGUAGE_CODE, STATUSBAR_HEIGHT, iconSize } from '../config';
+import { STATUSBAR_HEIGHT, iconSize } from '../config';
 import { _Card } from '../models/dto';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { NavProps } from '../config/routes';
@@ -18,31 +18,34 @@ import { showToast } from '../components/CustomToast';
 import * as SystemNavigationBar from 'expo-navigation-bar';
 import { Audio } from 'expo-av';
 import { Sound } from 'expo-av/build/Audio';
-import { log } from '../helpers/utility';
+import { isValidUrl, log } from '../helpers/utility';
 
 type ControlsProps = {
   onPressCross: () => void;
   onPressRotate: () => void;
   onPressCheck: () => void;
   onPlayAudio: () => void;
+  hasAudio: boolean;
 };
 
 const MARGIN_TOP = 10;
 
-const Controls = ({ onPressCross, onPressRotate, onPressCheck, onPlayAudio }: ControlsProps) => {
+const Controls = ({ onPressCross, onPressRotate, onPressCheck, onPlayAudio, hasAudio }: ControlsProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
 
   return (
     <View style={styles.controls}>
       <FAB size="large" color="white" icon={<EntypoIcons name="cross" color="#FF3636" size={iconSize.sm} />} onPress={onPressCross} />
-      <FAB
-        size="large"
-        icon={<EntypoIcons name="sound" color={theme.colors.white} size={iconSize.sm} />}
-        color={theme.mode === 'dark' ? theme.colors.purple : theme.colors.orange}
-        style={{ marginLeft: theme.spacing.lg }}
-        onPress={onPlayAudio}
-      />
+      {hasAudio && (
+        <FAB
+          size="large"
+          icon={<EntypoIcons name="sound" color={theme.colors.white} size={iconSize.sm} />}
+          color={theme.mode === 'dark' ? theme.colors.purple : theme.colors.orange}
+          style={{ marginLeft: theme.spacing.lg }}
+          onPress={onPlayAudio}
+        />
+      )}
       <FAB
         style={{ marginLeft: theme.spacing.lg }}
         size="large"
@@ -68,11 +71,10 @@ type CardsScreenProps = {
   deckId: string;
   setId: string;
   userId: string;
-  localesSupported: string[];
 };
 
 const CardsScreen = ({ route }: NavProps) => {
-  const { cards, deckId, setId, userId, localesSupported }: CardsScreenProps = route.params!;
+  const { cards, deckId, setId, userId }: CardsScreenProps = route.params!;
 
   const [currentCard, setCurrentCard] = useState({ index: 0, isCorrect: false });
   const [progress, setProgress] = useState(0);
@@ -139,7 +141,6 @@ const CardsScreen = ({ route }: NavProps) => {
     setProgress(currentCard.index / cards.length);
     setCardStatuses((prev) => {
       const statuses = { ...prev, [cards[currentCard.index - 1].id]: currentCard.isCorrect };
-      Cache.getInstance().saveCardStatuses(userId, deckId, setId, statuses);
       return statuses;
     });
 
@@ -441,24 +442,21 @@ const CardsScreen = ({ route }: NavProps) => {
             }}
             onPlayAudio={() => {
               const audio = cards[currentCard.index].audio;
-              if (audio) {
-                playSound(audio);
-              } else {
-                showToast('No pronounciation exists for this card.', 'error');
-              }
+              playSound(audio!);
             }}
+            hasAudio={isValidUrl(cards[currentCard.index].audio)}
           />
 
           <View style={styles.switchProgressContainer}>
-            {localesSupported.length >= 2 && (
+            {cards[currentCard.index].backLocale.length > 0 && (
               <LocaleSwitch
                 value={true}
                 onValueChange={(value: boolean) => {
                   setLocalSwtich(!value);
                 }}
                 mb={theme.spacing.lg}
-                value1={LANGUAGE_CODE[localesSupported[0]]}
-                value2={LANGUAGE_CODE[localesSupported[1]]}
+                value1={t('screens.cards.switch1')}
+                value2={t('screens.cards.switch2')}
               />
             )}
             <LinearProgress value={progress} variant="determinate" style={styles.progress} color={theme.colors.white} />

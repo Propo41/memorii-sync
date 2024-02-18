@@ -120,6 +120,8 @@ export default function HomeScreen({ navigation }: NavProps) {
 
           if (res.length === 0) {
             setIsEmpty(true);
+          } else {
+            setIsEmpty(false);
           }
 
           clearTimeout(loadingTimer);
