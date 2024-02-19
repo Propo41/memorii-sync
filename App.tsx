@@ -41,7 +41,7 @@ export default function App() {
       }
     };
 
-    Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+    Purchases.setLogLevel(Purchases.LOG_LEVEL.ERROR);
 
     setup().catch((e) => {
       log('Error', e);
