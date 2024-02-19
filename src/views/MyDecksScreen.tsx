@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, ScrollView, TouchableNativeFeedback, View } from 'react-native';
 import { Button, FAB, Image, Text, makeStyles } from '@rneui/themed';
 import { NavProps, NavRoutes } from '../config/routes';
@@ -6,7 +6,7 @@ import TitleBar from '../components/TitleBar';
 import { useFocusEffect } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import { useTranslation } from 'react-i18next';
-import { kickUser } from '../helpers/utility';
+import { fetchOfferings, kickUser, makePurchase } from '../helpers/utility';
 import { FirebaseApp } from '../models/FirebaseApp';
 import LottieView from 'lottie-react-native';
 import { _Deck, _User } from '../models/dto';
@@ -19,6 +19,8 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import { INSTRUCTION_URL } from '../config/conf';
 import { FF_REGULAR } from '../theme/typography';
 import Icon2 from 'react-native-vector-icons/MaterialIcons';
+import { PurchasesPackage, PurchasesStoreProduct } from 'react-native-purchases';
+import { showToast } from '../components/CustomToast';
 
 const fetchAndSaveDeck = async (deckId: string) => {
   const deck = await FirebaseApp.getInstance().getDeck(deckId);
@@ -31,9 +33,11 @@ const fetchAndSaveDeck = async (deckId: string) => {
 };
 
 type Pricing = {
-  type: 'free' | '4.99' | '8.99';
-  price: number;
-  summary: string[];
+  [key: string]: {
+    type: 'Free' | 'Premium';
+    price: string;
+    summary: string[];
+  };
 };
 
 type DeckItemProps = {
@@ -69,48 +73,66 @@ const DeckItem = ({ name, bgColor, totalCards, mt, onDeckPress }: DeckItemProps)
   );
 };
 
-type PricingCardProps = {
-  onPricingSelect: (p: Pricing) => void;
+const pricingCards: Pricing = {
+  'brainflip.free': {
+    price: '৳ 0',
+    type: 'Free',
+    summary: ['You can make maximum 1 custom deck', 'Maximum 3 sets', 'Maximum 50 cards per deck', 'Lifetime access'],
+  },
+  $rc_lifetime: {
+    price: '৳ 550',
+    type: 'Premium',
+    summary: [
+      'You can make unlimited custom decks and cards',
+      'Option to add 2 different meanings',
+      'Option to add self-hosted audio urls',
+      'Lifetime access',
+    ],
+  },
 };
 
-const PricingCard = ({ onPricingSelect }: PricingCardProps) => {
+type PricingCardProps = {
+  onPricingSelect: (p: PurchasesPackage) => void;
+  isPremium: boolean;
+};
+
+const PricingCard = ({ onPricingSelect, isPremium }: PricingCardProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
   const [selection, setSelection] = useState(0);
-  const [pricing, _] = useState<Pricing[]>(getPricingCards());
+  // @ts-expect-error
+  const [packages, setPackages] = useState<PurchasesPackage[]>([{ identifier: 'brainflip.free' }]);
+  const [loading, setLoading] = useState(true);
 
-  // useEffect(() => {
-  //   const setup = async () => {
-  //     // if (Platform.OS == 'android') {
-  //     //   await Purchases.configure({ apiKey: REVENUECAT_GOOGLE_API_KEY, appUserID: REVENUECAT_USER_ID });
-  //     // }
-  //     // const offerings = await Purchases.getProducts(['brainflip.access'], 'NON_SUBSCRIPTION');
-  //     // console.log('offerings', offerings);
-  //     // await Purchases.purchaseStoreProduct(offerings[0]);
-  //     // if (offerings.current !== null && offerings.current.availablePackages.length !== 0) {
-  //     // Display packages for sale
-  //     // }
-  //     // console.log(offerings);
-  //     // setCurrentOffering(offerings.current);
-  //   };
+  useFocusEffect(
+    useCallback(() => {
+      !isPremium &&
+        packages.length < 2 &&
+        fetchOfferings()
+          .then((data) => {
+            if (data) {
+              setPackages([...packages, ...data]);
+            }
+          })
+          .catch(() => showToast("Opps, couldn't fetch store details"))
+          .finally(() => setLoading(false));
+    }, [])
+  );
 
-  //   Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
-
-  //   setup().catch((e) => {
-  //     console.log(e);
-  //   });
-  // }, []);
+  if (loading) return null;
 
   return (
     <View style={styles.pricingCardContainer}>
       <View style={styles.pricingContentContainerTop}>
-        <Text head1>{pricing[selection].type}</Text>
+        <Text head1>{pricingCards[packages[selection].identifier].price}</Text>
         <View style={styles.pricingStackedBtnsContainer}>
-          {pricing.map((p, index) => {
+          {packages.map((p, index) => {
+            const item = pricingCards[p.identifier];
+
             return (
               <Button
                 key={index}
-                title={p.type}
+                title={item.type}
                 onPress={() => {
                   setSelection(index);
                 }}
@@ -127,7 +149,7 @@ const PricingCard = ({ onPricingSelect }: PricingCardProps) => {
         </View>
       </View>
       <View style={styles.pricingContentContainerBtm}>
-        {pricing[selection].summary.map((summary, index) => {
+        {pricingCards[packages[selection].identifier].summary.map((summary, index) => {
           return (
             // eslint-disable-next-line react-native/no-inline-styles
             <View key={index} style={{ marginTop: index === 0 ? 8 : 15, ...styles.pricingSummary }}>
@@ -141,7 +163,7 @@ const PricingCard = ({ onPricingSelect }: PricingCardProps) => {
 
         <Button
           onPress={() => {
-            onPricingSelect(pricing[selection]);
+            onPricingSelect(packages[selection]);
           }}
           title={'Continue'}
           buttonStyle={styles.pricingBtn}
@@ -150,32 +172,6 @@ const PricingCard = ({ onPricingSelect }: PricingCardProps) => {
       </View>
     </View>
   );
-};
-
-const getPricingCards = (): Pricing[] => {
-  return [
-    {
-      price: 0,
-      type: 'free',
-      summary: ['You can make atmost 1 custom deck'],
-    },
-    {
-      price: 4.99,
-      type: '4.99',
-      summary: ['You can make unlimited custom decks', 'Option to add 2 different meanings'],
-    },
-    {
-      price: 8.99,
-      type: '8.99',
-      summary: [
-        'You can make unlimited custom decks',
-        'Option to add 2 different meanings',
-        'Option to add audio and images',
-        'Option to add audio and images',
-        'Option to add audio and images',
-      ],
-    },
-  ];
 };
 
 export default function MyDecks({ navigation }: NavProps) {
@@ -251,11 +247,12 @@ export default function MyDecks({ navigation }: NavProps) {
     }, [])
   );
 
-  const onPricingSelect = (pricing: Pricing) => {
-    if (pricing.type === 'free') {
+  const onPricingSelect = async (pkg: PurchasesPackage) => {
+    if (pricingCards[pkg.identifier].type === 'Free') {
       setShowPricingCard(false);
     } else {
-      // todo
+      const customerInfo = await makePurchase(pkg);
+      console.log(customerInfo);
     }
   };
 
@@ -278,7 +275,7 @@ export default function MyDecks({ navigation }: NavProps) {
     <View style={styles.rootContainer}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <TitleBar title={t('screens.myDecks.title')} subtitle={t('screens.myDecks.subtitle')} />
-        {showPricingCard === true && <PricingCard onPricingSelect={onPricingSelect} />}
+        {showPricingCard === true && <PricingCard onPricingSelect={onPricingSelect} isPremium={user?.isPremium || false} />}
         {isEmpty && (
           <View style={styles.notFoundContainer}>
             <Image source={require('../assets/not-found.png')} style={styles.emptyImage} />

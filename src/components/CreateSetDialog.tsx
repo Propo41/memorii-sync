@@ -199,7 +199,7 @@ const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogOpen, bo
         cards = await rawToCards(fileContent, isPremium);
 
         if (!cards) {
-          showToast('Please use allowed headers only.', 'error');
+          showToast('Free tier allows 50 cards per deck; Please use acceptable headers only.', 'error');
           return;
         }
 
