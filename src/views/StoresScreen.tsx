@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Text, makeStyles, useTheme } from '@rneui/themed';
 import { toSize } from '../helpers/scaling';
@@ -8,9 +8,15 @@ import { iconSize, margins } from '../config';
 import { FF_REGULAR } from '../theme/typography';
 import { useTranslation } from 'react-i18next';
 import { NavProps, NavRoutes } from '../config/routes';
+import { useFocusEffect } from '@react-navigation/native';
+import { FirebaseApp } from '../models/FirebaseApp';
+import { _Market } from '../models/dto';
+import { fetchOfferings } from '../helpers/utility';
+import { PurchasesPackage } from 'react-native-purchases';
 
 type StoreItemProps = {
   mt?: number;
+  mb?: number;
   onPress: () => void;
   color: string;
   title: string;
@@ -19,13 +25,13 @@ type StoreItemProps = {
   oldPrice: number;
 };
 
-const StoreItem = ({ mt, onPress, color, title, subtitle, discountRate, oldPrice }: StoreItemProps) => {
+const StoreItem = ({ mt, mb, onPress, color, title, subtitle, discountRate, oldPrice }: StoreItemProps) => {
   const styles = useStyles();
   const { t } = useTranslation();
   const newPrice = oldPrice - (oldPrice * discountRate) / 100;
 
   return (
-    <View style={{ ...styles.itemContainer, marginTop: mt || 0 }}>
+    <View style={{ ...styles.itemContainer, marginTop: mt || 0, marginBottom: mb || 0 }}>
       <View style={styles.itemContent}>
         <View style={{ ...styles.itemContentLeft, backgroundColor: color }}>
           <Text head3 style={styles.text}>
@@ -65,46 +71,68 @@ const StoreItem = ({ mt, onPress, color, title, subtitle, discountRate, oldPrice
   );
 };
 
-const market = [
-  {
-    title: 'asd',
-    deckId: '1',
-    subtitle: '3 cards\n30 difficulties',
-    price: 140,
-    discountRate: 10,
-    color: '#FF6A6E',
-    description: `asdasd\n + Create a list by starting a line with
-    + Sub-lists are made by indenting 2 spaces:
-    + Very easy!`,
-    samples: [
-      {
-        front: 'Esteem',
-        back: 'Respect and admire',
-        backLocale: 'শ্রদ্ধা এবং সন্মান;',
-        example: `Many of these qualities are **esteemed** by managers.`,
-        audio: 'https://api.dictionaryapi.dev/media/pronunciations/en/eager-us.mp3',
-      },
-      {
-        front: 'Esteem2',
-        back: 'Respect and admire',
-        backLocale: 'শ্রদ্ধা এবং সন্মান;',
-        example: `Many of these qualities are **esteemed** by managers.`,
-        audio: 'https://api.dictionaryapi.dev/media/pronunciations/en/eager-us.mp3',
-      },
-      {
-        front: 'Esteem3',
-        back: 'Respect and admire',
-        backLocale: 'শ্রদ্ধা এবং সন্মান;',
-        example: `Many of these qualities are **esteemed** by managers.`,
-        audio: 'https://api.dictionaryapi.dev/media/pronunciations/en/eager-us.mp3',
-      },
-    ],
-  },
-];
+// const market = [
+//   {
+//     title: 'Test',
+//     deckId: '1',
+//     subtitle: '3 cards\n30 difficulties',
+//     identifier: 'brainflip.access',
+//     price: 110,
+//     discountRate: 100,
+//     color: '#FF6A6E',
+//     description: `asdasd\n + Create a list by starting a line with
+//     + Sub-lists are made by indenting 2 spaces:
+//     + Very easy!`,
+//     samples: [
+//       {
+//         front: 'Esteem',
+//         back: 'Respect and admire',
+//         backLocale: 'শ্রদ্ধা এবং সন্মান;',
+//         example: `Many of these qualities are **esteemed** by managers.`,
+//         audio: 'https://api.dictionaryapi.dev/media/pronunciations/en/eager-us.mp3',
+//       },
+//       {
+//         front: 'Esteem2',
+//         back: 'Respect and admire',
+//         backLocale: 'শ্রদ্ধা এবং সন্মান;',
+//         example: `Many of these qualities are **esteemed** by managers.`,
+//         audio: 'https://api.dictionaryapi.dev/media/pronunciations/en/eager-us.mp3',
+//       },
+//       {
+//         front: 'Esteem3',
+//         back: 'Respect and admire',
+//         backLocale: 'শ্রদ্ধা এবং সন্মান;',
+//         example: `Many of these qualities are **esteemed** by managers.`,
+//         audio: 'https://api.dictionaryapi.dev/media/pronunciations/en/eager-us.mp3',
+//       },
+//     ],
+//   },
+// ];
 
 export default function StoresScreen({ navigation }: NavProps) {
   const { theme } = useTheme();
   const styles = useStyles();
+  const [market, setMarket] = useState<_Market[]>([]);
+  
+  useFocusEffect(
+    useCallback(() => {
+      FirebaseApp.getInstance()
+        .fetchMarketItems()
+        .then(async (items) => {
+          const offerings = await fetchOfferings();
+          const marketItems = items.map((item) => {
+            const inAppPackage = offerings.find((offeringPkg) => offeringPkg.offeringIdentifier === item.offeringIdentifier);
+            if (inAppPackage) {
+              item._package = inAppPackage;
+            }
+
+            return item;
+          });
+
+          setMarket(marketItems);
+        });
+    }, [])
+  );
 
   return (
     <View style={styles.container}>
@@ -124,6 +152,7 @@ export default function StoresScreen({ navigation }: NavProps) {
               oldPrice={item.price}
               discountRate={item.discountRate}
               mt={index > 0 ? 8 : 0}
+              mb={index === market.length - 1 ? 70 : 0}
               onPress={() => {
                 // @ts-expect-error cant fix this ts error
                 navigation.push(NavRoutes.Store, {

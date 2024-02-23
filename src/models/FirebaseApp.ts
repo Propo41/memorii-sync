@@ -1,30 +1,27 @@
-import { _Deck, _Set, _User, _UserPreference } from './dto';
+import { _Deck, _Market, _Set, _User, _UserPreference } from './dto';
 import firestore from '@react-native-firebase/firestore';
-import { fetch } from '@react-native-community/netinfo';
+import { fetch as netInfo } from '@react-native-community/netinfo';
 import { log } from '../helpers/utility';
+import storage from '@react-native-firebase/storage';
 
 interface FirebaseAppInterface {
   getUser(userId: string): Promise<_User | null>;
   createUser(id: string, user: _User): Promise<void>;
   updateUser(userId: string, user: _User): Promise<void>;
   updateUserPreference(userId: string, preferences: _UserPreference): Promise<void>;
-
-  createDeck(deck: _Deck): Promise<string | null>;
-  getDeck(deckId: string): Promise<_Deck | null>;
-  updateDeck(deckId: string, deck: _Deck): Promise<void>;
-  deleteDeck(userId: string, deckId: string): Promise<void>;
-
-  updateCardStatuses(userId: string, deckId: string, setId: string, statuses: Record<number, boolean>): Promise<void>;
-  getDeckStatus(userId: string, deckId: string): Promise<number | null>;
-  getCardStatuses(userId: string, deckId: string, setId: string): Promise<Record<number, boolean> | null>;
-  getSetStatuses(userId: string, deckId: string): Promise<Map<string, number>>;
-
+  makePremium(userId: string): Promise<void>;
   addDeckToUser(deckId: string, userId: string): Promise<void>;
+
+  getDeck(deckId: string): Promise<_Deck | null>;
+  fetchMarketItems(): Promise<_Market[]>;
+
+  backUpDecks(userId: string, decks: _Deck[]): Promise<void>;
+  restoreDecks(userId: string): Promise<_Deck[]>;
 }
 
 export class FirebaseApp implements FirebaseAppInterface {
   private static instance: FirebaseApp | null = null;
-  private collections = { users: 'users', decks: 'decks', sets: 'sets', market: 'market', completed: 'completed' };
+  private collections = { users: 'users', decks: 'decks', market: 'market' };
 
   constructor() {
     firestore().settings({
@@ -43,7 +40,7 @@ export class FirebaseApp implements FirebaseAppInterface {
 
   async getUser(userId: string): Promise<_User | null> {
     try {
-      const { isConnected } = await fetch();
+      const { isConnected } = await netInfo();
       const snapshot = await firestore()
         .collection(this.collections.users)
         .doc(userId)
@@ -87,156 +84,14 @@ export class FirebaseApp implements FirebaseAppInterface {
     }
   }
 
-  async createDeck(deck: _Deck): Promise<string | null> {
+  async makePremium(userId: string): Promise<void> {
     try {
-      const doc = await firestore().collection(this.collections.decks).add(deck);
-      return doc.id;
-    } catch (error: any) {
-      log(error.message);
-    }
-
-    return null;
-  }
-
-  async getDeck(deckId: string): Promise<_Deck | null> {
-    try {
-      const { isConnected } = await fetch();
-      const snapshot = await firestore()
-        .collection(this.collections.decks)
-        .doc(deckId)
-        .get({
-          source: isConnected ? 'default' : 'cache',
-        });
-
-      if (snapshot.exists) {
-        const d = _Deck.transform(snapshot.data() as InstanceType<typeof _Deck>);
-        d.id = deckId;
-        return d;
-      }
-    } catch (error: any) {
-      log(error.message);
-    }
-
-    return null;
-  }
-
-  async updateDeck(deckId: string, deck: _Deck): Promise<void> {
-    try {
-      await firestore().collection(this.collections.decks).doc(deckId).update(deck);
-    } catch (error: any) {
-      log(error.message);
-    }
-  }
-
-  async deleteDeck(userId: string, deckId: string): Promise<void> {
-    try {
-      // fetch the user's deck id from the database
-      const user = await this.getUser(userId);
-      if (!user) return;
-
-      const updatedList = user?.decksCreated.filter((item) => item !== deckId);
-      user.decksCreated = updatedList;
-
-      await this.updateUser(userId, user);
-      await firestore().collection(this.collections.decks).doc(deckId).delete();
-      await firestore().collection(this.collections.completed).doc(`${userId}.${deckId}`).delete();
-    } catch (error: any) {
-      log(error.message);
-    }
-  }
-
-  async createSet(set: _Set): Promise<string | null> {
-    try {
-      const doc = await firestore().collection(this.collections.sets).add(set);
-      return doc.id;
-    } catch (error: any) {
-      log(error.message);
-    }
-
-    return null;
-  }
-
-  async updateCardStatuses(userId: string, deckId: string, setId: string, statuses: Record<number, boolean>): Promise<void> {
-    try {
-      await firestore()
-        .collection(this.collections.completed)
-        .doc(`${userId}.${deckId}`)
-        .set({ [setId]: statuses }, { merge: true });
-    } catch (error: any) {
-      log(error.message);
-    }
-  }
-
-  async getCardStatuses(userId: string, deckId: string, setId: string): Promise<Record<number, boolean> | null> {
-    try {
-      const snapshot = await firestore().collection(this.collections.completed).doc(`${userId}.${deckId}`).get({
-        source: 'cache',
+      await firestore().collection(this.collections.users).doc(userId).update({
+        isPremium: true,
       });
-      if (snapshot.exists) {
-        return snapshot.data()![setId];
-      }
     } catch (error: any) {
       log(error.message);
     }
-
-    return null;
-  }
-
-  // returns the count of true values in completed/$userid.deckid
-  async getDeckStatus(userId: string, deckId: string): Promise<number> {
-    try {
-      const snapshot = await firestore().collection(this.collections.completed).doc(`${userId}.${deckId}`).get({
-        source: 'cache',
-      });
-      let count = 0;
-
-      if (snapshot.exists) {
-        const data = snapshot.data();
-
-        for (const key in data) {
-          const innerObj = data[key];
-          for (const innerKey in innerObj) {
-            if (innerObj[innerKey] === true) {
-              count++;
-            }
-          }
-        }
-      }
-      return count;
-    } catch (error: any) {
-      log(`completed/${userId}.${deckId} does not exist`, error);
-    }
-
-    return 0;
-  }
-
-  // returns the count of true values in completed/$userid.deckid
-  async getSetStatuses(userId: string, deckId: string): Promise<Map<string, number>> {
-    const statuses: Map<string, number> = new Map<string, number>();
-
-    try {
-      const snapshot = await firestore().collection(this.collections.completed).doc(`${userId}.${deckId}`).get({
-        source: 'cache',
-      });
-
-      if (snapshot.exists) {
-        const data = snapshot.data();
-        for (const key in data) {
-          let count = 0;
-          const innerObj = data[key];
-          for (const innerKey in innerObj) {
-            if (innerObj[innerKey] === true) {
-              count++;
-            }
-          }
-
-          statuses.set(key, count);
-        }
-      }
-    } catch (error: any) {
-      log(error.message);
-    }
-    return statuses;
   }
 
   async addDeckToUser(deckId: string, userId: string) {
@@ -250,5 +105,74 @@ export class FirebaseApp implements FirebaseAppInterface {
     } catch (error: any) {
       log(error.message);
     }
+  }
+
+  async getDeck(deckId: string): Promise<_Deck | null> {
+    try {
+      const { isConnected } = await netInfo();
+      if (!isConnected) {
+        return null;
+      }
+
+      const snapshot = await firestore().collection(this.collections.decks).doc(deckId).get();
+      if (snapshot.exists) {
+        const d = _Deck.transform(snapshot.data() as InstanceType<typeof _Deck>);
+        d.id = deckId;
+        return d;
+      }
+    } catch (error: any) {
+      log(error.message);
+    }
+
+    return null;
+  }
+
+  async fetchMarketItems(): Promise<_Market[]> {
+    const items: _Market[] = [];
+    try {
+      const snapshot = await firestore().collection(this.collections.market).get();
+      for (const doc of snapshot.docs) {
+        const item = _Market.transform(doc.data() as InstanceType<typeof _Market>);
+        items.push(item);
+      }
+    } catch (error: any) {
+      log(error.message);
+    }
+
+    return items;
+  }
+
+  async backUpDecks(userId: string, decks: _Deck[]): Promise<void> {
+    if (decks.length === 0) return;
+
+    try {
+      const ref = storage().ref(`${userId}/decks/data.json`);
+      await ref.putString(JSON.stringify(decks), storage.StringFormat.RAW, {
+        contentType: 'application/json',
+        cacheControl: 'no-store', // disable caching\
+        customMetadata: {
+          createdBy: userId,
+          createdAt: new Date().toUTCString(),
+        },
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async restoreDecks(userId: string): Promise<_Deck[]> {
+    const decks = [];
+    try {
+      const url = await storage().ref(`${userId}/decks/data.json`).getDownloadURL();
+      const res = await (await fetch(url)).json();
+
+      const parsedJson = JSON.parse(res);
+      for (const item of parsedJson) {
+        decks.push(_Deck.transform(item as InstanceType<typeof _Deck>));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    return decks;
   }
 }

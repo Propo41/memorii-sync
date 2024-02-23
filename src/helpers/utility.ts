@@ -3,7 +3,9 @@ import { showToast } from '../components/CustomToast';
 import { NavRoutes } from '../config/routes';
 import auth from '@react-native-firebase/auth';
 import { Card } from '../models/dto/Card';
-import Purchases, { PurchasesPackage, PurchasesStoreProduct } from 'react-native-purchases';
+import Purchases, { PurchasesError, PurchasesPackage } from 'react-native-purchases';
+import { _Transaction } from '../models/dto';
+import * as FileSystem from 'expo-file-system';
 
 export const isValidUrl = (url: string | undefined) => {
   if (!url || url.length === 0) return false;
@@ -88,7 +90,6 @@ export const fetchOfferings = async () => {
     // const products = await Purchases.getProducts(['brainflip.access'], 'NON_SUBSCRIPTION');
     const offerings = await Purchases.getOfferings();
     if (offerings.current !== null) {
-      console.log('offerings', offerings.current.availablePackages);
       return offerings.current.availablePackages;
     }
   } catch (error: any) {
@@ -98,19 +99,25 @@ export const fetchOfferings = async () => {
   return [];
 };
 
-export const makePurchase = async (pkg: PurchasesPackage) => {
+export const makePurchase = async (userId: string, pkg: PurchasesPackage) => {
   try {
-    const { customerInfo } = await Purchases.purchasePackage(pkg);
-    console.log(customerInfo);
-    if (typeof customerInfo.entitlements.active['ENTITLEMENT_ID'] !== 'undefined') {
-      return customerInfo;
+    const { customerInfo, productIdentifier } = await Purchases.purchasePackage(pkg);
+    if (typeof customerInfo.entitlements.active['brainflip.access'] !== 'undefined') {
+      const trans = new _Transaction(userId, customerInfo.allPurchaseDates, productIdentifier);
+      return trans;
     }
-  } catch (error: any) {
-    if (!error.userCancelled) {
-      console.error('Error making purchase', error.message);
-    } else {
-      console.error('cancelled by user', error.message);
-    }
+  } catch (error: PurchasesError | any) {
+    showToast(error.message, 'error');
+  }
+  return null;
+};
+
+export const readFile = async (uri: string) => {
+  try {
+    const fileContent = await FileSystem.readAsStringAsync(uri);
+    return fileContent;
+  } catch (error) {
+    console.log(error);
   }
   return null;
 };

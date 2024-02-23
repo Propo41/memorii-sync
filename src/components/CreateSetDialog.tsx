@@ -13,7 +13,7 @@ import { toFont, toSize } from '../helpers/scaling';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import { showToast } from './CustomToast';
-import { rawToCards } from '../helpers/utility';
+import { rawToCards, readFile } from '../helpers/utility';
 import { INSTRUCTION_URL } from '../config/conf';
 import ColorPicker from 'react-native-wheel-color-picker';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -188,16 +188,30 @@ const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogOpen, bo
 
   const onCreateClick = async () => {
     try {
+      let cards: _Card[] | null = [];
+      if (dialogOpen.set?.cards.length) {
+        cards = dialogOpen.set.cards;
+      }
+
       if (!doc && !dialogOpen.set?.cards) {
         showToast('No card file uploaded.', 'error');
         return;
       }
 
-      let cards: _Card[] | null = [];
-      if (doc) {
-        const fileContent = await FileSystem.readAsStringAsync(doc!.uri);
-        cards = await rawToCards(fileContent, isPremium);
+      const { name, bgColor, fgColor } = input;
+      if (!name) {
+        showToast('Please input all the fields', 'error');
+        return;
+      }
 
+      if (doc) {
+        const fileContent = await readFile(doc.uri);
+        if (!fileContent) {
+          showToast("Couldn't read from the file", 'error');
+          return;
+        }
+
+        cards = await rawToCards(fileContent, isPremium);
         if (!cards) {
           showToast('Free tier allows 50 cards per deck; Please use acceptable headers only.', 'error');
           return;
@@ -209,15 +223,6 @@ const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogOpen, bo
         }
       }
 
-      if (dialogOpen.set?.cards.length) {
-        cards = dialogOpen.set.cards;
-      }
-
-      const { name, bgColor, fgColor } = input;
-      if (!name) {
-        showToast('Please input all the fields', 'error');
-        return;
-      }
       const appearance = new _Appearance(bgColor || '#595959', fgColor || '#A5A5A5');
       const newSet = new _Set(name, appearance);
       newSet.cards = cards;

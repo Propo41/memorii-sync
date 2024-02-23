@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Linking, ScrollView, TouchableNativeFeedback, View } from 'react-native';
 import { Button, FAB, Image, Text, makeStyles } from '@rneui/themed';
 import { NavProps, NavRoutes } from '../config/routes';
@@ -19,23 +19,13 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import { INSTRUCTION_URL } from '../config/conf';
 import { FF_REGULAR } from '../theme/typography';
 import Icon2 from 'react-native-vector-icons/MaterialIcons';
-import { PurchasesPackage, PurchasesStoreProduct } from 'react-native-purchases';
+import { PurchasesPackage } from 'react-native-purchases';
 import { showToast } from '../components/CustomToast';
-
-const fetchAndSaveDeck = async (deckId: string) => {
-  const deck = await FirebaseApp.getInstance().getDeck(deckId);
-  if (deck) {
-    await Cache.getInstance().saveDeck(deckId, deck);
-    return deck;
-  }
-
-  return null;
-};
 
 type Pricing = {
   [key: string]: {
     type: 'Free' | 'Premium';
-    price: string;
+    priceString?: string;
     summary: string[];
   };
 };
@@ -45,15 +35,16 @@ type DeckItemProps = {
   bgColor: string;
   totalCards: number;
   mt?: number;
+  mb?: number;
   onDeckPress: () => void;
 };
 
-const DeckItem = ({ name, bgColor, totalCards, mt, onDeckPress }: DeckItemProps) => {
+const DeckItem = ({ name, bgColor, totalCards, mt, mb, onDeckPress }: DeckItemProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
 
   return (
-    <View style={{ ...styles.container, marginTop: mt || 0, backgroundColor: bgColor }}>
+    <View style={{ ...styles.container, marginTop: mt || 0, marginBottom: mb || 0, backgroundColor: bgColor }}>
       <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple(theme.colors.lightAsh!, false)} onPress={onDeckPress}>
         <View style={styles.contentContainer}>
           <Text style={styles.title} head3>
@@ -74,13 +65,11 @@ const DeckItem = ({ name, bgColor, totalCards, mt, onDeckPress }: DeckItemProps)
 };
 
 const pricingCards: Pricing = {
-  'brainflip.free': {
-    price: '৳ 0',
+  free: {
     type: 'Free',
     summary: ['You can make maximum 1 custom deck', 'Maximum 3 sets', 'Maximum 50 cards per deck', 'Lifetime access'],
   },
-  $rc_lifetime: {
-    price: '৳ 550',
+  offering_pro_access: {
     type: 'Premium',
     summary: [
       'You can make unlimited custom decks and cards',
@@ -100,18 +89,19 @@ const PricingCard = ({ onPricingSelect, isPremium }: PricingCardProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
   const [selection, setSelection] = useState(0);
+
   // @ts-expect-error
-  const [packages, setPackages] = useState<PurchasesPackage[]>([{ identifier: 'brainflip.free' }]);
+  const [offerings, setOfferings] = useState<PurchasesPackage[]>([{ offeringIdentifier: 'free', product: { priceString: 'Free' } }]);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
       !isPremium &&
-        packages.length < 2 &&
+        offerings.length < 2 &&
         fetchOfferings()
           .then((data) => {
             if (data) {
-              setPackages([...packages, ...data]);
+              setOfferings([...offerings, ...data]);
             }
           })
           .catch(() => showToast("Opps, couldn't fetch store details"))
@@ -124,10 +114,10 @@ const PricingCard = ({ onPricingSelect, isPremium }: PricingCardProps) => {
   return (
     <View style={styles.pricingCardContainer}>
       <View style={styles.pricingContentContainerTop}>
-        <Text head1>{pricingCards[packages[selection].identifier].price}</Text>
+        <Text head1>{offerings[selection].product.priceString}</Text>
         <View style={styles.pricingStackedBtnsContainer}>
-          {packages.map((p, index) => {
-            const item = pricingCards[p.identifier];
+          {offerings.map((p, index) => {
+            const item = pricingCards[p.offeringIdentifier];
 
             return (
               <Button
@@ -149,7 +139,7 @@ const PricingCard = ({ onPricingSelect, isPremium }: PricingCardProps) => {
         </View>
       </View>
       <View style={styles.pricingContentContainerBtm}>
-        {pricingCards[packages[selection].identifier].summary.map((summary, index) => {
+        {pricingCards[offerings[selection].offeringIdentifier].summary.map((summary, index) => {
           return (
             // eslint-disable-next-line react-native/no-inline-styles
             <View key={index} style={{ marginTop: index === 0 ? 8 : 15, ...styles.pricingSummary }}>
@@ -163,7 +153,7 @@ const PricingCard = ({ onPricingSelect, isPremium }: PricingCardProps) => {
 
         <Button
           onPress={() => {
-            onPricingSelect(packages[selection]);
+            onPricingSelect(offerings[selection]);
           }}
           title={'Continue'}
           buttonStyle={styles.pricingBtn}
@@ -194,24 +184,6 @@ export default function MyDecks({ navigation }: NavProps) {
         return;
       }
 
-      const fetchDecks = async (user: _User) => {
-        const decksList: _Deck[] = [];
-        if (user.decksCreated) {
-          for (const deckId of user.decksCreated) {
-            const deck = await fetchAndSaveDeck(deckId);
-            if (deck) {
-              deck.id = deckId;
-              decksList.push(deck);
-            }
-          }
-        }
-
-        setDecks(decksList);
-
-        animationRef.current?.pause();
-        return decksList;
-      };
-
       FirebaseApp.getInstance()
         .getUser(currentUser.uid)
         .then(async (user) => {
@@ -234,8 +206,12 @@ export default function MyDecks({ navigation }: NavProps) {
           }, 500);
 
           setUser(user);
-          const res = await fetchDecks(user);
-          if (res.length === 0) {
+          const decksList = await Cache.getInstance().getDecks(user.decksCreated);
+          setDecks(decksList);
+
+          animationRef.current?.pause();
+
+          if (decksList.length === 0) {
             setIsEmpty(true);
           } else {
             setIsEmpty(false);
@@ -248,11 +224,17 @@ export default function MyDecks({ navigation }: NavProps) {
   );
 
   const onPricingSelect = async (pkg: PurchasesPackage) => {
-    if (pricingCards[pkg.identifier].type === 'Free') {
+    if (pricingCards[pkg.offeringIdentifier].type === 'Free') {
       setShowPricingCard(false);
     } else {
-      const customerInfo = await makePurchase(pkg);
-      console.log(customerInfo);
+      const transaction = await makePurchase(user!.id, pkg);
+      if (transaction) {
+        await FirebaseApp.getInstance().makePremium(user!.id);
+        showToast('Congratulations 🎉 You have unlocked premium access!');
+        setShowPricingCard(false);
+        // @ts-expect-error
+        setUser({ ...user, isPremium: true });
+      }
     }
   };
 
@@ -261,7 +243,7 @@ export default function MyDecks({ navigation }: NavProps) {
       return;
     }
 
-    if (user.decksCreated.length === 0 && !user?.isPremium) {
+    if ((user.decksCreated || []).length === 0 && !user?.isPremium) {
       setShowPricingCard(false);
       navigation.push(NavRoutes.CreateDeck);
     } else if (user.isPremium) {
@@ -305,6 +287,7 @@ export default function MyDecks({ navigation }: NavProps) {
                     key={index}
                     name={deck.name}
                     mt={index > 0 ? 8 : 0}
+                    mb={index === decks.length - 1 ? 70 : 0}
                     bgColor={bgColor}
                     totalCards={totalCards}
                     onDeckPress={() => {

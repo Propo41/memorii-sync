@@ -1,6 +1,6 @@
 import NavigationBar from '../components/NavigationBar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import React, { View, Animated, PanResponder, StatusBar, AppState } from 'react-native';
+import React, { View, Animated, PanResponder, StatusBar } from 'react-native';
 import { Button, FAB, LinearProgress, makeStyles, Text, useTheme } from '@rneui/themed';
 import { SCREEN_HEIGHT, SCREEN_WIDTH, toSize } from '../helpers/scaling';
 import Card from '../components/Card';
@@ -8,7 +8,6 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import EntypoIcons from 'react-native-vector-icons/Entypo';
 import { STATUSBAR_HEIGHT, iconSize } from '../config';
 import { _Card } from '../models/dto';
-import { FirebaseApp } from '../models/FirebaseApp';
 import { NavProps } from '../config/routes';
 import { Cache } from '../models/Cache';
 import LottieView from 'lottie-react-native';
@@ -81,7 +80,6 @@ const CardsScreen = ({ route }: NavProps) => {
   const [cardStatuses, setCardStatuses] = useState<Record<number, boolean>>({});
   const styles = useStyles();
   const { theme } = useTheme();
-  const [appState, setAppState] = useState<string>(AppState.currentState);
   const [loading, setLoading] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
   const { t } = useTranslation();
@@ -107,25 +105,15 @@ const CardsScreen = ({ route }: NavProps) => {
   }, [sound]);
 
   useEffect(() => {
-    // on create
-    const subscriptionInactive = AppState.addEventListener('change', onPause);
-    const subscriptionMemoryWarning = AppState.addEventListener('memoryWarning', onPause);
-
     return () => {
       // on destroy
-      saveCardStatuses();
-
-      // @ts-expect-error remove() does exit
-      subscriptionInactive.remove();
-      // @ts-expect-error remove() does exit
-      subscriptionMemoryWarning.remove();
       SystemNavigationBar.setBackgroundColorAsync(theme.colors.background);
     };
   }, []);
 
   useEffect(() => {
     const fetchData = async () => {
-      const cardStatuses = await FirebaseApp.getInstance().getCardStatuses(userId, deckId, setId);
+      const cardStatuses = await Cache.getInstance().getCardStatuses(deckId, setId);
       if (cardStatuses) {
         setCardStatuses(cardStatuses);
       }
@@ -137,10 +125,11 @@ const CardsScreen = ({ route }: NavProps) => {
   }, []);
 
   useEffect(() => {
-    if (currentCard.index === 0) return;
+    if (currentCard.index === 0) return;    
     setProgress(currentCard.index / cards.length);
     setCardStatuses((prev) => {
       const statuses = { ...prev, [cards[currentCard.index - 1].id]: currentCard.isCorrect };
+      Cache.getInstance().saveCardStatuses(deckId, setId, statuses);
       return statuses;
     });
 
@@ -268,23 +257,6 @@ const CardsScreen = ({ route }: NavProps) => {
       useNativeDriver: false,
       duration: duration,
     }).start(() => removeCard(true));
-  };
-
-  const saveCardStatuses = () => {
-    Cache.getInstance()
-      .getCardStatuses(userId, deckId, setId)
-      .then(async (statuses) => {
-        if (statuses !== null) {
-          await FirebaseApp.getInstance().updateCardStatuses(userId, deckId, setId, statuses);
-        }
-      });
-  };
-
-  const onPause = (nextAppState: string) => {
-    if (appState === 'active' && nextAppState.match(/inactive|background/)) {
-      saveCardStatuses();
-    }
-    setAppState(nextAppState);
   };
 
   function shuffleCards() {

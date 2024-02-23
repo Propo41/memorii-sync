@@ -37,7 +37,7 @@ export default function App() {
 
     const setup = async () => {
       if (Platform.OS == 'android') {
-        await Purchases.configure({ apiKey: REVENUECAT_GOOGLE_API_KEY, appUserID: REVENUECAT_USER_ID });
+        await Purchases.configure({ apiKey: REVENUECAT_GOOGLE_API_KEY });
       }
     };
 
@@ -45,20 +45,6 @@ export default function App() {
 
     setup().catch((e) => {
       log('Error', e);
-    });
-  }, []);
-
-  useEffect(() => {
-    const setup = async () => {
-      if (Platform.OS == 'android') {
-        await Purchases.configure({ apiKey: REVENUECAT_GOOGLE_API_KEY, appUserID: REVENUECAT_USER_ID });
-      }
-    };
-
-    Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
-
-    setup().catch((e) => {
-      console.log(e);
     });
   }, []);
 

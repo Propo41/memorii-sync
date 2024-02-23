@@ -1,3 +1,4 @@
+import { PurchasesPackage } from 'react-native-purchases';
 import { Card } from './Card';
 
 export class Market {
@@ -7,10 +8,11 @@ export class Market {
   subtitle: string;
   price: number;
   discountRate: number;
-  discountValidTill?: Date;
   color: string;
   description: string;
   samples: Card[];
+  offeringIdentifier?: string; // revenue cat product identifier
+  _package?: PurchasesPackage;
 
   constructor(
     title: string,
@@ -43,8 +45,8 @@ export class Market {
       _market.samples,
       _market.discountRate || 0
     );
-    market.discountValidTill = _market.discountValidTill;
 
+    market.offeringIdentifier = _market.offeringIdentifier;
     return market;
   }
 }

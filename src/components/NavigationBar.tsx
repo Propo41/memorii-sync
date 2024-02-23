@@ -35,8 +35,7 @@ const useStyles = makeStyles((theme) => ({
   container: {
     display: 'flex',
     flexDirection: 'row',
-    paddingTop: theme.spacing.sm,
-    paddingBottom: margins.window_vert,
+    marginBottom: 10,
     backgroundColor: theme.colors.background,
     paddingHorizontal: margins.window_hor_w_icon,
   },

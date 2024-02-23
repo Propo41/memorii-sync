@@ -16,27 +16,30 @@ import { useTranslation } from 'react-i18next';
 import * as NavigationBar from 'expo-navigation-bar';
 import { kickUser } from '../helpers/utility';
 
-const fetchAndSaveDeck = async (deckId: string) => {
-  const deck = await FirebaseApp.getInstance().getDeck(deckId);
-  if (deck) {
-    await Cache.getInstance().saveDeck(deckId, deck);
-    return deck;
+const getCompletionCount = async (deck: _Deck) => {
+  const setIds = Array.from({ length: deck.sets.length }, (_, index) => index);
+  let total = 0;
+  for (const setId of setIds) {
+    const statuses = await Cache.getInstance().getCardStatuses(deck.id!, setId.toString());
+    if (statuses) {
+      total += Object.values(statuses).filter(Boolean).length;
+    }
   }
 
-  return null;
-};
-
-const getCompletionCount = async (userId: string, deckId: string) => {
-  return await FirebaseApp.getInstance().getDeckStatus(userId, deckId);
+  return total;
 };
 
 const calculateDeckProgress = async (userId: string, decksList: _Deck[]) => {
+  const updatedDecks = [];
   for (const deck of decksList) {
     const total = deck.sets.reduce((acc, set) => acc + (set.cards?.length || 0), 0);
-    const completed = await getCompletionCount(userId, deck!.id!);
+    const completed = await getCompletionCount(deck);
     const progress = completed / total;
     deck._progress = progress;
+    updatedDecks.push(deck);
   }
+
+  return updatedDecks;
 };
 
 export default function HomeScreen({ navigation }: NavProps) {
@@ -44,7 +47,6 @@ export default function HomeScreen({ navigation }: NavProps) {
   const { theme } = useTheme();
   const [decks, setDecks] = useState<_Deck[]>([]);
   const [user, setUser] = useState<_User>();
-  const [loading, setLoading] = useState(false);
   const animationRef = useRef<LottieView>(null);
   // app state
   const { setMode } = useThemeMode();
@@ -63,36 +65,6 @@ export default function HomeScreen({ navigation }: NavProps) {
 
   useFocusEffect(
     useCallback(() => {
-      const fetchDecks = async (user: _User) => {
-        const decksList: _Deck[] = [];
-
-        if (user.decksPurchased) {
-          for (const deckId of user.decksPurchased) {
-            const deck = await fetchAndSaveDeck(deckId);
-            if (deck) {
-              deck.id = deckId;
-              decksList.push(deck);
-            }
-          }
-        }
-
-        if (user.decksCreated) {
-          for (const deckId of user.decksCreated) {
-            const deck = await fetchAndSaveDeck(deckId);
-            if (deck) {
-              deck.id = deckId;
-              decksList.push(deck);
-            }
-          }
-        }
-
-        await calculateDeckProgress(user.id, decksList);
-        setDecks(decksList);
-        animationRef.current?.pause();
-
-        return decksList;
-      };
-
       const currentUser = auth().currentUser;
       if (!currentUser) {
         kickUser(navigation, t);
@@ -107,25 +79,25 @@ export default function HomeScreen({ navigation }: NavProps) {
             return;
           }
 
-          const loadingTimer = setTimeout(() => {
-            setLoading(true);
-            animationRef.current?.play();
-          }, 500);
-
           setUser(user);
           setUserPreference(user);
+          let deckList = await Cache.getInstance().getDecks([...user.decksPurchased, ...user.decksCreated]);
+          // check if user has any decks in database
+          if (deckList.length === 0) {
+            for (const deckId of user.decksPurchased) {
+              const deck = await FirebaseApp.getInstance().getDeck(deckId);
+              if (deck) deckList.push(deck);
+            }
+          }
 
-          const res = await fetchDecks(user);
-          await calculateDeckProgress(user.id, decks);
+          animationRef.current?.pause();
+          setDecks(await calculateDeckProgress(user.id, deckList));
 
-          if (res.length === 0) {
+          if (deckList.length === 0) {
             setIsEmpty(true);
           } else {
             setIsEmpty(false);
           }
-
-          clearTimeout(loadingTimer);
-          setLoading(false);
         });
     }, [])
   );
@@ -147,37 +119,32 @@ export default function HomeScreen({ navigation }: NavProps) {
             </Text>
           </View>
         )}
-        {!loading && (
-          <>
-            <View style={{ marginTop: theme.spacing.lg }}>
-              {decks.map((deck, index) => {
-                const { bgColor, fgColor, trackColor, textColor } = deck.appearance;
+        <View style={{ marginTop: theme.spacing.lg }}>
+          {decks.map((deck, index) => {
+            const { bgColor, fgColor, trackColor, textColor } = deck.appearance;
 
-                return (
-                  <Deck
-                    key={index}
-                    name={deck.name}
-                    progress={deck._progress || 0}
-                    mt={index > 0 ? 8 : 0}
-                    mb={index === decks.length - 1 ? 70 : 0}
-                    containerBgColor={bgColor}
-                    pbColor={fgColor}
-                    pbBackgroundColor={trackColor!}
-                    textColor={textColor}
-                    onDeckPress={() => {
-                      // @ts-expect-error cant fix this ts error
-                      navigation.push(NavRoutes.Sets, {
-                        deckId: deck.id,
-                      });
-                    }}
-                  />
-                );
-              })}
-            </View>
-          </>
-        )}
+            return (
+              <Deck
+                key={index}
+                name={deck.name}
+                progress={deck._progress || 0}
+                mt={index > 0 ? 8 : 0}
+                mb={index === decks.length - 1 ? 70 : 0}
+                containerBgColor={bgColor}
+                pbColor={fgColor}
+                pbBackgroundColor={trackColor!}
+                textColor={textColor}
+                onDeckPress={() => {
+                  // @ts-expect-error cant fix this ts error
+                  navigation.push(NavRoutes.Sets, {
+                    deckId: deck.id,
+                  });
+                }}
+              />
+            );
+          })}
+        </View>
       </ScrollView>
-      {loading && <LottieView ref={animationRef} loop={true} source={require('../assets/animation/loading-animation.json')} style={styles.loading} />}
     </View>
   );
 }

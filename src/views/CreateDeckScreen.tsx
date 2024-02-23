@@ -19,6 +19,7 @@ import { kickUser } from '../helpers/utility';
 import { NavProps } from '../config/routes';
 import ColorPicker from 'react-native-wheel-color-picker';
 import BottomSheet from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheet/BottomSheet';
+import { Cache } from '../models/Cache';
 
 type InputFields = {
   id?: string;
@@ -90,6 +91,7 @@ const DummyDeckItem = ({ name, bgColor, fgColor, trackColor, mt, onEditColorPres
 type SetItemProps = {
   name: string;
   mt?: number;
+  mb?: number;
   totalCards: number;
   onDeleteClick: () => void;
   onEditClick: () => void;
@@ -112,12 +114,12 @@ const showAlert = (title: string, subtitle: string, onConfirm: () => void) =>
     }
   );
 
-const SetItem = ({ name, totalCards, mt, onEditClick, onDeleteClick }: SetItemProps) => {
+const SetItem = ({ name, totalCards, mt, mb, onEditClick, onDeleteClick }: SetItemProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
 
   return (
-    <View style={{ ...styles.setContainer, marginTop: mt || 0 }}>
+    <View style={{ ...styles.setContainer, marginTop: mt || 0, marginBottom: mb || 0 }}>
       <Text>{name}</Text>
       <Text> : ({totalCards})</Text>
       <View style={styles.flexGrow} />
@@ -274,13 +276,13 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     }
 
     if (isEditing) {
-      await FirebaseApp.getInstance().updateDeck(input.id!, newDeck);
+      await Cache.getInstance().updateDeck(input.id!, newDeck);
       showToast('Edited deck!');
       navigation.goBack();
       return;
     }
 
-    const deckId = await FirebaseApp.getInstance().createDeck(newDeck);
+    const deckId = await Cache.getInstance().createDeck(newDeck);
     if (deckId) {
       await FirebaseApp.getInstance().addDeckToUser(deckId, currentUser.uid);
     } else {
@@ -296,7 +298,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     const currentUser = auth().currentUser;
     if (!currentUser) return;
 
-    await FirebaseApp.getInstance().deleteDeck(currentUser.uid!, input!.id!);
+    await Cache.getInstance().deleteDeck(input.id!);
     navigation.goBack();
   };
 
@@ -325,7 +327,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     <View style={styles.rootContainer}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <NavigationBar title={t('screens.myDecks.create_deck')} />
-        <View style={{ marginTop: theme.spacing.xs, paddingHorizontal: margins.window_hor }}>
+        <View style={{ marginTop: theme.spacing.lg, paddingHorizontal: margins.window_hor }}>
           <CustomTextInput name={'name'} value={input.name!} onChange={onInputChange} placeholder={t('screens.myDecks.input.enter_name')} />
           <Text body1_bold style={{ color: theme.colors.text, ...styles.mt0 }}>
             {t('screens.myDecks.deck_appr')}
@@ -370,6 +372,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
                   totalCards={set.cards.length}
                   key={index}
                   mt={index === 0 ? 10 : 7}
+                  mb={index === sets.length - 1 ? 70 : 0}
                   onEditClick={() => {
                     // open dialog
                     console.log(`editing: set: ${set.name}`);
