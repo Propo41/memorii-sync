@@ -4,6 +4,7 @@ import { Switch } from '@rneui/themed';
 import React, { useEffect, useState } from 'react';
 import { ColorValue, TouchableNativeFeedback, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import EntypoIcon from 'react-native-vector-icons/Entypo';
 import ChangeLanguageDialog from '../components/ChangeLanguageDialog';
 import TitleBar from '../components/TitleBar';
 import { iconSize, Language, margins } from '../config';
@@ -21,11 +22,12 @@ type MenuProps = {
   title: string;
   Icon1: React.ReactElement;
   subtitle?: string;
+  color?: string;
   Icon2?: React.ReactElement;
   onPress: () => void;
 };
 
-const Menu = ({ Icon1, title, subtitle, Icon2, onPress }: MenuProps) => {
+const Menu = ({ Icon1, title, subtitle, Icon2, onPress, color }: MenuProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
 
@@ -37,7 +39,7 @@ const Menu = ({ Icon1, title, subtitle, Icon2, onPress }: MenuProps) => {
     <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple(theme.colors.touchable as ColorValue, false)} onPress={onClick}>
       <View style={styles.menuContainer}>
         {Icon1}
-        <Text body1_bold style={styles.menuTitle}>
+        <Text body1_bold style={{ ...styles.menuTitle, color: color || theme.colors.text }}>
           {title}
         </Text>
         <Text body1 style={styles.menuSubtitle}>
@@ -138,16 +140,23 @@ export default function SettingsScreen({ navigation }: NavProps) {
         }
       />
       <Divider style={styles.divider} color={theme.colors.touchable} />
-      {/* todo <Menu
-        title={t('screens.settings.helpAndSupport')}
+      <Menu
+        title={t('screens.settings.import')}
         onPress={() => {}}
-        Icon1={<Icon name="help" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
+        Icon1={<EntypoIcon name="download" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
         Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
       />
-      <Divider style={styles.divider} color={theme.colors.touchable} /> */}
+      <Menu
+        title={t('screens.settings.export')}
+        onPress={() => {}}
+        Icon1={<EntypoIcon name="upload-to-cloud" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
+        Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
+      />
+      <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
         title={t('screens.settings.logout')}
         onPress={onSignOutClick}
+        color={theme.colors.orange}
         Icon1={<Icon name="logout" style={styles.icon1} color={theme.colors.orange} size={iconSize.sm} onPress={toggleDarkMode} />}
       />
       {/* dialogs */}

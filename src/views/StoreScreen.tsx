@@ -15,7 +15,10 @@ import { showToast } from '../components/CustomToast';
 import { Sound } from 'expo-av/build/Audio';
 import * as SystemNavigationBar from 'expo-navigation-bar';
 import { Market } from '../models/dto/Market';
-import { isValidUrl, log } from '../helpers/utility';
+import { isValidUrl, log, makePurchase } from '../helpers/utility';
+import auth from '@react-native-firebase/auth';
+import { FirebaseApp } from '../models/FirebaseApp';
+import { Cache } from '../models/Cache';
 
 type SampleCardProps = {
   word: string;
@@ -127,13 +130,13 @@ const SampleCard = ({ word, value1, value2, example, audio, onNextClick, onPrevC
   );
 };
 
-export default function StoreScreen({ route }: NavProps) {
+export default function StoreScreen({ route, navigation }: NavProps) {
   const { theme } = useTheme();
   const styles = useStyles();
   const { t } = useTranslation();
   // @ts-expect-error store is infact a type of Market. need to fix NavProps
   const store: Market = route.params!.store;
-  const { title, description, price, discountRate, samples } = store;
+  const { title, deckId, description, price, discountRate, samples, _package } = store;
   const [currentSampleIndex, setCurrentSampleIndex] = useState(0);
   const newPrice = price - (price * discountRate) / 100;
 
@@ -143,6 +146,33 @@ export default function StoreScreen({ route }: NavProps) {
       SystemNavigationBar.setBackgroundColorAsync(theme.mode === 'dark' ? theme.colors.violetShade! : theme.colors.white);
     };
   }, []);
+
+  const onPurchaseClick = async () => {
+    const currentUser = auth().currentUser;
+    if (!currentUser) {
+      return;
+    }
+
+    if (_package && newPrice > 0) {
+      const res = await makePurchase(currentUser.uid, _package);
+      if (res) {
+        showToast('Deck purchased 🎊');
+      }
+    } else {
+      showToast('Deck is being downloaded...');
+    }
+
+    await FirebaseApp.getInstance().addDeckToUser(deckId, currentUser.uid); // at first, attach the deck id to user
+
+    const downloadedDeck = await FirebaseApp.getInstance().getDeck(deckId); // next try downloading
+    if (!downloadedDeck) {
+      showToast("Couldn't get deck details. Please try again or contact support", 'error');
+      return;
+    }
+
+    await Cache.getInstance().updateDeck(deckId, downloadedDeck);
+    navigation.pop();
+  };
 
   return (
     <View style={styles.rootContainer}>
@@ -198,10 +228,11 @@ export default function StoreScreen({ route }: NavProps) {
       </ScrollView>
 
       <Button
-        title={t('screens.store.purchase')}
+        title={newPrice === 0 ? t('screens.store.download') : t('screens.store.purchase')}
         titleStyle={styles.purchaseButtonTitle}
         buttonStyle={styles.purchaseButton}
         containerStyle={styles.purchaseButtonContainer}
+        onPress={onPurchaseClick}
       />
     </View>
   );

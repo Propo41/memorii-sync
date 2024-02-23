@@ -78,7 +78,8 @@
             "meaning_2": "Meaning 2",
             "example": "Example",
             "audio": "Audio",
-            "purchase": "Purchase"
+            "purchase": "Purchase",
+            "download": "Download for free"
         },
         "toast": {
             "sessionExpired": "Session expired. Please login again.",

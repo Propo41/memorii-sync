@@ -6,6 +6,7 @@ export class Set {
   name: string;
   appearance: Appearance;
   cards: Card[] = [];
+  _progress?: number;
 
   constructor(name: string, appearance?: Appearance) {
     this.name = name;

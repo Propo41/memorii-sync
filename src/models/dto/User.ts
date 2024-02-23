@@ -25,8 +25,8 @@ export class User {
     const user = new User(_user.id, _user.name, _user.email, _user.profilePicture);
     user.id = _user.id;
     user.preferences = UserPreference.transform(_user.preferences);
-    user.decksCreated = _user.decksCreated;
-    user.decksPurchased = _user.decksPurchased;
+    user.decksCreated = _user.decksCreated || [];
+    user.decksPurchased = _user.decksPurchased || [];
     user.isPremium = _user.isPremium;
 
     return user;
