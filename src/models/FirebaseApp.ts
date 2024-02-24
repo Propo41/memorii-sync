@@ -117,7 +117,6 @@ export class FirebaseApp implements FirebaseAppInterface {
       const snapshot = await firestore().collection(this.collections.decks).doc(deckId).get();
       if (snapshot.exists) {
         const d = _Deck.transform(snapshot.data() as InstanceType<typeof _Deck>);
-        d.id = deckId;
         return d;
       }
     } catch (error: any) {
@@ -146,10 +145,10 @@ export class FirebaseApp implements FirebaseAppInterface {
     if (decks.length === 0) return;
 
     try {
-      const ref = storage().ref(`${userId}/decks/data.json`);
+      const ref = storage().ref(`backup/${userId}/decks/data.json`);
       await ref.putString(JSON.stringify(decks), storage.StringFormat.RAW, {
         contentType: 'application/json',
-        cacheControl: 'no-store', // disable caching\
+        cacheControl: 'no-store', // disable caching
         customMetadata: {
           createdBy: userId,
           createdAt: new Date().toUTCString(),
@@ -163,13 +162,14 @@ export class FirebaseApp implements FirebaseAppInterface {
   async restoreDecks(userId: string): Promise<_Deck[]> {
     const decks = [];
     try {
-      const url = await storage().ref(`${userId}/decks/data.json`).getDownloadURL();
+      const url = await storage().ref(`backup/${userId}/decks/data.json`).getDownloadURL();
       const res = await (await fetch(url)).json();
-
-      const parsedJson = JSON.parse(res);
-      for (const item of parsedJson) {
-        decks.push(_Deck.transform(item as InstanceType<typeof _Deck>));
+  
+      for (const item of res) {
+        const deck = _Deck.transform(item as InstanceType<typeof _Deck>);
+        decks.push(deck);
       }
+      
     } catch (error) {
       console.log(error);
     }

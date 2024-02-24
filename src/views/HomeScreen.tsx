@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Avatar, Image, Text, makeStyles, useTheme, useThemeMode } from '@rneui/themed';
 import React, { useCallback, useRef, useState } from 'react';
-import { ScrollView, StatusBar, View } from 'react-native';
+import { RefreshControl, ScrollView, StatusBar, View } from 'react-native';
 import Deck from '../components/Deck';
 import TitleBar from '../components/TitleBar';
 import { iconSize } from '../config';
@@ -53,15 +53,7 @@ export default function HomeScreen({ navigation }: NavProps) {
   const [_, setLanguage] = useState<string>('English');
   const { t, i18n } = useTranslation(); // i18n instance
   const [isEmpty, setIsEmpty] = useState(false);
-
-  const setUserPreference = async (user: _User) => {
-    const { locale, isDarkMode } = user.preferences;
-    setLanguage(locale);
-    i18n.changeLanguage(locale);
-
-    setMode(isDarkMode ? 'dark' : 'light');
-    await NavigationBar.setBackgroundColorAsync(isDarkMode ? theme.colors.violetShade! : theme.colors.white);
-  };
+  const [refreshing, setRefreshing] = React.useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -102,10 +94,27 @@ export default function HomeScreen({ navigation }: NavProps) {
     }, [])
   );
 
+  const onRefresh = React.useCallback(() => {
+    // todo fetch from firebase
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
+  const setUserPreference = async (user: _User) => {
+    const { locale, isDarkMode } = user.preferences;
+    setLanguage(locale);
+    i18n.changeLanguage(locale);
+
+    setMode(isDarkMode ? 'dark' : 'light');
+    await NavigationBar.setBackgroundColorAsync(isDarkMode ? theme.colors.violetShade! : theme.colors.white);
+  };
+
   return (
     <View>
       <StatusBar backgroundColor={theme.colors.background} hidden={false} />
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         <TitleBar
           title={t('screens.home.title')}
           subtitle={t('screens.home.subtitle')}

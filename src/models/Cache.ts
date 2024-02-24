@@ -35,9 +35,8 @@ export class Cache implements CacheInterface {
 
   async createDeck(deck: _Deck): Promise<string | null> {
     try {
-      const deckId = uuid.v4().toString();
-      await AsyncStorage.setItem(`${this.uid}/deck/${deckId}`, JSON.stringify(deck));
-      return deckId;
+      await AsyncStorage.setItem(`${this.uid}/deck/${deck.id}`, JSON.stringify(deck));
+      return deck.id;
     } catch (error: any) {
       log(error.message);
     }
@@ -73,7 +72,6 @@ export class Cache implements CacheInterface {
         for (const pair of data) {
           if (pair[1]) {
             const deck = _Deck.transform(JSON.parse(pair[1]));
-            deck.id = pair[0].split('/')[2]; // extracting the last part which is the deck id
             decks.push(deck);
           }
         }

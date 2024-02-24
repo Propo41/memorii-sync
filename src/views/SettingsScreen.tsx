@@ -1,8 +1,8 @@
-import { makeStyles, Text, useTheme, useThemeMode } from '@rneui/themed';
+import { Dialog, makeStyles, Text, useTheme, useThemeMode } from '@rneui/themed';
 import { Divider } from '@rneui/themed';
 import { Switch } from '@rneui/themed';
 import React, { useEffect, useState } from 'react';
-import { ColorValue, TouchableNativeFeedback, View } from 'react-native';
+import { Alert, ColorValue, TouchableNativeFeedback, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
 import ChangeLanguageDialog from '../components/ChangeLanguageDialog';
@@ -17,6 +17,9 @@ import { useTranslation } from 'react-i18next';
 import { UserPreference } from '../models/dto/UserPreference';
 import * as NavigationBar from 'expo-navigation-bar';
 import { log } from '../helpers/utility';
+import { _User } from '../models/dto';
+import { Cache } from '../models/Cache';
+import { FF_BOLD, FF_REGULAR } from '../theme/typography';
 
 type MenuProps = {
   title: string;
@@ -26,6 +29,23 @@ type MenuProps = {
   Icon2?: React.ReactElement;
   onPress: () => void;
 };
+
+const showAlert = (title: string, subtitle: string, onConfirm: () => void) =>
+  Alert.alert(
+    title,
+    subtitle,
+    [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      { text: 'Confirm', onPress: onConfirm },
+    ],
+    {
+      cancelable: true,
+    }
+  );
 
 const Menu = ({ Icon1, title, subtitle, Icon2, onPress, color }: MenuProps) => {
   const styles = useStyles();
@@ -59,6 +79,9 @@ export default function SettingsScreen({ navigation }: NavProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [language, setLanguage] = useState<Language>('English');
   const { t, i18n } = useTranslation(); //i18n instance
+  const [user, setUser] = useState<_User>();
+  const [backupAlertVisible, setBackupAlertVisible] = useState(false);
+  const [importAlertVisible, setImportAlertVisible] = useState(false);
 
   useEffect(() => {
     const getData = async () => {
@@ -70,6 +93,7 @@ export default function SettingsScreen({ navigation }: NavProps) {
         return;
       }
 
+      setUser(user);
       const { locale, isDarkMode } = user.preferences;
       setLanguage(locale);
       setMode(isDarkMode ? 'dark' : 'light');
@@ -95,9 +119,8 @@ export default function SettingsScreen({ navigation }: NavProps) {
   };
 
   const updatePreference = async (isDarkMode: boolean, locale: Language) => {
-    const currentUser = auth().currentUser;
-    if (!currentUser) return;
-    await FirebaseApp.getInstance().updateUserPreference(currentUser.uid, new UserPreference(isDarkMode, locale));
+    if (!user) return;
+    await FirebaseApp.getInstance().updateUserPreference(user.id, new UserPreference(isDarkMode, locale));
   };
 
   const onSignOutClick = async () => {
@@ -110,6 +133,26 @@ export default function SettingsScreen({ navigation }: NavProps) {
     }
     navigation.replace(NavRoutes.Login);
     await NavigationBar.setBackgroundColorAsync(theme.colors.white);
+  };
+
+  const onImportPress = async () => {
+    if (!user) return;
+    const decks = await FirebaseApp.getInstance().restoreDecks(user.id);
+    for (const deck of decks) {
+      await Cache.getInstance().updateDeck(deck.id, deck);
+    }
+
+    showToast('Import done!');
+    setImportAlertVisible(!importAlertVisible);
+  };
+
+  const onExportPress = async () => {
+    if (!user) return;
+    const deckList = await Cache.getInstance().getDecks([...user.decksCreated, ...user.decksPurchased]);
+    await FirebaseApp.getInstance().backUpDecks(user.id, deckList);
+
+    showToast('Backup done!');
+    setBackupAlertVisible(!backupAlertVisible);
   };
 
   return (
@@ -142,13 +185,13 @@ export default function SettingsScreen({ navigation }: NavProps) {
       <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
         title={t('screens.settings.import')}
-        onPress={() => {}}
+        onPress={() => setImportAlertVisible(true)}
         Icon1={<EntypoIcon name="download" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
         Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
       />
       <Menu
         title={t('screens.settings.export')}
-        onPress={() => {}}
+        onPress={() => setBackupAlertVisible(true)}
         Icon1={<EntypoIcon name="upload-to-cloud" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
         Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
       />
@@ -161,6 +204,22 @@ export default function SettingsScreen({ navigation }: NavProps) {
       />
       {/* dialogs */}
       <ChangeLanguageDialog dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} language={language} onLanguageChange={onLanguageChange} />
+      <Dialog isVisible={backupAlertVisible} onBackdropPress={() => setBackupAlertVisible(!backupAlertVisible)}>
+        <Text style={styles.alertTitle}>Backup data</Text>
+        <Text body1>Are you sure you want to export your data to the cloud for backup?</Text>
+        <Dialog.Actions>
+          <Dialog.Button title="CONFIRM" titleStyle={styles.alertActionButtonPos} onPress={onExportPress} />
+          <Dialog.Button title="CANCEL" titleStyle={styles.alertTitle} onPress={() => setBackupAlertVisible(!backupAlertVisible)} />
+        </Dialog.Actions>
+      </Dialog>
+      <Dialog isVisible={importAlertVisible} onBackdropPress={() => setImportAlertVisible(!importAlertVisible)}>
+        <Text style={styles.alertTitle}>Import data</Text>
+        <Text body1>You will be downloading all your backed up data from the cloud</Text>
+        <Dialog.Actions>
+          <Dialog.Button title="CONFIRM" titleStyle={styles.alertActionButtonPos} onPress={onImportPress} />
+          <Dialog.Button title="CANCEL" titleStyle={styles.alertTitle} onPress={() => setImportAlertVisible(!importAlertVisible)} />
+        </Dialog.Actions>
+      </Dialog>
     </>
   );
 }
@@ -171,7 +230,16 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 20,
-    paddingHorizontal: margins.window_hor + 15,
+    paddingHorizontal: margins.window_hor + 5,
+  },
+  alertTitle: {
+    fontFamily: FF_BOLD,
+    paddingBottom: 5,
+  },
+  alertActionButtonPos: {
+    fontFamily: FF_BOLD,
+    paddingBottom: 5,
+    color: theme.colors.orange,
   },
   divider: {
     marginHorizontal: margins.window_hor,

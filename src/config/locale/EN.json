@@ -56,7 +56,7 @@
             },
             "alerts": {
                 "delete_title": "Are you sure?",
-                "delete_subtitle": "Once you delete it, it cannot be reverted."
+                "delete_subtitle": "This will delete the deck from your device. To permanently delete it, backup your data from settings."
             },
             "edit_deck_btn": "Update",
             "deck_appr": "Deck Appearance",

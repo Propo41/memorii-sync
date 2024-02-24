@@ -2,6 +2,7 @@ import React, { ReactElement } from 'react';
 import { View } from 'react-native';
 import { makeStyles, Text } from '@rneui/themed';
 import { margins } from '../config';
+import { toSize } from '../helpers/scaling';
 
 type TitleProps = {
   title: string;
@@ -31,10 +32,10 @@ const TitleBar = ({ title, subtitle, icon }: TitleProps) => {
 
 const useStyles = makeStyles((theme) => ({
   container: {
+    paddingVertical: 0,
     display: 'flex',
     flexDirection: 'row',
     // paddingTop: margins.window_vert,
-    marginBottom: 15,
     paddingHorizontal: margins.window_hor,
   },
   titleContainer: {
@@ -44,8 +45,9 @@ const useStyles = makeStyles((theme) => ({
     color: theme.colors.purple,
   },
   text: {
-    marginTop: 5,
+    marginTop: 0,
     color: theme.colors.text,
+    marginBottom: toSize(7),
   },
 }));
 
