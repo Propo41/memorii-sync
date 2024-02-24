@@ -8,6 +8,12 @@ import { toFont } from '../helpers/scaling';
 export const FF_REGULAR = 'JosefinSans_400Regular';
 export const FF_BOLD = 'JosefinSans_700Bold';
 
+const lineHeight = (fontSize: number) => {
+  const responsiveFont = toFont(fontSize);
+  const multiplier = responsiveFont > 20 ? 0.1 : 1;
+  return Math.round(responsiveFont + responsiveFont * multiplier);
+};
+
 type FontStyle = {
   head1?: TextStyle;
   head2?: TextStyle;
@@ -22,19 +28,21 @@ const fontStyle: FontStyle = {
   head1: {
     fontSize: toFont(43),
     fontFamily: FF_BOLD,
+    lineHeight: lineHeight(43),
   },
   head2: {
     fontSize: toFont(35),
     fontFamily: FF_BOLD,
+    lineHeight: lineHeight(35),
   },
   head3: {
     fontSize: toFont(25),
     fontFamily: FF_BOLD,
+    lineHeight: lineHeight(25),
   },
   body1: {
     fontSize: toFont(20),
     fontFamily: FF_REGULAR,
-    lineHeight: 25,
   },
   body1_bold: {
     fontSize: toFont(20),

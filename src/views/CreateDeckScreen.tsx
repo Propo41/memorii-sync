@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, BackHandler, Keyboard, ScrollView, View } from 'react-native';
-import { Button, FAB, Overlay, Text, makeStyles, useTheme } from '@rneui/themed';
+import { BackHandler, Keyboard, ScrollView, View } from 'react-native';
+import { Button, Dialog, FAB, Overlay, Text, makeStyles, useTheme } from '@rneui/themed';
 import NavigationBar from '../components/NavigationBar';
 import { _Appearance, _Deck, _Set } from '../models/dto';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +9,7 @@ import { margins } from '../config';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { toFont, toSize } from '../helpers/scaling';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { FF_REGULAR } from '../theme/typography';
+import { FF_BOLD, FF_REGULAR } from '../theme/typography';
 import * as SystemNavigationBar from 'expo-navigation-bar';
 import CreateSetDialog from '../components/CreateSetDialog';
 import { showToast } from '../components/CustomToast';
@@ -97,23 +97,6 @@ type SetItemProps = {
   onEditClick: () => void;
 };
 
-const showAlert = (title: string, subtitle: string, onConfirm: () => void) =>
-  Alert.alert(
-    title,
-    subtitle,
-    [
-      {
-        text: 'Cancel',
-        onPress: () => console.log('Cancel Pressed'),
-        style: 'cancel',
-      },
-      { text: 'Confirm', onPress: onConfirm },
-    ],
-    {
-      cancelable: true,
-    }
-  );
-
 const SetItem = ({ name, totalCards, mt, mb, onEditClick, onDeleteClick }: SetItemProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
@@ -164,6 +147,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
   const [isEditing, setIsEditing] = useState(false);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [isPremium, setIsPremium] = useState(false); // Initial color state
+  const [deleteAlertVisible, setDeleteAlertVisible] = useState(false);
 
   const onColorChangeComplete = (color: string) => {
     setCurrentColor(color);
@@ -300,6 +284,9 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
 
     await Cache.getInstance().deleteDeck(input.id!);
     navigation.goBack();
+
+    setDeleteAlertVisible(!deleteAlertVisible);
+    showToast('Deck is deleted!');
   };
 
   const onEditColorPress = (type: string) => {
@@ -327,7 +314,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     <View style={styles.rootContainer}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <NavigationBar title={t('screens.myDecks.create_deck')} />
-        <View style={{ marginTop: theme.spacing.lg, paddingHorizontal: margins.window_hor }}>
+        <View style={{ marginTop: toSize(theme.spacing.sm), paddingHorizontal: margins.window_hor }}>
           <CustomTextInput name={'name'} value={input.name!} onChange={onInputChange} placeholder={t('screens.myDecks.input.enter_name')} />
           <Text body1_bold style={{ color: theme.colors.text, ...styles.mt0 }}>
             {t('screens.myDecks.deck_appr')}
@@ -392,7 +379,6 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
             })}
         </View>
       </ScrollView>
-
       {isEditing && (
         <Button
           title={t('screens.myDecks.delete_deck_btn')}
@@ -400,10 +386,9 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
           buttonStyle={{ ...styles.createBtn, backgroundColor: theme.colors.orange }}
           // eslint-disable-next-line react-native/no-inline-styles
           containerStyle={{ ...styles.deleteBtnContainer, display: isKeyboardShowing ? 'none' : 'flex' }}
-          onPress={() => showAlert(t('screens.myDecks.alerts.delete_title'), t('screens.myDecks.alerts.delete_subtitle'), onDeleteDeck)}
+          onPress={() => setDeleteAlertVisible(true)}
         />
       )}
-
       <Button
         title={isEditing ? t('screens.myDecks.edit_deck_btn') : t('screens.myDecks.create_deck_btn')}
         titleStyle={styles.createBtnTitle}
@@ -412,7 +397,6 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
         containerStyle={{ ...styles.createBtnContainer, width: isEditing ? '50%' : '100%', display: isKeyboardShowing ? 'none' : 'flex' }}
         onPress={onCreateDeck}
       />
-
       <CreateSetDialog
         dialogOpen={dialogOpen}
         isPremium={isPremium}
@@ -423,7 +407,6 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
         onAddSetClick={onSetAdded}
         bottomSheetRef={bottomSheetRef}
       />
-
       <Overlay
         isVisible={showColorModal.open}
         onBackdropPress={() => {
@@ -451,6 +434,14 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
           />
         </View>
       </Overlay>
+      <Dialog isVisible={deleteAlertVisible} onBackdropPress={() => setDeleteAlertVisible(!deleteAlertVisible)}>
+        <Text style={styles.alertTitle}>{t('screens.myDecks.alerts.delete_title')}</Text>
+        <Text body1>{t('screens.myDecks.alerts.delete_subtitle')}</Text>
+        <Dialog.Actions>
+          <Dialog.Button title="CONFIRM" titleStyle={styles.alertActionButtonPos} onPress={onDeleteDeck} />
+          <Dialog.Button title="CANCEL" titleStyle={styles.alertTitle} onPress={() => setDeleteAlertVisible(!deleteAlertVisible)} />
+        </Dialog.Actions>
+      </Dialog>
     </View>
   );
 }
@@ -464,6 +455,15 @@ const useStyles = makeStyles((theme) => ({
   },
   rootContainer: {
     height: '100%',
+  },
+  alertTitle: {
+    fontFamily: FF_BOLD,
+    paddingBottom: 5,
+  },
+  alertActionButtonPos: {
+    fontFamily: FF_BOLD,
+    paddingBottom: 5,
+    color: theme.colors.orange,
   },
   flexGrow: { flexGrow: 1 },
   setTitle: {

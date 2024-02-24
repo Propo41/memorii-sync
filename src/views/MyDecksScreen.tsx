@@ -167,9 +167,7 @@ const PricingCard = ({ onPricingSelect, isPremium }: PricingCardProps) => {
 export default function MyDecks({ navigation }: NavProps) {
   const styles = useStyles();
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(false);
   const [isEmpty, setIsEmpty] = useState(false);
-  const animationRef = useRef<LottieView>(null);
   const [user, setUser] = useState<_User>();
   const [showPricingCard, setShowPricingCard] = useState(false);
 
@@ -194,31 +192,15 @@ export default function MyDecks({ navigation }: NavProps) {
 
           console.log('user.isPremium', user.isPremium);
 
-          if (user.isPremium) {
-            setShowPricingCard(false);
-          } else {
-            setShowPricingCard(true);
-          }
-
-          const loadingTimer = setTimeout(() => {
-            setLoading(true);
-            animationRef.current?.play();
-          }, 500);
-
           setUser(user);
-          const decksList = await Cache.getInstance().getDecks(user.decksCreated);
+          const decksList = await Cache.getInstance().getDecks([...user.decksCreated, ...user.decksPurchased]);
           setDecks(decksList);
-
-          animationRef.current?.pause();
 
           if (decksList.length === 0) {
             setIsEmpty(true);
           } else {
             setIsEmpty(false);
           }
-
-          clearTimeout(loadingTimer);
-          setLoading(false);
         });
     }, [])
   );
@@ -244,6 +226,7 @@ export default function MyDecks({ navigation }: NavProps) {
     }
 
     if ((user.decksCreated || []).length === 0 && !user?.isPremium) {
+      // if user has not created any decks yet and the user is not a premium user, let him create a deck
       setShowPricingCard(false);
       navigation.push(NavRoutes.CreateDeck);
     } else if (user.isPremium) {
@@ -257,7 +240,7 @@ export default function MyDecks({ navigation }: NavProps) {
     <View style={styles.rootContainer}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <TitleBar title={t('screens.myDecks.title')} subtitle={t('screens.myDecks.subtitle')} />
-        {showPricingCard === true && <PricingCard onPricingSelect={onPricingSelect} isPremium={user?.isPremium || false} />}
+        {showPricingCard && <PricingCard onPricingSelect={onPricingSelect} isPremium={user?.isPremium || false} />}
         {isEmpty && (
           <View style={styles.notFoundContainer}>
             <Image source={require('../assets/not-found.png')} style={styles.emptyImage} />
@@ -275,7 +258,7 @@ export default function MyDecks({ navigation }: NavProps) {
             </Text>
           </View>
         )}
-        {!loading && decks.length > 0 && (
+        {!showPricingCard && decks.length > 0 && (
           <>
             <View style={{ marginTop: theme.spacing.lg }}>
               {decks.map((deck, index) => {
@@ -312,8 +295,6 @@ export default function MyDecks({ navigation }: NavProps) {
           onPress={onCreateDeckClick}
         />
       )}
-
-      {loading && <LottieView ref={animationRef} loop={true} source={require('../assets/animation/loading-animation.json')} style={styles.loading} />}
     </View>
   );
 }
