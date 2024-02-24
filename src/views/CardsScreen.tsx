@@ -27,7 +27,8 @@ type ControlsProps = {
   hasAudio: boolean;
 };
 
-const MARGIN_TOP = 10;
+const MARGIN_TOP = toSize(10);
+const CARD_HEIGHT = toSize(400);
 
 const Controls = ({ onPressCross, onPressRotate, onPressCheck, onPlayAudio, hasAudio }: ControlsProps) => {
   const styles = useStyles();
@@ -125,7 +126,7 @@ const CardsScreen = ({ route }: NavProps) => {
   }, []);
 
   useEffect(() => {
-    if (currentCard.index === 0) return;    
+    if (currentCard.index === 0) return;
     setProgress(currentCard.index / cards.length);
     setCardStatuses((prev) => {
       const statuses = { ...prev, [cards[currentCard.index - 1].id]: currentCard.isCorrect };
@@ -356,6 +357,7 @@ const CardsScreen = ({ route }: NavProps) => {
     <Animated.View style={{ ...styles.container, backgroundColor: backgroundColor }}>
       <StatusBar backgroundColor={theme.colors.cardsBackground} />
       <NavigationBar title="" style={{ backgroundColor: theme.colors.transparent }} />
+      {/* shuffle button */}
       <View style={styles.shuffleButtonContainer}>
         <Button
           radius={'xs'}
@@ -492,20 +494,23 @@ const useStyles = makeStyles((theme) => ({
   },
   correctGuess: {
     position: 'absolute',
-    top: toSize(70 - MARGIN_TOP),
-    left: SCREEN_WIDTH / 2 - 50,
+    top: toSize(60 - MARGIN_TOP),
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   wrongGuess: {
     position: 'absolute',
-    top: toSize(70 - MARGIN_TOP),
-    left: SCREEN_WIDTH / 2 - 75,
+    top: toSize(60 - MARGIN_TOP),
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   switchProgressContainer: {
     position: 'absolute',
     bottom: 0,
     right: 0,
     left: 0,
-    alignItems: 'center',
   },
   progress: {
     marginBottom: 20,
@@ -515,15 +520,14 @@ const useStyles = makeStyles((theme) => ({
   },
   controlsContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
     marginLeft: toSize(25),
     marginRight: toSize(25),
+    marginTop: toSize(CARD_HEIGHT + 20),
   },
   controls: {
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: toSize((SCREEN_HEIGHT - (460 + STATUSBAR_HEIGHT + 80) + MARGIN_TOP) / 2),
   },
   back: {
     backgroundColor: '#FDFFB4',
