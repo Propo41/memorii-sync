@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Linking, ScrollView, TouchableNativeFeedback, View } from 'react-native';
+import { Linking, RefreshControl, ScrollView, TouchableNativeFeedback, View } from 'react-native';
 import { Button, FAB, Image, Text, makeStyles } from '@rneui/themed';
 import { NavProps, NavRoutes } from '../config/routes';
 import TitleBar from '../components/TitleBar';
@@ -100,7 +100,7 @@ const PricingCard = ({ onPricingSelect, isPremium, showPricingCard }: PricingCar
           .then(async (items) => {
             const offerings = await fetchOfferings();
             console.log(offerings);
-            
+
             const appOffers = items.map((item) => {
               const inAppPackage = offerings.find((offeringPkg) => offeringPkg.offeringIdentifier === item.offeringIdentifier);
               if (inAppPackage) {
@@ -181,40 +181,48 @@ export default function MyDecks({ navigation }: NavProps) {
   const [isEmpty, setIsEmpty] = useState(false);
   const [user, setUser] = useState<_User>();
   const [showPricingCard, setShowPricingCard] = useState(false);
+  const [refreshing, setRefreshing] = React.useState(false);
 
   const [decks, setDecks] = useState<_Deck[]>([]);
   const { theme } = useTheme();
 
   useFocusEffect(
     useCallback(() => {
-      const currentUser = auth().currentUser;
-      if (!currentUser) {
-        kickUser(navigation, t);
-        return;
-      }
-
-      FirebaseApp.getInstance()
-        .getUser(currentUser.uid)
-        .then(async (user) => {
-          if (!user) {
-            kickUser(navigation, t);
-            return;
-          }
-
-          console.log('user.isPremium', user.isPremium);
-
-          setUser(user);
-          const decksList = await Cache.getInstance().getDecks([...user.decksCreated, ...user.decksPurchased]);
-          setDecks(decksList);
-
-          if (decksList.length === 0) {
-            setIsEmpty(true);
-          } else {
-            setIsEmpty(false);
-          }
-        });
+      init();
     }, [])
   );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    init();
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
+  const init = async () => {
+    const currentUser = auth().currentUser;
+    if (!currentUser) {
+      kickUser(navigation, t);
+      return;
+    }
+
+    const user = await FirebaseApp.getInstance().getUser(currentUser.uid);
+    if (!user) {
+      kickUser(navigation, t);
+      return;
+    }
+
+    setUser(user);
+    const decksList = await Cache.getInstance().getDecks([...user.decksCreated, ...user.decksPurchased]);
+    setDecks(decksList);
+
+    if (decksList.length === 0) {
+      setIsEmpty(true);
+    } else {
+      setIsEmpty(false);
+    }
+  };
 
   const onPricingSelect = async (pkg?: PurchasesPackage) => {
     if (!user) return;
@@ -250,7 +258,7 @@ export default function MyDecks({ navigation }: NavProps) {
 
   return (
     <View style={styles.rootContainer}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         <TitleBar title={t('screens.myDecks.title')} subtitle={t('screens.myDecks.subtitle')} />
         {showPricingCard && (
           <PricingCard onPricingSelect={onPricingSelect} isPremium={user?.isPremium || false} showPricingCard={setShowPricingCard} />

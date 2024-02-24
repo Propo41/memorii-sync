@@ -36,7 +36,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'row',
     marginBottom: 10,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.transparent,
     paddingHorizontal: margins.window_hor_w_icon,
   },
   icon: {
@@ -44,6 +44,7 @@ const useStyles = makeStyles((theme) => ({
   },
   text: {
     marginLeft: 20,
+    alignSelf: 'center',
     color: theme.colors.purple,
   },
   iconButton: {

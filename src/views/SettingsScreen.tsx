@@ -2,7 +2,7 @@ import { Dialog, makeStyles, Text, useTheme, useThemeMode } from '@rneui/themed'
 import { Divider } from '@rneui/themed';
 import { Switch } from '@rneui/themed';
 import React, { useEffect, useState } from 'react';
-import { Alert, ColorValue, TouchableNativeFeedback, View } from 'react-native';
+import { Alert, ColorValue, Linking, TouchableNativeFeedback, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
 import ChangeLanguageDialog from '../components/ChangeLanguageDialog';
@@ -20,6 +20,7 @@ import { log } from '../helpers/utility';
 import { _User } from '../models/dto';
 import { Cache } from '../models/Cache';
 import { FF_BOLD, FF_REGULAR } from '../theme/typography';
+import { INSTRUCTION_URL } from '../config/conf';
 
 type MenuProps = {
   title: string;
@@ -137,7 +138,13 @@ export default function SettingsScreen({ navigation }: NavProps) {
 
   const onImportPress = async () => {
     if (!user) return;
+
     const decks = await FirebaseApp.getInstance().restoreDecks(user.id);
+    if (decks.length === 0) {
+      showToast('No backup was found.', 'error');
+      return;
+    }
+
     for (const deck of decks) {
       await Cache.getInstance().updateDeck(deck.id, deck);
     }
@@ -148,7 +155,13 @@ export default function SettingsScreen({ navigation }: NavProps) {
 
   const onExportPress = async () => {
     if (!user) return;
+
     const deckList = await Cache.getInstance().getDecks([...user.decksCreated, ...user.decksPurchased]);
+    if (deckList.length === 0) {
+      showToast("You don't have any decks to back up yet!", 'error');
+      return;
+    }
+
     await FirebaseApp.getInstance().backUpDecks(user.id, deckList);
 
     showToast('Backup done!');
@@ -193,6 +206,12 @@ export default function SettingsScreen({ navigation }: NavProps) {
         title={t('screens.settings.export')}
         onPress={() => setBackupAlertVisible(true)}
         Icon1={<EntypoIcon name="upload-to-cloud" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
+        Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
+      />
+      <Menu
+        title={t('screens.settings.helpAndSupport')}
+        onPress={() => Linking.openURL(INSTRUCTION_URL)}
+        Icon1={<EntypoIcon name="help-with-circle" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
         Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
       />
       <Divider style={styles.divider} color={theme.colors.touchable} />
