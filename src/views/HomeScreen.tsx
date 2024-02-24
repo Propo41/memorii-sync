@@ -47,7 +47,6 @@ export default function HomeScreen({ navigation }: NavProps) {
   const { theme } = useTheme();
   const [decks, setDecks] = useState<_Deck[]>([]);
   const [user, setUser] = useState<_User>();
-  const animationRef = useRef<LottieView>(null);
   // app state
   const { setMode } = useThemeMode();
   const [_, setLanguage] = useState<string>('English');
@@ -57,46 +56,38 @@ export default function HomeScreen({ navigation }: NavProps) {
 
   useFocusEffect(
     useCallback(() => {
-      const currentUser = auth().currentUser;
-      if (!currentUser) {
-        kickUser(navigation, t);
-        return;
-      }
-
-      FirebaseApp.getInstance()
-        .getUser(currentUser.uid)
-        .then(async (user) => {
-          if (!user) {
-            await kickUser(navigation, t);
-            return;
-          }
-
-          setUser(user);
-          setUserPreference(user);
-          let deckList = await Cache.getInstance().getDecks([...user.decksPurchased, ...user.decksCreated]);
-          // check if user has any decks in database
-          if (deckList.length === 0) {
-            for (const deckId of user.decksPurchased) {
-              const deck = await FirebaseApp.getInstance().getDeck(deckId);
-              if (deck) deckList.push(deck);
-            }
-          }
-
-          animationRef.current?.pause();
-          setDecks(await calculateDeckProgress(user.id, deckList));
-
-          if (deckList.length === 0) {
-            setIsEmpty(true);
-          } else {
-            setIsEmpty(false);
-          }
-        });
+      init();
     }, [])
   );
 
-  const onRefresh = React.useCallback(() => {
-    // todo fetch from firebase
+  const init = async () => {
+    const currentUser = auth().currentUser;
+    if (!currentUser) {
+      kickUser(navigation, t);
+      return;
+    }
+
+    const user = await FirebaseApp.getInstance().getUser(currentUser.uid);
+    if (!user) {
+      await kickUser(navigation, t);
+      return;
+    }
+
+    setUser(user);
+    setUserPreference(user);
+    let deckList = await Cache.getInstance().getDecks([...user.decksPurchased, ...user.decksCreated]);
+    setDecks(await calculateDeckProgress(user.id, deckList));
+
+    if (deckList.length === 0) {
+      setIsEmpty(true);
+    } else {
+      setIsEmpty(false);
+    }
+  };
+
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
+    init();
     setTimeout(() => {
       setRefreshing(false);
     }, 2000);
