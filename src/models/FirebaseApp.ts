@@ -1,4 +1,4 @@
-import { _Deck, _Market, _Set, _User, _UserPreference } from './dto';
+import { _Deck, _Market, _Offering, _Set, _User, _UserPreference } from './dto';
 import firestore from '@react-native-firebase/firestore';
 import { fetch as netInfo } from '@react-native-community/netinfo';
 import { log } from '../helpers/utility';
@@ -14,6 +14,7 @@ interface FirebaseAppInterface {
 
   getDeck(deckId: string): Promise<_Deck | null>;
   fetchMarketItems(): Promise<_Market[]>;
+  fetchOffers(): Promise<_Offering[]>;
 
   backUpDecks(userId: string, decks: _Deck[]): Promise<void>;
   restoreDecks(userId: string): Promise<_Deck[]>;
@@ -21,7 +22,7 @@ interface FirebaseAppInterface {
 
 export class FirebaseApp implements FirebaseAppInterface {
   private static instance: FirebaseApp | null = null;
-  private collections = { users: 'users', decks: 'decks', market: 'market' };
+  private collections = { users: 'users', decks: 'decks', market: 'market', offers: 'offers' };
 
   constructor() {
     firestore().settings({
@@ -141,6 +142,21 @@ export class FirebaseApp implements FirebaseAppInterface {
     return items;
   }
 
+  async fetchOffers(): Promise<_Offering[]> {
+    const items: _Offering[] = [];
+    try {
+      const snapshot = await firestore().collection(this.collections.offers).get();
+      for (const doc of snapshot.docs) {
+        const item = _Offering.transform(doc.data() as InstanceType<typeof _Offering>);
+        items.push(item);
+      }
+    } catch (error: any) {
+      log(error.message);
+    }
+
+    return items;
+  }
+
   async backUpDecks(userId: string, decks: _Deck[]): Promise<void> {
     if (decks.length === 0) return;
 
@@ -164,12 +180,11 @@ export class FirebaseApp implements FirebaseAppInterface {
     try {
       const url = await storage().ref(`backup/${userId}/decks/data.json`).getDownloadURL();
       const res = await (await fetch(url)).json();
-  
+
       for (const item of res) {
         const deck = _Deck.transform(item as InstanceType<typeof _Deck>);
         decks.push(deck);
       }
-      
     } catch (error) {
       console.log(error);
     }

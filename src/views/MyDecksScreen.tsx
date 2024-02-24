@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Linking, ScrollView, TouchableNativeFeedback, View } from 'react-native';
 import { Button, FAB, Image, Text, makeStyles } from '@rneui/themed';
 import { NavProps, NavRoutes } from '../config/routes';
@@ -8,8 +8,7 @@ import auth from '@react-native-firebase/auth';
 import { useTranslation } from 'react-i18next';
 import { fetchOfferings, kickUser, makePurchase } from '../helpers/utility';
 import { FirebaseApp } from '../models/FirebaseApp';
-import LottieView from 'lottie-react-native';
-import { _Deck, _User } from '../models/dto';
+import { _Deck, _Offering, _User } from '../models/dto';
 import { Cache } from '../models/Cache';
 import { toFont, toSize } from '../helpers/scaling';
 import { useTheme } from '@rneui/themed';
@@ -64,65 +63,77 @@ const DeckItem = ({ name, bgColor, totalCards, mt, mb, onDeckPress }: DeckItemPr
   );
 };
 
-const pricingCards: Pricing = {
-  free: {
-    type: 'Free',
-    summary: ['You can make maximum 1 custom deck', 'Maximum 3 sets', 'Maximum 50 cards per deck', 'Lifetime access'],
-  },
-  offering_pro_access: {
-    type: 'Premium',
-    summary: [
-      'You can make unlimited custom decks and cards',
-      'Option to add 2 different meanings',
-      'Option to add self-hosted audio urls',
-      'Lifetime access',
-    ],
-  },
-};
+// const pricingCards: Pricing = {
+//   free: {
+//     type: 'Free',
+//     summary: ['You can make maximum 1 custom deck', 'Maximum 3 sets', 'Maximum 50 cards per deck', 'Lifetime access'],
+//   },
+//   offering_pro_access: {
+//     type: 'Premium',
+//     summary: [
+//       'You can make unlimited custom decks and cards',
+//       'Option to add 2 different meanings',
+//       'Option to add self-hosted audio urls',
+//       'Lifetime access',
+//     ],
+//   },
+// };
 
 type PricingCardProps = {
-  onPricingSelect: (p: PurchasesPackage) => void;
+  onPricingSelect: (p?: PurchasesPackage) => void;
   isPremium: boolean;
+  showPricingCard: (show: boolean) => void;
 };
 
-const PricingCard = ({ onPricingSelect, isPremium }: PricingCardProps) => {
+const PricingCard = ({ onPricingSelect, isPremium, showPricingCard }: PricingCardProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
   const [selection, setSelection] = useState(0);
 
-  // @ts-expect-error
-  const [offerings, setOfferings] = useState<PurchasesPackage[]>([{ offeringIdentifier: 'free', product: { priceString: 'Free' } }]);
-  const [loading, setLoading] = useState(true);
+  const [pricingCards, setPricingCards] = useState<_Offering[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       !isPremium &&
-        offerings.length < 2 &&
-        fetchOfferings()
-          .then((data) => {
-            if (data) {
-              setOfferings([...offerings, ...data]);
+        FirebaseApp.getInstance()
+          .fetchOffers()
+          .then(async (items) => {
+            const offerings = await fetchOfferings();
+            console.log(offerings);
+            
+            const appOffers = items.map((item) => {
+              const inAppPackage = offerings.find((offeringPkg) => offeringPkg.offeringIdentifier === item.offeringIdentifier);
+              if (inAppPackage) {
+                item._package = inAppPackage;
+              }
+
+              return item;
+            });
+
+            if (appOffers.length === 0) {
+              showToast("Coudn't retrieve app offerings. Connection issues?", 'error');
+              showPricingCard(false);
+            } else {
+              setPricingCards(appOffers);
             }
-          })
-          .catch(() => showToast("Opps, couldn't fetch store details"))
-          .finally(() => setLoading(false));
+          });
     }, [])
   );
 
-  if (loading) return null;
+  if (pricingCards.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.pricingCardContainer}>
       <View style={styles.pricingContentContainerTop}>
-        <Text head1>{offerings[selection].product.priceString}</Text>
+        <Text head1>{pricingCards[selection]?._package?.product.priceString}</Text>
         <View style={styles.pricingStackedBtnsContainer}>
-          {offerings.map((p, index) => {
-            const item = pricingCards[p.offeringIdentifier];
-
+          {pricingCards.map((p, index) => {
             return (
               <Button
                 key={index}
-                title={item.type}
+                title={p.type}
                 onPress={() => {
                   setSelection(index);
                 }}
@@ -139,7 +150,7 @@ const PricingCard = ({ onPricingSelect, isPremium }: PricingCardProps) => {
         </View>
       </View>
       <View style={styles.pricingContentContainerBtm}>
-        {pricingCards[offerings[selection].offeringIdentifier].summary.map((summary, index) => {
+        {pricingCards[selection]?.summary.map((summary, index) => {
           return (
             // eslint-disable-next-line react-native/no-inline-styles
             <View key={index} style={{ marginTop: index === 0 ? 8 : 15, ...styles.pricingSummary }}>
@@ -153,7 +164,7 @@ const PricingCard = ({ onPricingSelect, isPremium }: PricingCardProps) => {
 
         <Button
           onPress={() => {
-            onPricingSelect(offerings[selection]);
+            onPricingSelect(pricingCards[selection]?._package);
           }}
           title={'Continue'}
           buttonStyle={styles.pricingBtn}
@@ -205,16 +216,17 @@ export default function MyDecks({ navigation }: NavProps) {
     }, [])
   );
 
-  const onPricingSelect = async (pkg: PurchasesPackage) => {
-    if (pricingCards[pkg.offeringIdentifier].type === 'Free') {
+  const onPricingSelect = async (pkg?: PurchasesPackage) => {
+    if (!user) return;
+
+    if (!pkg) {
       setShowPricingCard(false);
     } else {
-      const transaction = await makePurchase(user!.id, pkg);
+      const transaction = await makePurchase(user.id, pkg);
       if (transaction) {
-        await FirebaseApp.getInstance().makePremium(user!.id);
+        await FirebaseApp.getInstance().makePremium(user.id);
         showToast('Congratulations 🎉 You have unlocked premium access!');
         setShowPricingCard(false);
-        // @ts-expect-error
         setUser({ ...user, isPremium: true });
       }
     }
@@ -225,7 +237,7 @@ export default function MyDecks({ navigation }: NavProps) {
       return;
     }
 
-    if ((user.decksCreated || []).length === 0 && !user?.isPremium) {
+    if ((user.decksCreated || []).length === 0 && user.isPremium) {
       // if user has not created any decks yet and the user is not a premium user, let him create a deck
       setShowPricingCard(false);
       navigation.push(NavRoutes.CreateDeck);
@@ -240,7 +252,9 @@ export default function MyDecks({ navigation }: NavProps) {
     <View style={styles.rootContainer}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <TitleBar title={t('screens.myDecks.title')} subtitle={t('screens.myDecks.subtitle')} />
-        {showPricingCard && <PricingCard onPricingSelect={onPricingSelect} isPremium={user?.isPremium || false} />}
+        {showPricingCard && (
+          <PricingCard onPricingSelect={onPricingSelect} isPremium={user?.isPremium || false} showPricingCard={setShowPricingCard} />
+        )}
         {isEmpty && (
           <View style={styles.notFoundContainer}>
             <Image source={require('../assets/not-found.png')} style={styles.emptyImage} />
