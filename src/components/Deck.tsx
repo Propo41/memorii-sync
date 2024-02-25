@@ -3,6 +3,7 @@ import { TouchableNativeFeedback, View } from 'react-native';
 import React from 'react';
 import { LinearProgress } from '@rneui/themed';
 import { margins } from '../config';
+import { useTranslation } from 'react-i18next';
 
 type DeckProps = {
   name: string;
@@ -18,6 +19,7 @@ type DeckProps = {
 
 const Deck = ({ name, progress, containerBgColor, pbColor, pbBackgroundColor, textColor, mt, mb, onDeckPress }: DeckProps) => {
   const styles = useStyles();
+  const { t } = useTranslation();
 
   return (
     <View style={{ ...styles.container, backgroundColor: containerBgColor, marginTop: mt || 0, marginBottom: mb || 0 }}>
@@ -34,7 +36,7 @@ const Deck = ({ name, progress, containerBgColor, pbColor, pbBackgroundColor, te
           />
           <View style={styles.progressStatusContainer}>
             <Text body2 style={[styles.flex, { color: textColor || styles.text.color }]}>
-              Completion
+              {t('screens.home.completion')}
             </Text>
             <Text style={{ color: textColor || styles.text.color }} body2>
               {(progress * 100).toFixed(0)}%

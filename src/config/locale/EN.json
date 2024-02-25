@@ -10,10 +10,8 @@
         "home": {
             "title": "Decks",
             "subtitle": "Your available decks",
-            "decksEmpty": {
-                "title": "No available decks",
-                "subtitle": "But the shop has many. Hurry up!"
-            }
+            "decksEmpty": "No decks yet. Buy one from the market or create one yourself!",
+            "completion": "Completion"
         },
         "sets": {
             "title": "Sets"
@@ -26,7 +24,20 @@
             "helpAndSupport": "Help & support",
             "languageSelect": "Choose language",
             "export": "Backup",
-            "import": "Import"
+            "import": "Import",
+            "log_out": "See you later! 👋",
+            "no_backup": "No backup was found.",
+            "import_done": "Import done",
+            "backup_done": "Backup done!",
+            "no_decks_backup": "You don't have any decks to back up yet!",
+            "alert": {
+                "backup_title": "Backup data",
+                "backup_subtitle": "Are you sure you want to export your data to the cloud for backup?",
+                "dialog_confirm": "Confirm",
+                "dialog_cancel": "Cancel",
+                "import_title": "Import data",
+                "import_subtitle": "You will be downloading all your backed up data from the cloud"
+            }
         },
         "cards": {
             "correctGuess": "I got it right",
@@ -38,7 +49,8 @@
             "example": "Example",
             "shuffle": "Shuffled the cards!",
             "switch1": "1",
-            "switch2": "2"
+            "switch2": "2",
+            "no_audio": "Couldn't play the audio. Network issue?"
         },
         "myDecks": {
             "title": "My Decks",
@@ -48,29 +60,53 @@
             "delete_deck_btn": "Delete",
             "input": {
                 "enter_name": "Enter name",
-                "enter_bg_color": "Enter bg color",
-                "enter_fg_color": "Enter fg color",
-                "enter_track_color": "Enter track color",
                 "upload_tsv_file": "Upload .tsv file",
                 "updating_set_cards_alert": "Uploading again will replace the existing one."
             },
             "alerts": {
                 "delete_title": "Are you sure?",
-                "delete_subtitle": "This will delete the deck from your device. To permanently delete it, backup your data from settings."
+                "delete_subtitle": "This will delete the deck from your device. To permanently delete it, backup your data from settings.",
+                "dialog_confirm": "Confirm",
+                "dialog_cancel": "Cancel"
+            },
+            "createDecks": {
+                "duplicate_set_name": "Please choose a different set name",
+                "validation_error": "Please fill all the input fields",
+                "no_sets": "No sets added yet.",
+                "edited_deck": "Edited deck!",
+                "added_deck": "Added deck!",
+                "deleted_deck": "Deck is deleted!",
+                "set_limit_error": "Maximum 3 sets are allowed in free tier",
+                "deck_creation_error": "Couldn't add deck. Please try again"
+            },
+            "createSets": {
+                "no_cards": "No card file uploaded",
+                "set_updated": "Set updated!",
+                "cards_total": "Total cards uploaded:",
+                "unknown_error": "Something went wrong:",
+                "no_lines": "The file does not have any lines in it.",
+                "cards_limit": "50 cards maximum in free tier. Please upgrade to have unlimited uploads.",
+                "no_cards_file": "No cards were found in the .tsv file",
+                "cant_read_file": "Couldn't read from the file"
             },
             "edit_deck_btn": "Update",
             "deck_appr": "Deck Appearance",
             "set_appr": "Set Appearance",
             "cards": "Cards",
             "sets": "Sets",
+            "btn_continue": "Continue",
+            "premium_unlocked": "Congratulations 🎉 You have unlocked premium access!",
             "instructions": "See the instructions on how to make a .tsv file",
             "instructions2": "See the instructions",
             "empty_my_decks": "No decks yet. Press the button below to create one yourself!",
             "empty_sets": "No sets added yet!",
             "create_set": "Create Set",
-            "update_set": "Update Set"
+            "update_set": "Update Set",
+            "app_offerings_not_found": "Coudn't retrieve app offerings. Connection issues?"
         },
         "store": {
+            "title": "Market",
+            "subtitle": "Buy ready-made decks",
             "view": "View",
             "description": "Description",
             "price": "Price",
@@ -80,12 +116,20 @@
             "meaning_2": "Meaning 2",
             "example": "Example",
             "audio": "Audio",
+            "deck_purchased": "Deck purchased 🎊",
+            "deck_downloading": "Deck is being downloaded..",
+            "deck_details_not_found": "Couldn't get deck details. Please try again or contact support",
             "purchase": "Purchase",
-            "download": "Download for free"
+            "download": "Download for free",
+            "audio_broken": "Audio url seems to be broken",
+            "audio_unplayable": "Couldn't play the audio. Network issue?"
         },
         "toast": {
             "sessionExpired": "Session expired. Please login again.",
             "cacheExpired": "Data was deleted. Try restaring the app!"
+        },
+        "misc": {
+            "text_input_placeholder": "Enter value"
         }
     }
 }

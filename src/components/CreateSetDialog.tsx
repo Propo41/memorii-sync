@@ -11,7 +11,6 @@ import { margins } from '../config';
 import { FF_REGULAR } from '../theme/typography';
 import { toFont, toSize } from '../helpers/scaling';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
 import { showToast } from './CustomToast';
 import { rawToCards, readFile } from '../helpers/utility';
 import { INSTRUCTION_URL } from '../config/conf';
@@ -20,7 +19,7 @@ import Entypo from 'react-native-vector-icons/Entypo';
 
 type CreateSetDialog = {
   onAddSetClick: (set: _Set) => boolean;
-  dialogOpen: { open: boolean; editing: boolean; set?: _Set | null };
+  dialogPayload: { open: boolean; editing: boolean; set?: _Set | null };
   closeDialog: () => void;
   bottomSheetRef: RefObject<BottomSheet>;
   isPremium: boolean;
@@ -94,7 +93,7 @@ const DummySetItem = ({ name, bgColor, fgColor, mt, onEditColorPress }: DummySet
   );
 };
 
-const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogOpen, bottomSheetRef }: CreateSetDialog) => {
+const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogPayload, bottomSheetRef }: CreateSetDialog) => {
   const snapPoints = useMemo(() => ['63%'], []);
   const { theme } = useTheme();
   const styles = useStyles();
@@ -115,15 +114,15 @@ const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogOpen, bo
   };
 
   useEffect(() => {
-    if (dialogOpen.set) {
-      const { name, appearance } = dialogOpen.set;
+    if (dialogPayload.set) {
+      const { name, appearance } = dialogPayload.set;
       const { fgColor, bgColor } = appearance;
 
       setInput({ name, bgColor, fgColor });
     } else {
       setInput({ name: '', bgColor: '#595959', fgColor: '#A5A5A5' });
     }
-  }, [dialogOpen.set]);
+  }, [dialogPayload.set]);
 
   useEffect(() => {
     Keyboard.addListener('keyboardDidShow', () => {
@@ -189,36 +188,41 @@ const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogOpen, bo
   const onCreateClick = async () => {
     try {
       let cards: _Card[] | null = [];
-      if (dialogOpen.set?.cards.length) {
-        cards = dialogOpen.set.cards;
+      if (dialogPayload.set?.cards.length) {
+        cards = dialogPayload.set.cards;
       }
 
-      if (!doc && !dialogOpen.set?.cards) {
-        showToast('No card file uploaded.', 'error');
+      if (!doc && !dialogPayload.set?.cards) {
+        showToast(t('screens.myDecks.createSets.no_cards'), 'error');
         return;
       }
 
       const { name, bgColor, fgColor } = input;
       if (!name) {
-        showToast('Please input all the fields', 'error');
+        showToast(t('screens.myDecks.createDecks.validation_error'), 'error');
         return;
       }
 
       if (doc) {
         const fileContent = await readFile(doc.uri);
         if (!fileContent) {
-          showToast("Couldn't read from the file", 'error');
+          showToast(t('screens.myDecks.createSets.cant_read_file'), 'error');
           return;
         }
 
-        cards = await rawToCards(fileContent, isPremium);
-        if (!cards) {
-          showToast('Free tier allows 50 cards per deck; Please use acceptable headers only.', 'error');
+        const { status, message, data } = await rawToCards(fileContent, isPremium, t);
+
+        if (data) {
+          cards = data;
+        }
+
+        if (!status) {
+          showToast(message!, 'error');
           return;
         }
 
         if (cards.length === 0) {
-          showToast('No cards were found in the .tsv file', 'error');
+          showToast(t('screens.myDecks.createSets.no_cards_file'), 'error');
           return;
         }
       }
@@ -228,15 +232,16 @@ const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogOpen, bo
       newSet.cards = cards;
 
       if (onAddSetClick(newSet) !== false) {
-        dialogOpen.editing ? showToast(`Set updated!`) : showToast(`Total ${newSet.cards.length} cards uploaded!`);
+        dialogPayload.editing
+          ? showToast(t('screens.myDecks.createSets.set_updated'))
+          : showToast(`${t('screens.myDecks.createSets.cards_total')} ${newSet.cards.length}`);
         onDialogClose();
         Keyboard.dismiss();
         setInput({});
         setDoc(null);
       }
     } catch (error: any) {
-      showToast(`Something went wrong: ${error.message}`);
-      console.log('Error reading file:', error);
+      showToast(`${t('screens.myDecks.createSets.unknown_error')} ${error.message}`);
     }
   };
 
@@ -280,7 +285,7 @@ const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogOpen, bo
 
           <TouchableOpacity onPress={onCardUpload}>
             <View style={styles.uploadContainer}>
-              {dialogOpen.editing ? (
+              {dialogPayload.editing ? (
                 <Text body2 style={styles.textAlign}>
                   {t('screens.myDecks.input.updating_set_cards_alert')}
                 </Text>
@@ -303,7 +308,7 @@ const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogOpen, bo
           <View style={styles.flexGrow} />
 
           <Button
-            title={dialogOpen.editing ? t('screens.myDecks.update_set') : t('screens.myDecks.create_set')}
+            title={dialogPayload.editing ? t('screens.myDecks.update_set') : t('screens.myDecks.create_set')}
             titleStyle={styles.createBtnTitle}
             buttonStyle={styles.createBtn}
             // eslint-disable-next-line react-native/no-inline-styles

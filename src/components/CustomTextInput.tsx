@@ -3,6 +3,7 @@ import React from 'react';
 import { KeyboardTypeOptions, TextInput } from 'react-native';
 import { FF_REGULAR } from '../theme/typography';
 import { toFont, toSize } from '../helpers/scaling';
+import { useTranslation } from 'react-i18next';
 
 type TextInputProps = {
   name: string; // name of the text input, ie email/name/phone etc
@@ -15,6 +16,7 @@ type TextInputProps = {
 
 export default function CustomTextInput({ name, value, onChange, keyboardType, placeholder, mt }: TextInputProps) {
   const styles = useStyles();
+  const { t } = useTranslation();
 
   return (
     <TextInput
@@ -23,7 +25,7 @@ export default function CustomTextInput({ name, value, onChange, keyboardType, p
         onChange(name, text);
       }}
       value={value || ''}
-      placeholder={placeholder || 'Enter value'}
+      placeholder={placeholder || t('screens.misc.text_input_placeholder')}
       keyboardType={keyboardType || 'default'}
     />
   );

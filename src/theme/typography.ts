@@ -28,7 +28,7 @@ const fontStyle: FontStyle = {
   head1: {
     fontSize: toFont(43),
     fontFamily: FF_BOLD,
-    lineHeight: lineHeight(43),
+    lineHeight: lineHeight(50),
   },
   head2: {
     fontSize: toFont(35),
@@ -38,7 +38,7 @@ const fontStyle: FontStyle = {
   head3: {
     fontSize: toFont(25),
     fontFamily: FF_BOLD,
-    lineHeight: lineHeight(25),
+    lineHeight: lineHeight(28),
   },
   body1: {
     fontSize: toFont(20),

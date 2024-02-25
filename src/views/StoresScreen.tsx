@@ -12,7 +12,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { _Market } from '../models/dto';
 import { fetchOfferings } from '../helpers/utility';
-import { PurchasesPackage } from 'react-native-purchases';
 
 type StoreItemProps = {
   mt?: number;
@@ -71,49 +70,12 @@ const StoreItem = ({ mt, mb, onPress, color, title, subtitle, discountRate, oldP
   );
 };
 
-// const market = [
-//   {
-//     title: 'Test',
-//     deckId: '1',
-//     subtitle: '3 cards\n30 difficulties',
-//     identifier: 'brainflip.access',
-//     price: 110,
-//     discountRate: 100,
-//     color: '#FF6A6E',
-//     description: `asdasd\n + Create a list by starting a line with
-//     + Sub-lists are made by indenting 2 spaces:
-//     + Very easy!`,
-//     samples: [
-//       {
-//         front: 'Esteem',
-//         back: 'Respect and admire',
-//         backLocale: 'শ্রদ্ধা এবং সন্মান;',
-//         example: `Many of these qualities are **esteemed** by managers.`,
-//         audio: 'https://api.dictionaryapi.dev/media/pronunciations/en/eager-us.mp3',
-//       },
-//       {
-//         front: 'Esteem2',
-//         back: 'Respect and admire',
-//         backLocale: 'শ্রদ্ধা এবং সন্মান;',
-//         example: `Many of these qualities are **esteemed** by managers.`,
-//         audio: 'https://api.dictionaryapi.dev/media/pronunciations/en/eager-us.mp3',
-//       },
-//       {
-//         front: 'Esteem3',
-//         back: 'Respect and admire',
-//         backLocale: 'শ্রদ্ধা এবং সন্মান;',
-//         example: `Many of these qualities are **esteemed** by managers.`,
-//         audio: 'https://api.dictionaryapi.dev/media/pronunciations/en/eager-us.mp3',
-//       },
-//     ],
-//   },
-// ];
-
 export default function StoresScreen({ navigation }: NavProps) {
   const { theme } = useTheme();
   const styles = useStyles();
   const [market, setMarket] = useState<_Market[]>([]);
-  
+  const { t } = useTranslation();
+
   useFocusEffect(
     useCallback(() => {
       FirebaseApp.getInstance()
@@ -137,8 +99,8 @@ export default function StoresScreen({ navigation }: NavProps) {
   return (
     <View style={styles.container}>
       <TitleBar
-        title="Market"
-        subtitle="Buy ready-made decks"
+        title={t('screens.store.title')}
+        subtitle={t('screens.store.subtitle')}
         icon={<Icon name="shopping-cart" color={theme.colors.purple} size={iconSize.lg} style={styles.headerIcon} />}
       />
       <View style={{ marginTop: theme.spacing.lg }}>
@@ -149,7 +111,7 @@ export default function StoresScreen({ navigation }: NavProps) {
               title={item.title}
               subtitle={item.subtitle}
               color={item.color}
-              oldPrice={item.price}
+              oldPrice={item.price} // todo: change it to price string
               discountRate={item.discountRate}
               mt={index > 0 ? 8 : 0}
               mb={index === market.length - 1 ? 70 : 0}
