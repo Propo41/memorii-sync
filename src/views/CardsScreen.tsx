@@ -25,12 +25,13 @@ type ControlsProps = {
   onPressCheck: () => void;
   onPlayAudio: () => void;
   hasAudio: boolean;
+  isAudioPlaying: boolean;
 };
 
 const MARGIN_TOP = toSize(10);
 const CARD_HEIGHT = toSize(400);
 
-const Controls = ({ onPressCross, onPressRotate, onPressCheck, onPlayAudio, hasAudio }: ControlsProps) => {
+const Controls = ({ onPressCross, onPressRotate, onPressCheck, onPlayAudio, hasAudio, isAudioPlaying }: ControlsProps) => {
   const styles = useStyles();
   const { theme } = useTheme();
 
@@ -44,6 +45,7 @@ const Controls = ({ onPressCross, onPressRotate, onPressCheck, onPlayAudio, hasA
           color={theme.mode === 'dark' ? theme.colors.purple : theme.colors.orange}
           style={{ marginLeft: theme.spacing.lg }}
           onPress={onPlayAudio}
+          disabled={isAudioPlaying}
         />
       )}
       <FAB
@@ -94,12 +96,12 @@ const CardsScreen = ({ route }: NavProps) => {
   flipAnimation.addListener(({ value }) => (flipRotation = value));
 
   // audio
-  const [sound, setSound] = useState<Sound>();
+  const [sound, setSound] = useState<Sound | null>();
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   useEffect(() => {
     return sound
       ? () => {
-          console.log('Unloading Sound');
           sound.unloadAsync();
         }
       : undefined;
@@ -150,12 +152,12 @@ const CardsScreen = ({ route }: NavProps) => {
     try {
       const { sound } = await Audio.Sound.createAsync({ uri: path });
       setSound(sound);
-      log('Playing sound');
 
       await sound.playAsync();
+      setIsAudioPlaying(false);
     } catch (error: any) {
       log(error.message);
-      showToast("Couldn't play the audio. Network issue?", 'error');
+      showToast(t('screens.cards.no_audio'), 'error');
     }
   };
 
@@ -415,10 +417,16 @@ const CardsScreen = ({ route }: NavProps) => {
               flipRotation ? flipToBack() : flipToFront();
             }}
             onPlayAudio={() => {
+              if (isAudioPlaying) {
+                return;
+              }
+
               const audio = cards[currentCard.index].audio;
               playSound(audio!);
+              setIsAudioPlaying(true);
             }}
             hasAudio={isValidUrl(cards[currentCard.index].audio)}
+            isAudioPlaying={isAudioPlaying}
           />
 
           <View style={styles.switchProgressContainer}>

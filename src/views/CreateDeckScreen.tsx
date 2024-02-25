@@ -132,7 +132,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     trackColor: '#FFFFFF',
   });
   const [sets, setSets] = useState<_Set[]>([]);
-  const [dialogOpen, setDialogOpen] = useState<DialogState>({
+  const [dialogPayload, setDialogPayload] = useState<DialogState>({
     open: false,
     editing: false,
     set: null,
@@ -195,8 +195,8 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
 
   useEffect(() => {
     const backAction = () => {
-      if (dialogOpen.open) {
-        setDialogOpen({ open: false, editing: false });
+      if (dialogPayload.open) {
+        setDialogPayload({ open: false, editing: false });
         bottomSheetRef.current?.close();
       } else {
         navigation.goBack();
@@ -206,7 +206,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
 
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
     return () => backHandler.remove();
-  }, [dialogOpen.open]);
+  }, [dialogPayload.open]);
 
   const onInputChange = (name: string, text: string) => {
     setInput({
@@ -216,22 +216,20 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
   };
 
   const onSetAdded = (set: _Set) => {
-    if (!dialogOpen.editing) {
+    if (!dialogPayload.editing) {
       const isSetExist = sets.some((_set) => _set.name === set.name);
       if (isSetExist) {
-        showToast('Please choose a different set name', 'error');
+        showToast(t('screens.myDecks.createDecks.duplicate_set_name'), 'error');
         return false;
       }
     }
 
     let updatedSets = [...sets, set];
-    if (dialogOpen.editing) {
+    if (dialogPayload.editing) {
       updatedSets = sets.map((_set) => {
         return _set._id === set._id ? set : _set;
       });
     }
-
-    console.log(set.name);
 
     setSets(updatedSets);
     return true;
@@ -241,12 +239,12 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     const { name, bgColor, fgColor, trackColor } = input;
 
     if (!name || !bgColor || !fgColor || !trackColor) {
-      showToast('Please fill all the input fields', 'error');
+      showToast(t('screens.myDecks.createDecks.validation_error'), 'error');
       return;
     }
 
     if (sets.length === 0) {
-      showToast('No sets added yet.', 'error');
+      showToast(t('screens.myDecks.createDecks.no_sets'), 'error');
       return;
     }
 
@@ -261,7 +259,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
 
     if (isEditing) {
       await Cache.getInstance().updateDeck(input.id!, newDeck);
-      showToast('Edited deck!');
+      showToast(t('screens.myDecks.createDecks.edited_deck'));
       navigation.goBack();
       return;
     }
@@ -270,11 +268,11 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     if (deckId) {
       await FirebaseApp.getInstance().addDeckToUser(deckId, currentUser.uid);
     } else {
-      showToast("Couldn't add deck. Please try again", 'error');
+      showToast(t('screens.myDecks.createDecks.deck_creation_error'), 'error');
       return;
     }
 
-    showToast('Added deck!');
+    showToast(t('screens.myDecks.createDecks.added_deck'));
     navigation.goBack();
   };
 
@@ -286,7 +284,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     navigation.goBack();
 
     setDeleteAlertVisible(!deleteAlertVisible);
-    showToast('Deck is deleted!');
+    showToast(t('screens.myDecks.createDecks.deleted_deck'));
   };
 
   const onEditColorPress = (type: string) => {
@@ -298,11 +296,11 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
 
   const onAddSetClick = () => {
     if (!isPremium && sets.length >= 3) {
-      showToast('Maximum 3 sets are allowed in free tier', 'error');
+      showToast(t('screens.myDecks.createDecks.set_limit_error'), 'error');
       return;
     }
 
-    setDialogOpen({
+    setDialogPayload({
       open: true,
       editing: false,
     });
@@ -362,9 +360,8 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
                   mb={index === sets.length - 1 ? 70 : 0}
                   onEditClick={() => {
                     // open dialog
-                    console.log(`editing: set: ${set.name}`);
                     bottomSheetRef.current?.snapToIndex(0);
-                    setDialogOpen({
+                    setDialogPayload({
                       open: true,
                       editing: true,
                       set: set,
@@ -398,10 +395,10 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
         onPress={onCreateDeck}
       />
       <CreateSetDialog
-        dialogOpen={dialogOpen}
+        dialogPayload={dialogPayload}
         isPremium={isPremium}
         closeDialog={() => {
-          setDialogOpen({ open: false, editing: false });
+          setDialogPayload({ open: false, editing: false });
           bottomSheetRef.current?.close();
         }}
         onAddSetClick={onSetAdded}
@@ -438,8 +435,12 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
         <Text style={styles.alertTitle}>{t('screens.myDecks.alerts.delete_title')}</Text>
         <Text body1>{t('screens.myDecks.alerts.delete_subtitle')}</Text>
         <Dialog.Actions>
-          <Dialog.Button title="CONFIRM" titleStyle={styles.alertActionButtonPos} onPress={onDeleteDeck} />
-          <Dialog.Button title="CANCEL" titleStyle={styles.alertTitle} onPress={() => setDeleteAlertVisible(!deleteAlertVisible)} />
+          <Dialog.Button title={t('screens.myDecks.alerts.dialog_confirm')} titleStyle={styles.alertActionButtonPos} onPress={onDeleteDeck} />
+          <Dialog.Button
+            title={t('screens.myDecks.alerts.dialog_cancel')}
+            titleStyle={styles.alertTitle}
+            onPress={() => setDeleteAlertVisible(!deleteAlertVisible)}
+          />
         </Dialog.Actions>
       </Dialog>
     </View>

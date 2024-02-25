@@ -19,7 +19,7 @@ import * as NavigationBar from 'expo-navigation-bar';
 import { log } from '../helpers/utility';
 import { _User } from '../models/dto';
 import { Cache } from '../models/Cache';
-import { FF_BOLD, FF_REGULAR } from '../theme/typography';
+import { FF_BOLD } from '../theme/typography';
 import { INSTRUCTION_URL } from '../config/conf';
 
 type MenuProps = {
@@ -30,23 +30,6 @@ type MenuProps = {
   Icon2?: React.ReactElement;
   onPress: () => void;
 };
-
-const showAlert = (title: string, subtitle: string, onConfirm: () => void) =>
-  Alert.alert(
-    title,
-    subtitle,
-    [
-      {
-        text: 'Cancel',
-        onPress: () => console.log('Cancel Pressed'),
-        style: 'cancel',
-      },
-      { text: 'Confirm', onPress: onConfirm },
-    ],
-    {
-      cancelable: true,
-    }
-  );
 
 const Menu = ({ Icon1, title, subtitle, Icon2, onPress, color }: MenuProps) => {
   const styles = useStyles();
@@ -128,7 +111,7 @@ export default function SettingsScreen({ navigation }: NavProps) {
     try {
       await auth().signOut();
       await GoogleSignin.revokeAccess();
-      showToast('See you later!');
+      showToast(t('screens.settings.log_out'));
     } catch (error: any) {
       log('error signing out.', error);
     }
@@ -141,7 +124,7 @@ export default function SettingsScreen({ navigation }: NavProps) {
 
     const decks = await FirebaseApp.getInstance().restoreDecks(user.id);
     if (decks.length === 0) {
-      showToast('No backup was found.', 'error');
+      showToast(t('screens.settings.no_backup'), 'error');
       return;
     }
 
@@ -149,7 +132,7 @@ export default function SettingsScreen({ navigation }: NavProps) {
       await Cache.getInstance().updateDeck(deck.id, deck);
     }
 
-    showToast('Import done!');
+    showToast(t('screens.settings.import_done'));
     setImportAlertVisible(!importAlertVisible);
   };
 
@@ -158,13 +141,13 @@ export default function SettingsScreen({ navigation }: NavProps) {
 
     const deckList = await Cache.getInstance().getDecks([...user.decksCreated, ...user.decksPurchased]);
     if (deckList.length === 0) {
-      showToast("You don't have any decks to back up yet!", 'error');
+      showToast(t('screens.settings.no_decks_backup'), 'error');
       return;
     }
 
     await FirebaseApp.getInstance().backUpDecks(user.id, deckList);
 
-    showToast('Backup done!');
+    showToast(t('screens.settings.backup_done'));
     setBackupAlertVisible(!backupAlertVisible);
   };
 
@@ -224,19 +207,27 @@ export default function SettingsScreen({ navigation }: NavProps) {
       {/* dialogs */}
       <ChangeLanguageDialog dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} language={language} onLanguageChange={onLanguageChange} />
       <Dialog isVisible={backupAlertVisible} onBackdropPress={() => setBackupAlertVisible(!backupAlertVisible)}>
-        <Text style={styles.alertTitle}>Backup data</Text>
-        <Text body1>Are you sure you want to export your data to the cloud for backup?</Text>
+        <Text style={styles.alertTitle}>{t('screens.settings.alert.backup_title')}</Text>
+        <Text body1>{t('screens.settings.alert.backup_subtitle')}</Text>
         <Dialog.Actions>
-          <Dialog.Button title="CONFIRM" titleStyle={styles.alertActionButtonPos} onPress={onExportPress} />
-          <Dialog.Button title="CANCEL" titleStyle={styles.alertTitle} onPress={() => setBackupAlertVisible(!backupAlertVisible)} />
+          <Dialog.Button title={t('screens.settings.alert.dialog_confirm')} titleStyle={styles.alertActionButtonPos} onPress={onExportPress} />
+          <Dialog.Button
+            title={t('screens.settings.alert.dialog_cancel')}
+            titleStyle={styles.alertTitle}
+            onPress={() => setBackupAlertVisible(!backupAlertVisible)}
+          />
         </Dialog.Actions>
       </Dialog>
       <Dialog isVisible={importAlertVisible} onBackdropPress={() => setImportAlertVisible(!importAlertVisible)}>
-        <Text style={styles.alertTitle}>Import data</Text>
-        <Text body1>You will be downloading all your backed up data from the cloud</Text>
+        <Text style={styles.alertTitle}>{t('screens.settings.alert.import_title')}</Text>
+        <Text body1>{t('screens.settings.alert.import_subtitle')}</Text>
         <Dialog.Actions>
-          <Dialog.Button title="CONFIRM" titleStyle={styles.alertActionButtonPos} onPress={onImportPress} />
-          <Dialog.Button title="CANCEL" titleStyle={styles.alertTitle} onPress={() => setImportAlertVisible(!importAlertVisible)} />
+          <Dialog.Button title={t('screens.settings.alert.dialog_confirm')} titleStyle={styles.alertActionButtonPos} onPress={onImportPress} />
+          <Dialog.Button
+            title={t('screens.settings.alert.dialog_cancel')}
+            titleStyle={styles.alertTitle}
+            onPress={() => setImportAlertVisible(!importAlertVisible)}
+          />
         </Dialog.Actions>
       </Dialog>
     </>

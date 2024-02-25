@@ -21,7 +21,7 @@ const NavigationBar = ({ title, style }: NavigationBarProps) => {
 
   return (
     <View style={{ ...styles.container, ...style }}>
-      <Button title="Clear" type="clear" buttonStyle={styles.iconButton} onPress={onBackPress}>
+      <Button type="clear" buttonStyle={styles.iconButton} onPress={onBackPress}>
         <Icon name="navigate-before" style={styles.icon} size={toSize(30)} />
       </Button>
       <Text style={styles.text} head3>

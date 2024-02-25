@@ -133,6 +133,7 @@ export class FirebaseApp implements FirebaseAppInterface {
       const snapshot = await firestore().collection(this.collections.market).get();
       for (const doc of snapshot.docs) {
         const item = _Market.transform(doc.data() as InstanceType<typeof _Market>);
+        item.id = doc.id;
         items.push(item);
       }
     } catch (error: any) {
@@ -170,8 +171,8 @@ export class FirebaseApp implements FirebaseAppInterface {
           createdAt: new Date().toUTCString(),
         },
       });
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      log(error.message);
     }
   }
 
@@ -185,8 +186,8 @@ export class FirebaseApp implements FirebaseAppInterface {
         const deck = _Deck.transform(item as InstanceType<typeof _Deck>);
         decks.push(deck);
       }
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      log(error.message);
     }
     return decks;
   }

@@ -26,8 +26,6 @@ async function onGoogleButtonPress() {
     // Sign-in the user with the credential
     return auth().signInWithCredential(googleCredential);
   } catch (error: any) {
-    console.log(error);
-    
     if (error.message === 'NETWORK_ERROR') {
       showToast("Couldn't sign in. Network issues?", 'error');
     } else if (error.message === 'DEVELOPER_ERROR') {
@@ -89,7 +87,6 @@ export default function LoginScreen({ navigation }: NavProps) {
         const { user } = res;
         const userDto = new User(user.uid, user.displayName!, user.email!, user.photoURL!, user.emailVerified, user.metadata?.creationTime);
 
-        // userDto.decksPurchased = ['W1IOzaESOgZJRjsyOdVO', 'cIjHAzdFMZhZsErnSDn9', 'wScY3QOGTjM0cX7CLQV4', 'xY0fBfVJsioLPSoqoF4o'];
         await FirebaseApp.getInstance().createUser(user.uid, userDto);
         navigation.replace(NavRoutes.App);
       } else {

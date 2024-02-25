@@ -1,6 +1,6 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Avatar, Image, Text, makeStyles, useTheme, useThemeMode } from '@rneui/themed';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StatusBar, View } from 'react-native';
 import Deck from '../components/Deck';
 import TitleBar from '../components/TitleBar';
@@ -11,7 +11,6 @@ import { Cache } from '../models/Cache';
 import { _Deck, _User } from '../models/dto';
 import { FirebaseApp } from '../models/FirebaseApp';
 import auth from '@react-native-firebase/auth';
-import LottieView from 'lottie-react-native';
 import { useTranslation } from 'react-i18next';
 import * as NavigationBar from 'expo-navigation-bar';
 import { kickUser } from '../helpers/utility';
@@ -115,7 +114,7 @@ export default function HomeScreen({ navigation }: NavProps) {
           <View style={styles.notFoundContainer}>
             <Image source={require('../assets/not-found.png')} style={styles.notFoundImage} />
             <Text body1 style={styles.notFoundText}>
-              No decks yet. Buy one from the market or create one yourself!
+              {t('screens.home.decksEmpty')}
             </Text>
           </View>
         )}

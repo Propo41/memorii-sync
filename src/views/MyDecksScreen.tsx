@@ -6,7 +6,7 @@ import TitleBar from '../components/TitleBar';
 import { useFocusEffect } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import { useTranslation } from 'react-i18next';
-import { fetchOfferings, kickUser, makePurchase } from '../helpers/utility';
+import { fetchOfferings, kickUser, log, makePurchase } from '../helpers/utility';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { _Deck, _Offering, _User } from '../models/dto';
 import { Cache } from '../models/Cache';
@@ -20,14 +20,6 @@ import { FF_REGULAR } from '../theme/typography';
 import Icon2 from 'react-native-vector-icons/MaterialIcons';
 import { PurchasesPackage } from 'react-native-purchases';
 import { showToast } from '../components/CustomToast';
-
-type Pricing = {
-  [key: string]: {
-    type: 'Free' | 'Premium';
-    priceString?: string;
-    summary: string[];
-  };
-};
 
 type DeckItemProps = {
   name: string;
@@ -63,22 +55,6 @@ const DeckItem = ({ name, bgColor, totalCards, mt, mb, onDeckPress }: DeckItemPr
   );
 };
 
-// const pricingCards: Pricing = {
-//   free: {
-//     type: 'Free',
-//     summary: ['You can make maximum 1 custom deck', 'Maximum 3 sets', 'Maximum 50 cards per deck', 'Lifetime access'],
-//   },
-//   offering_pro_access: {
-//     type: 'Premium',
-//     summary: [
-//       'You can make unlimited custom decks and cards',
-//       'Option to add 2 different meanings',
-//       'Option to add self-hosted audio urls',
-//       'Lifetime access',
-//     ],
-//   },
-// };
-
 type PricingCardProps = {
   onPricingSelect: (p?: PurchasesPackage) => void;
   isPremium: boolean;
@@ -89,7 +65,7 @@ const PricingCard = ({ onPricingSelect, isPremium, showPricingCard }: PricingCar
   const styles = useStyles();
   const { theme } = useTheme();
   const [selection, setSelection] = useState(0);
-
+  const { t } = useTranslation();
   const [pricingCards, setPricingCards] = useState<_Offering[]>([]);
 
   useFocusEffect(
@@ -99,7 +75,7 @@ const PricingCard = ({ onPricingSelect, isPremium, showPricingCard }: PricingCar
           .fetchOffers()
           .then(async (items) => {
             const offerings = await fetchOfferings();
-            console.log(offerings);
+            log(offerings.toString());
 
             const appOffers = items.map((item) => {
               const inAppPackage = offerings.find((offeringPkg) => offeringPkg.offeringIdentifier === item.offeringIdentifier);
@@ -111,7 +87,7 @@ const PricingCard = ({ onPricingSelect, isPremium, showPricingCard }: PricingCar
             });
 
             if (appOffers.length === 0) {
-              showToast("Coudn't retrieve app offerings. Connection issues?", 'error');
+              showToast(t('screens.myDecks.app_offerings_not_found'), 'error');
               showPricingCard(false);
             } else {
               setPricingCards(appOffers);
@@ -127,7 +103,7 @@ const PricingCard = ({ onPricingSelect, isPremium, showPricingCard }: PricingCar
   return (
     <View style={styles.pricingCardContainer}>
       <View style={styles.pricingContentContainerTop}>
-        <Text head1>{pricingCards[selection]?._package?.product.priceString}</Text>
+        <Text head1>{pricingCards[selection]?._package?.product.priceString || pricingCards[selection].type}</Text>
         <View style={styles.pricingStackedBtnsContainer}>
           {pricingCards.map((p, index) => {
             return (
@@ -166,7 +142,7 @@ const PricingCard = ({ onPricingSelect, isPremium, showPricingCard }: PricingCar
           onPress={() => {
             onPricingSelect(pricingCards[selection]?._package);
           }}
-          title={'Continue'}
+          title={t('screens.myDecks.btn_continue')}
           buttonStyle={styles.pricingBtn}
           titleStyle={styles.pricingBtnTitle}
         />
@@ -233,7 +209,8 @@ export default function MyDecks({ navigation }: NavProps) {
       const transaction = await makePurchase(user.id, pkg);
       if (transaction) {
         await FirebaseApp.getInstance().makePremium(user.id);
-        showToast('Congratulations 🎉 You have unlocked premium access!');
+
+        showToast(t('screens.myDecks.premium_unlocked'));
         setShowPricingCard(false);
         setUser({ ...user, isPremium: true });
       }
@@ -449,9 +426,10 @@ const useStyles = makeStyles((theme) => ({
   pricingSummary: {
     display: 'flex',
     flexDirection: 'row',
+    alignItems: 'center',
   },
   pricingSummaryText: {
     color: theme.colors.black,
-    marginLeft: 3,
+    marginLeft: 5,
   },
 }));

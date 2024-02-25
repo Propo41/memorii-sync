@@ -37,20 +37,32 @@ const possible_headers = [
   { header: 'audio', required: false, needPremium1: true },
 ];
 
+type StatusMessage = {
+  status: boolean;
+  message?: string;
+  data?: Card[];
+};
 /**
  * The .tsv file can have the @possible_headers in any order
  * @note: the first row is assumed to be the table headers. Check @possible_headers for the allowed headers
  * @returns Card[]
  * @param {string} rawData contains tab separated values
  */
-export const rawToCards = async (rawData: string, hasPremiumAccess: boolean = false) => {
+export const rawToCards = async (rawData: string, hasPremiumAccess: boolean = false, t: any): Promise<StatusMessage> => {
   const lines = rawData.split('\n');
   const cards: Card[] = [];
 
-  if (lines.length === 0) return null;
+  if (lines.length === 0)
+    return {
+      status: false,
+      message: t('screens.myDecks.createSets.no_lines'),
+    };
 
   if (lines.length > 50 && !hasPremiumAccess) {
-    return null;
+    return {
+      status: false,
+      message: t('screens.myDecks.createSets.cards_limit'),
+    };
   }
 
   const headers = lines[0].trim().split('\t');
@@ -65,7 +77,10 @@ export const rawToCards = async (rawData: string, hasPremiumAccess: boolean = fa
 
       // if its a required card but value is missing, exit
       if (index === -1 && ph.required === true) {
-        return null;
+        return {
+          status: false,
+          message: `Required column ${ph} is missing.`,
+        };
       }
 
       if (ph.needPremium1 && !hasPremiumAccess) {
@@ -82,7 +97,7 @@ export const rawToCards = async (rawData: string, hasPremiumAccess: boolean = fa
     cards.push(card);
   }
 
-  return cards;
+  return { status: true, data: cards };
 };
 
 export const fetchOfferings = async () => {
@@ -116,8 +131,8 @@ export const readFile = async (uri: string) => {
   try {
     const fileContent = await FileSystem.readAsStringAsync(uri);
     return fileContent;
-  } catch (error) {
-    console.log(error);
+  } catch (error: any) {
+    log(error.message);
   }
   return null;
 };

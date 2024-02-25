@@ -38,8 +38,6 @@ const SampleCard = ({ word, value1, value2, example, audio, onNextClick, onPrevC
   // audio
   const [sound, setSound] = useState<Sound>();
 
-  console.log(word);
-
   useEffect(() => {
     return sound
       ? () => {
@@ -51,17 +49,15 @@ const SampleCard = ({ word, value1, value2, example, audio, onNextClick, onPrevC
   const onPlayAudio = async () => {
     try {
       if (isValidUrl(audio!)) {
-        showToast('Audio url seems to be broken', 'error');
+        showToast(t('screens.store.audio_broken'), 'error');
         return;
       }
       const { sound } = await Audio.Sound.createAsync({ uri: audio! });
       setSound(sound);
-      log('Playing sound');
-
       await sound.playAsync();
     } catch (error: any) {
       log(error.message);
-      showToast("Couldn't play the audio. Network issue?", 'error');
+      showToast(t('screens.store.audio_unplayable'), 'error');
     }
   };
 
@@ -156,17 +152,17 @@ export default function StoreScreen({ route, navigation }: NavProps) {
     if (_package && newPrice > 0) {
       const res = await makePurchase(currentUser.uid, _package);
       if (res) {
-        showToast('Deck purchased 🎊');
+        showToast(t('screens.store.deck_purchased'));
       }
     } else {
-      showToast('Deck is being downloaded...');
+      showToast(t('screens.store.deck_downloading'));
     }
 
     await FirebaseApp.getInstance().addDeckToUser(deckId, currentUser.uid); // at first, attach the deck id to user
 
     const downloadedDeck = await FirebaseApp.getInstance().getDeck(deckId); // next try downloading
     if (!downloadedDeck) {
-      showToast("Couldn't get deck details. Please try again or contact support", 'error');
+      showToast(t('screens.store.deck_details_not_found'), 'error');
       return;
     }
 
