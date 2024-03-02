@@ -36,7 +36,7 @@ const DeckItem = ({ name, bgColor, totalCards, mt, mb, onDeckPress }: DeckItemPr
 
   return (
     <View style={{ ...styles.container, marginTop: mt || 0, marginBottom: mb || 0, backgroundColor: bgColor }}>
-      <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple(theme.colors.lightAsh!, false)} onPress={onDeckPress}>
+      <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple('#A5A5A5', false)} onPress={onDeckPress}>
         <View style={styles.contentContainer}>
           <Text style={styles.title} head3>
             {name}
@@ -191,6 +191,8 @@ export default function MyDecks({ navigation }: NavProps) {
 
     setUser(user);
     const decksList = await Cache.getInstance().getDecks([...user.decksCreated, ...user.decksPurchased]);
+    decksList.sort((a, b) => b.createdAt - a.createdAt);
+
     setDecks(decksList);
 
     if (decksList.length === 0) {

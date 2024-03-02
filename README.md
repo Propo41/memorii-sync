@@ -21,6 +21,39 @@ const possible_headers = [
 ];
 ```
 
+- code for options menu: 
+
+```
+<Menu opened={menuOpen} onBackdropPress={() => setMenuOpen(false)}>
+            <MenuTrigger
+              children={
+                <Button
+                  type="clear"
+                  buttonStyle={styles.optionsIconBtn}
+                  containerStyle={{
+                    borderRadius: 30,
+                  }}
+                  onPress={() => setMenuOpen(!menuOpen)}
+                >
+                  <SimpleLineIcons name="options-vertical" style={styles.optionsIcon} size={toSize(18)} />
+                </Button>
+              }
+            />
+            <MenuOptions>
+              <MenuOption
+                onSelect={() => alert(`Delete`)}
+                style={{
+                  padding: 10,
+                }}
+              >
+                <Text style={{ color: theme.colors.black, fontFamily: FF_REGULAR, fontSize: toFont(15) }}>Reset Cards</Text>
+              </MenuOption>
+            </MenuOptions>
+          </Menu>
+          ```
+
+- sm2: https://cs310.hashnode.dev/spaced-repetition-flashcards-nodejs
+
 ## Issues faced
 
 - View is not a jsx component: https://github.com/eslint/eslint/issues/15802

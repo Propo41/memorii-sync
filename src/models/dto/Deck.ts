@@ -9,6 +9,7 @@ export class Deck {
   sets: Set[] = [];
   isDisabled: boolean = false;
   _progress?: number;
+  createdAt = new Date().getTime();
 
   constructor(name: string, appearance?: Appearance) {
     this.name = name;
@@ -20,10 +21,10 @@ export class Deck {
     deck.id = _deck.id;
     deck.appearance = Appearance.transform(_deck.appearance);
     deck.sets = _deck.sets.map((set, i) => {
-      set._id = i;
       return Set.transform(set);
     });
     deck.isDisabled = _deck.isDisabled;
+    deck.createdAt = _deck.createdAt;
 
     return deck;
   }
