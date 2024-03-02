@@ -20,7 +20,7 @@ import { log } from '../helpers/utility';
 import { _User } from '../models/dto';
 import { Cache } from '../models/Cache';
 import { FF_BOLD } from '../theme/typography';
-import { INSTRUCTION_URL } from '../config/conf';
+import { SITE_URL } from '../config/conf';
 
 type MenuProps = {
   title: string;
@@ -91,7 +91,7 @@ export default function SettingsScreen({ navigation }: NavProps) {
 
   const toggleSm2 = async () => {
     console.log(!usingSm2);
-    
+
     setUsingSm2(!usingSm2);
     await updatePreference(mode === 'dark', language, !usingSm2);
   };
@@ -220,7 +220,10 @@ export default function SettingsScreen({ navigation }: NavProps) {
       />
       <Menu
         title={t('screens.settings.helpAndSupport')}
-        onPress={() => Linking.openURL(INSTRUCTION_URL)}
+        onPress={async () => {
+          const appInfo = await Cache.getInstance().getAppInfo();
+          Linking.openURL(appInfo?.instructionUrl || SITE_URL);
+        }}
         Icon1={<EntypoIcon name="help-with-circle" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
         Icon2={<Icon name="navigate-next" style={styles.icon} size={iconSize.sm} />}
       />

@@ -1,18 +1,23 @@
 import { JosefinSans_400Regular, JosefinSans_700Bold, useFonts } from '@expo-google-fonts/josefin-sans';
 import { NavigationContainer } from '@react-navigation/native';
-import { createTheme, ThemeProvider } from '@rneui/themed';
+import { createTheme, Dialog, makeStyles, Text, ThemeProvider } from '@rneui/themed';
 import React, { useEffect, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { Linking, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { AppNavigator } from './src/navigation';
 import { palette, typography } from './src/theme';
 import { NavRoutes } from './src/config/routes';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { FIREBASE_WEB_CLIENT_ID, REVENUECAT_GOOGLE_API_KEY } from './src/config/conf';
-import CustomToast from './src/components/CustomToast';
-import Purchases from 'react-native-purchases';
-import { log } from './src/helpers/utility';
+import { FIREBASE_WEB_CLIENT_ID } from './src/config/conf';
+import CustomToast, { showToast } from './src/components/CustomToast';
+import { FirebaseApp } from './src/models/FirebaseApp';
+import { Cache } from './src/models/Cache';
+import { FF_BOLD } from './src/theme/typography';
+import { useTranslation } from 'react-i18next';
+import { _AppInfo } from './src/models/dto';
+// import Purchases from 'react-native-purchases';
+// import { log } from './src/helpers/utility';
 
 const theme = createTheme({
   lightColors: palette['light'],
@@ -29,30 +34,59 @@ export default function App() {
   });
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>();
+  const [updateAlertVisible, setUpdateAlertVisible] = useState(false);
+  const styles = useStyles();
+  const { t } = useTranslation(); //i18n instance
+  const [appInfo, setAppInfo] = useState<_AppInfo>();
 
   useEffect(() => {
     GoogleSignin.configure({
       webClientId: FIREBASE_WEB_CLIENT_ID,
     });
 
-    const setup = async () => {
-      if (Platform.OS == 'android') {
-        await Purchases.configure({ apiKey: REVENUECAT_GOOGLE_API_KEY });
-      }
-    };
+    // const setup = async () => {
+    //   if (Platform.OS == 'android') {
+    //     await Purchases.configure({ apiKey: REVENUECAT_GOOGLE_API_KEY });
+    //   }
+    // };
 
-    Purchases.setLogLevel(Purchases.LOG_LEVEL.ERROR);
+    // Purchases.setLogLevel(Purchases.LOG_LEVEL.ERROR);
 
-    setup().catch((e) => {
-      log('Error', e);
-    });
+    // setup().catch((e) => {
+    //   log('Error', e);
+    // });
   }, []);
 
   useEffect(() => {
     const _user = auth().currentUser;
     setUser(_user);
     setInitializing(false);
+
+    FirebaseApp.getInstance()
+      .getAppInfo()
+      .then(async (appInfo) => {
+        const currentAppInfo = await Cache.getInstance().getAppInfo();
+
+        if (!appInfo || !currentAppInfo) return;
+
+        setAppInfo(appInfo);
+
+        if (appInfo.version > currentAppInfo.version) {
+          // update is available. Show user prompt
+          setUpdateAlertVisible(true);
+        }
+
+        await Cache.getInstance().saveAppInfo(appInfo);
+      });
   }, []);
+
+  const onConfirmUpdatePress = () => {
+    if (appInfo) {
+      Linking.openURL(appInfo.updateUrl);
+    }
+
+    setUpdateAlertVisible(false);
+  };
 
   if (!fontsLoaded && initializing) {
     return null;
@@ -64,16 +98,41 @@ export default function App() {
         <NavigationContainer>
           <AppNavigator initialRoute={!user ? NavRoutes.Login : NavRoutes.App} />
           <CustomToast position="bottom" />
+
+          <Dialog isVisible={updateAlertVisible} onBackdropPress={() => setUpdateAlertVisible(!updateAlertVisible)}>
+            <Text style={styles.alertTitle}>{t('screens.misc.update_alert_title')}</Text>
+            <Text body1>{t('screens.misc.update_alert_subtitle')}</Text>
+            <Dialog.Actions>
+              <Dialog.Button
+                title={t('screens.misc.update_alert_positive_btn')}
+                titleStyle={styles.alertActionButtonPos}
+                onPress={onConfirmUpdatePress}
+              />
+              <Dialog.Button
+                title={t('screens.settings.alert.dialog_cancel')}
+                titleStyle={styles.alertTitle}
+                onPress={() => setUpdateAlertVisible(!updateAlertVisible)}
+              />
+            </Dialog.Actions>
+          </Dialog>
         </NavigationContainer>
       </ThemeProvider>
     </GestureHandlerRootView>
   );
 }
 
-const BACKGROUND_COLOR = '#F8F9FF';
-const styles = StyleSheet.create({
+const useStyles = makeStyles(() => ({
   container: {
     flex: 1,
-    backgroundColor: BACKGROUND_COLOR,
+    backgroundColor: '#F8F9FF',
   },
-});
+  alertTitle: {
+    fontFamily: FF_BOLD,
+    paddingBottom: 5,
+  },
+  alertActionButtonPos: {
+    fontFamily: FF_BOLD,
+    paddingBottom: 5,
+    color: '#FF7C7C',
+  },
+}));

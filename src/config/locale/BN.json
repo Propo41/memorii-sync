@@ -136,7 +136,10 @@
             "cacheExpired": "ক্যাশে মুছে গিয়েছে। অ্যাপ পুনরায় চালু করুন!"
         },
         "misc": {
-            "text_input_placeholder": "মান লিখুন"
+            "text_input_placeholder": "মান লিখুন",
+            "update_alert_title": "নতুন আপডেট এসেছে",
+            "update_alert_subtitle": "অনুগ্রহ করে সঠিকভাবে অ্যাপ কাজ করার জন্য নতুন আপডেটটি সরাসরি ডাউনলোড করুন।",
+            "update_alert_positive_btn": "আপডেট করুন"
         }
     }
 }

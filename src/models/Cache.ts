@@ -1,5 +1,5 @@
 import { log } from '../helpers/utility';
-import { _Card, _CardStatus, _Deck, _User } from './dto';
+import { _AppInfo, _Card, _CardStatus, _Deck, _User } from './dto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
 
@@ -15,6 +15,9 @@ interface CacheInterface {
   saveCardStatuses(deckId: string, setId: string, cardStatuses: Record<string, _CardStatus>): Promise<void>;
   getCardStatuses(deckId: string, setId: string): Promise<Record<string, _CardStatus> | null>;
   resetCardStatuses(deckId: string, setId: string): Promise<void>;
+
+  getAppInfo(): Promise<_AppInfo | null>;
+  saveAppInfo(appInfo: _AppInfo): Promise<void>;
 }
 
 export class Cache implements CacheInterface {
@@ -189,5 +192,25 @@ export class Cache implements CacheInterface {
       log(e.message);
     }
     console.log('Purged all data');
+  }
+
+  async getAppInfo(): Promise<_AppInfo | null> {
+    try {
+      const data = await AsyncStorage.getItem(`appinfo`);
+      if (data) {
+        return _AppInfo.transform(JSON.parse(data));
+      }
+    } catch (error: any) {
+      log(error.message);
+    }
+    return null;
+  }
+
+  async saveAppInfo(appInfo: _AppInfo) {
+    try {
+      await AsyncStorage.setItem(`appinfo`, JSON.stringify(appInfo));
+    } catch (error: any) {
+      log(error.message);
+    }
   }
 }

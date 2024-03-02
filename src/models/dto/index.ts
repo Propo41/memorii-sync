@@ -1,3 +1,4 @@
+import { AppInfo } from './AppInfo';
 import { CardStatus } from './CardStatus';
 import { Offering } from './Offering';
 import { Market } from './Market';
@@ -20,4 +21,5 @@ export {
   Transaction as _Transaction,
   Offering as _Offering,
   CardStatus as _CardStatus,
+  AppInfo as _AppInfo,
 };
