@@ -71,7 +71,7 @@ export class FirebaseApp implements FirebaseAppInterface {
     try {
       await firestore().collection(this.collections.users).doc(userId).update({
         preferences,
-      });      
+      });
     } catch (error: any) {
       log(error.message);
     }
@@ -117,6 +117,8 @@ export class FirebaseApp implements FirebaseAppInterface {
 
       const snapshot = await firestore().collection(this.collections.decks).doc(deckId).get();
       if (snapshot.exists) {
+        console.log(snapshot.data());
+
         const d = _Deck.transform(snapshot.data() as InstanceType<typeof _Deck>);
         return d;
       }

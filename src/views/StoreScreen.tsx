@@ -15,11 +15,12 @@ import { showToast } from '../components/CustomToast';
 import { Sound } from 'expo-av/build/Audio';
 import * as SystemNavigationBar from 'expo-navigation-bar';
 import { Market } from '../models/dto/Market';
-import { isValidUrl, log } from '../helpers/utility';
+import { isValidUrl, kickUser, log } from '../helpers/utility';
 import auth from '@react-native-firebase/auth';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { Cache } from '../models/Cache';
 import { PURCHASE_URL } from '../config/conf';
+import { _User } from '../models/dto';
 
 type SampleCardProps = {
   word: string;
@@ -133,11 +134,35 @@ export default function StoreScreen({ route, navigation }: NavProps) {
   const { t } = useTranslation();
   // @ts-expect-error store is infact a type of Market. need to fix NavProps
   const store: Market = route.params!.store;
-  const { title, deckId, description, price, discountRate, samples, _package } = store;
+  const { id, title, deckId, description, price, discountRate, samples, _package } = store;
   const [currentSampleIndex, setCurrentSampleIndex] = useState(0);
   const newPrice = price - (price * discountRate) / 100;
+  const [user, setUser] = useState<_User>();
+  const [isPurchased, setIsPurchased] = useState(false);
 
   useEffect(() => {
+    const currentUser = auth().currentUser;
+    if (!currentUser) {
+      kickUser(navigation, t);
+      return;
+    }
+
+    FirebaseApp.getInstance()
+      .getUser(currentUser.uid)
+      .then((user) => {
+        if (!user) {
+          kickUser(navigation, t);
+          return;
+        }
+
+        const isDeckPurchased = user.decksPurchased.find((id) => id === deckId);
+        if (isDeckPurchased) {
+          setIsPurchased(true);
+        }
+
+        setUser(user);
+      });
+
     SystemNavigationBar.setBackgroundColorAsync(theme.colors.purple!);
     return () => {
       SystemNavigationBar.setBackgroundColorAsync(theme.mode === 'dark' ? theme.colors.violetShade! : theme.colors.white);
@@ -150,18 +175,16 @@ export default function StoreScreen({ route, navigation }: NavProps) {
       return;
     }
 
-    if (_package && newPrice > 0) {
+    if (newPrice > 0 && !isPurchased) {
       Linking.openURL(PURCHASE_URL);
-
+      return;
       // const res = await makePurchase(currentUser.uid, _package);
       // if (res) {
       //   showToast(t('screens.store.deck_purchased'));
       // }
-    } else {
-      showToast(t('screens.store.deck_downloading'));
     }
-
-    await FirebaseApp.getInstance().addDeckToUser(deckId, currentUser.uid); // at first, attach the deck id to user
+    // for now, the deck will be added manually by admin after purchase completion
+    // await FirebaseApp.getInstance().addDeckToUser(deckId, currentUser.uid); // at first, attach the deck id to user
 
     const downloadedDeck = await FirebaseApp.getInstance().getDeck(deckId); // next try downloading
     if (!downloadedDeck) {
@@ -169,6 +192,7 @@ export default function StoreScreen({ route, navigation }: NavProps) {
       return;
     }
 
+    showToast(t('screens.store.deck_downloading'));
     await Cache.getInstance().updateDeck(deckId, downloadedDeck);
     navigation.pop();
   };
@@ -193,9 +217,11 @@ export default function StoreScreen({ route, navigation }: NavProps) {
             {t('screens.store.price')}
           </Text>
           <View style={styles.priceContainer}>
-            <Text body1 style={styles.oldPrice}>
-              ৳{price}
-            </Text>
+            {discountRate > 0 && (
+              <Text body1 style={styles.oldPrice}>
+                ৳{price}
+              </Text>
+            )}
             <Text body1 style={{ color: theme.colors.orange, marginLeft: theme.spacing.sm }}>
               ৳{newPrice}
             </Text>
@@ -205,29 +231,31 @@ export default function StoreScreen({ route, navigation }: NavProps) {
             {t('screens.store.sample')}
           </Text>
 
-          <SampleCard
-            word={samples[currentSampleIndex].front}
-            value1={samples[currentSampleIndex].back}
-            value2={samples[currentSampleIndex].backLocale}
-            example={samples[currentSampleIndex].example}
-            audio={samples[currentSampleIndex].audio}
-            navigateIndex={`${currentSampleIndex + 1}/${samples.length}`}
-            onNextClick={() => {
-              if (currentSampleIndex + 1 < samples.length) {
-                setCurrentSampleIndex(currentSampleIndex + 1);
-              }
-            }}
-            onPrevClick={() => {
-              if (currentSampleIndex > 0) {
-                setCurrentSampleIndex(currentSampleIndex - 1);
-              }
-            }}
-          />
+          {samples.length > 0 && (
+            <SampleCard
+              word={samples[currentSampleIndex].front}
+              value1={samples[currentSampleIndex].back}
+              value2={samples[currentSampleIndex].backLocale}
+              example={samples[currentSampleIndex].example}
+              audio={samples[currentSampleIndex].audio}
+              navigateIndex={`${currentSampleIndex + 1}/${samples.length}`}
+              onNextClick={() => {
+                if (currentSampleIndex + 1 < samples.length) {
+                  setCurrentSampleIndex(currentSampleIndex + 1);
+                }
+              }}
+              onPrevClick={() => {
+                if (currentSampleIndex > 0) {
+                  setCurrentSampleIndex(currentSampleIndex - 1);
+                }
+              }}
+            />
+          )}
         </View>
       </ScrollView>
 
       <Button
-        title={newPrice === 0 ? t('screens.store.download') : t('screens.store.purchase')}
+        title={newPrice === 0 || isPurchased ? t('screens.store.download') : t('screens.store.purchase')}
         titleStyle={styles.purchaseButtonTitle}
         buttonStyle={styles.purchaseButton}
         containerStyle={styles.purchaseButtonContainer}

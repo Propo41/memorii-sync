@@ -2,7 +2,7 @@ import { PurchasesPackage } from 'react-native-purchases';
 import { Card } from './Card';
 
 export class Market {
-  id?: string;
+  id: string;
   title: string;
   deckId: string;
   subtitle: string;
@@ -15,6 +15,7 @@ export class Market {
   _package?: PurchasesPackage;
 
   constructor(
+    id: string,
     title: string,
     subtitle: string,
     description: string,
@@ -24,6 +25,7 @@ export class Market {
     samples: Card[],
     discountRate: number = 0
   ) {
+    this.id = id;
     this.deckId = deckId;
     this.price = price;
     this.title = title;
@@ -36,6 +38,7 @@ export class Market {
 
   static transform(_market: InstanceType<typeof Market>): Market {
     const market = new Market(
+      _market.id,
       _market.title,
       _market.subtitle,
       _market.description,
