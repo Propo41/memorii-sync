@@ -1,17 +1,19 @@
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import { View, ViewStyle } from 'react-native';
 import { Button, Text, makeStyles } from '@rneui/themed';
 import { toSize } from '../helpers/scaling';
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { margins } from '../config';
 
 type NavigationBarProps = {
   title: string;
   style?: ViewStyle;
+  optionsMenu?: ReactElement;
 };
 
-const NavigationBar = ({ title, style }: NavigationBarProps) => {
+const NavigationBar = ({ title, style,  optionsMenu }: NavigationBarProps) => {
   const styles = useStyles();
   const navigation = useNavigation();
 
@@ -20,13 +22,22 @@ const NavigationBar = ({ title, style }: NavigationBarProps) => {
   };
 
   return (
-    <View style={{ ...styles.container, ...style }}>
-      <Button type="clear" buttonStyle={styles.iconButton} onPress={onBackPress}>
+    <View style={{ ...styles.container, ...style, alignItems: 'center' }}>
+      <Button
+        type="clear"
+        buttonStyle={styles.iconButton}
+        containerStyle={{
+          borderRadius: 30,
+        }}
+        onPress={onBackPress}
+      >
         <Icon name="navigate-before" style={styles.icon} size={toSize(30)} />
       </Button>
       <Text style={styles.text} head3>
         {title}
       </Text>
+      <View style={{ flexGrow: 1 }} />
+      {optionsMenu}
     </View>
   );
 };

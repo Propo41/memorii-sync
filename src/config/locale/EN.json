@@ -20,6 +20,7 @@
             "title": "Settings",
             "language": "Language",
             "darkMode": "Dark Mode",
+            "use_sm2": "Use Algorithm",
             "logout": "Log out",
             "helpAndSupport": "Help & support",
             "languageSelect": "Choose language",
@@ -44,13 +45,19 @@
             "incorrectGuess": "Didn't get it right",
             "completed": {
                 "title": "Congratulations!",
-                "subtitle": "Keep it up"
+                "subtitle": "No cards to review for today. Come back tomorrow!",
+                "subtitle_no_sm2": "You have completed all the cards!"
             },
             "example": "Example",
             "shuffle": "Shuffled the cards!",
             "switch1": "1",
             "switch2": "2",
-            "no_audio": "Couldn't play the audio. Network issue?"
+            "no_audio": "Couldn't play the audio. Network issue?",
+            "alert": {
+                "title": "Reset cards",
+                "subtitle": "This will reset all card parameters that are used for the spaced repitition algorithm"
+            },
+            "reset_done": "Reset complete!"
         },
         "myDecks": {
             "title": "My Decks",

@@ -1,14 +1,26 @@
-export class Card {
-  id: number;
+import uuid from 'react-native-uuid';
+
+export interface IFlashcard {
+  id: string; // To uniquely identify flashcards
+  front: string; // The text that goes on the front of the card
+  back: string; // The answer to the question
+  backLocale: string;
+  example?: string;
+  type?: string; // verb/adj/noun
+  audio?: string; // url of the audio track
+}
+
+export class Card implements IFlashcard {
+  id: string = uuid.v4().toString();
   front: string;
   back: string;
   backLocale: string;
   example?: string;
   type?: string; // verb/adj/noun
   audio?: string; // url of the audio track
+  createdAt = new Date().getTime();
 
-  constructor(id: number, front: string = '', back: string = '', backLocale = '', example = '', type?: string, audio?: string) {
-    this.id = id;
+  constructor(front: string = '', back: string = '', backLocale = '', example = '', type?: string, audio?: string) {
     this.front = front;
     this.back = back;
     this.backLocale = backLocale;
@@ -18,7 +30,9 @@ export class Card {
   }
 
   static transform(_card: InstanceType<typeof Card>): Card {
-    const card = new Card(_card.id, _card.front, _card.back, _card.backLocale || '', _card.example || '', _card.type, _card.audio);
+    const card = new Card(_card.front, _card.back, _card.backLocale || '', _card.example || '', _card.type, _card.audio);
+    card.id = _card.id;
+
     return card;
   }
 }

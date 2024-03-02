@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { Button, Text, makeStyles, useTheme } from '@rneui/themed';
 import { toSize } from '../helpers/scaling';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -75,56 +75,71 @@ export default function StoresScreen({ navigation }: NavProps) {
   const styles = useStyles();
   const [market, setMarket] = useState<_Market[]>([]);
   const { t } = useTranslation();
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    init();
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
+  const init = () => {
+    FirebaseApp.getInstance()
+      .fetchMarketItems()
+      .then(async (items) => {
+        const offerings = await fetchOfferings();
+        const marketItems = items.map((item) => {
+          const inAppPackage = offerings.find((offeringPkg) => offeringPkg.offeringIdentifier === item.offeringIdentifier);
+          if (inAppPackage) {
+            item._package = inAppPackage;
+          }
+
+          return item;
+        });
+
+        setMarket(marketItems);
+      });
+  };
 
   useFocusEffect(
     useCallback(() => {
-      FirebaseApp.getInstance()
-        .fetchMarketItems()
-        .then(async (items) => {
-          const offerings = await fetchOfferings();
-          const marketItems = items.map((item) => {
-            const inAppPackage = offerings.find((offeringPkg) => offeringPkg.offeringIdentifier === item.offeringIdentifier);
-            if (inAppPackage) {
-              item._package = inAppPackage;
-            }
-
-            return item;
-          });
-
-          setMarket(marketItems);
-        });
+      init();
     }, [])
   );
 
   return (
-    <View style={styles.container}>
-      <TitleBar
-        title={t('screens.store.title')}
-        subtitle={t('screens.store.subtitle')}
-        icon={<Icon name="shopping-cart" color={theme.colors.purple} size={iconSize.lg} style={styles.headerIcon} />}
-      />
-      <View style={{ marginTop: theme.spacing.lg }}>
-        {market.map((item, index) => {
-          return (
-            <StoreItem
-              key={index}
-              title={item.title}
-              subtitle={item.subtitle}
-              color={item.color}
-              oldPrice={item.price} // todo: change it to price string
-              discountRate={item.discountRate}
-              mt={index > 0 ? 8 : 0}
-              mb={index === market.length - 1 ? 70 : 0}
-              onPress={() => {
-                // @ts-expect-error cant fix this ts error
-                navigation.push(NavRoutes.Store, {
-                  store: item,
-                });
-              }}
-            />
-          );
-        })}
-      </View>
+    <View>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+        <TitleBar
+          title={t('screens.store.title')}
+          subtitle={t('screens.store.subtitle')}
+          icon={<Icon name="shopping-cart" color={theme.colors.purple} size={iconSize.lg} style={styles.headerIcon} />}
+        />
+        <View style={{ marginTop: theme.spacing.lg }}>
+          {market.map((item, index) => {
+            return (
+              <StoreItem
+                key={index}
+                title={item.title}
+                subtitle={item.subtitle}
+                color={item.color}
+                oldPrice={item.price} // todo: change it to price string
+                discountRate={item.discountRate}
+                mt={index > 0 ? 8 : 0}
+                mb={index === market.length - 1 ? 70 : 0}
+                onPress={() => {
+                  // @ts-expect-error cant fix this ts error
+                  navigation.push(NavRoutes.Store, {
+                    store: item,
+                  });
+                }}
+              />
+            );
+          })}
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -135,10 +150,6 @@ const useStyles = makeStyles((theme) => ({
   },
   image: {
     marginTop: 30,
-  },
-  container: {
-    borderRadius: 15,
-    overflow: 'hidden',
   },
   itemContainer: {
     borderRadius: 15,

@@ -6,6 +6,13 @@ import { Card } from '../models/dto/Card';
 import Purchases, { PurchasesError, PurchasesPackage } from 'react-native-purchases';
 import { _Transaction } from '../models/dto';
 import * as FileSystem from 'expo-file-system';
+import { IStatus } from '../models/dto/CardStatus';
+
+type StatusMessage = {
+  status: boolean;
+  message?: string;
+  data?: Card[];
+};
 
 export const isValidUrl = (url: string | undefined) => {
   if (!url || url.length === 0) return false;
@@ -37,11 +44,6 @@ const possible_headers = [
   { header: 'audio', required: false, needPremium1: true },
 ];
 
-type StatusMessage = {
-  status: boolean;
-  message?: string;
-  data?: Card[];
-};
 /**
  * The .tsv file can have the @possible_headers in any order
  * @note: the first row is assumed to be the table headers. Check @possible_headers for the allowed headers
@@ -70,7 +72,7 @@ export const rawToCards = async (rawData: string, hasPremiumAccess: boolean = fa
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
     const columns = line.trim().split('\t');
-    const card = new Card(i - 1);
+    const card = new Card();
 
     for (const ph of possible_headers) {
       const index = headers.findIndex((val: any) => val.toLowerCase() === ph.header);
@@ -135,4 +137,85 @@ export const readFile = async (uri: string) => {
     log(error.message);
   }
   return null;
+};
+
+// Uses optional `date` argument
+// returns in ms
+const getIntervalDate = (interval: number, date?: number) => {
+  const currentDate = date ? new Date(date) : new Date();
+  const targetDate = new Date(currentDate.getTime() + interval * 24 * 60 * 60 * 1000);
+  return targetDate.getTime();
+};
+
+/**
+ * The function applies SM2 partially. Instead of using 4 different quality values, it only uses 2 to make user interaction friendly
+ * Reviews the flashcard and changes the interval date based on repetitions and quality
+ * @param status
+ * @param quality 2.5 or 4.5. Used the avg of 2,3 and 4,5. Maybe in the future more options can be added
+ * @param reviewDate [optional] used in tests
+ */
+export const reviewFlashcard = (status: IStatus, quality: number, reviewDate?: number) => {
+  status.repetitions++;
+
+  let interval: number;
+  switch (status.repetitions) {
+    case 1:
+      interval = 1;
+      break;
+    case 2:
+      interval = 3;
+      break;
+    default:
+      // mark the card as completed
+      status.isCompleted = true;
+      interval = Math.round(status.interval * status.easiness);
+  }
+
+  let easiness = status.easiness + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+
+  if (easiness < 1.3) {
+    easiness = 1.3;
+  }
+
+  if (quality < 3) {
+    // show it the next day
+    interval = 1;
+    status.repetitions = 0;
+    status.isCompleted = false;
+  } else {
+    status.easiness = easiness;
+  }
+
+  status.interval = interval;
+  // Gets the next review date as the current date, `interval` days later
+  status.nextReview = getIntervalDate(interval, reviewDate);
+};
+
+/**
+ * If current date is less than next review date then dont show the card, return false,
+ * in other words, if date1 - date2 is negative, dont show the card
+ * @param date1 current date
+ * @param date2 next review date
+ * @returns
+ */
+const doShowCard = (date1: number, date2: number) => {
+  const diffInTime = date1 - date2;
+  return diffInTime >= 0;
+};
+
+/**
+ *
+ * @param cards
+ * @param currentDate [optional] used in tests
+ */
+export const getInitialStack = (cards: Card[], statuses: Record<string, IStatus>, currentDate?: number) => {
+  let queue: Card[] = [];
+
+  for (let card of cards) {
+    if (doShowCard(currentDate || new Date().getTime(), statuses[card.id].nextReview)) {
+      queue.push(card);
+    }
+  }
+
+  return queue;
 };

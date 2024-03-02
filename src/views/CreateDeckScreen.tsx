@@ -148,6 +148,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [isPremium, setIsPremium] = useState(false); // Initial color state
   const [deleteAlertVisible, setDeleteAlertVisible] = useState(false);
+  const [routeParams, setRouteParams] = useState<_Deck>();
 
   const onColorChangeComplete = (color: string) => {
     setCurrentColor(color);
@@ -172,6 +173,8 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     // @ts-expect-error don't know how to fix it
     if (route?.params?.deck) {
       setIsEditing(true);
+      // @ts-expect-error don't know how to fix it
+      setRouteParams(route.params.deck);
 
       // @ts-expect-error don't know how to fix it
       const { id, name, appearance, sets } = route?.params?.deck as _Deck;
@@ -227,7 +230,7 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     let updatedSets = [...sets, set];
     if (dialogPayload.editing) {
       updatedSets = sets.map((_set) => {
-        return _set._id === set._id ? set : _set;
+        return _set.id === set.id ? set : _set;
       });
     }
 
@@ -257,7 +260,10 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
       return;
     }
 
-    if (isEditing) {
+    if (isEditing && routeParams) {
+      newDeck.createdAt = routeParams.createdAt;
+      newDeck.id = routeParams.id;
+
       await Cache.getInstance().updateDeck(input.id!, newDeck);
       showToast(t('screens.myDecks.createDecks.edited_deck'));
       navigation.goBack();
@@ -266,7 +272,8 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
 
     const deckId = await Cache.getInstance().createDeck(newDeck);
     if (deckId) {
-      await FirebaseApp.getInstance().addDeckToUser(deckId, currentUser.uid);
+      // not awaiting here since if user is offline, the ui will be stuck here
+      FirebaseApp.getInstance().addDeckToUser(deckId, currentUser.uid);
     } else {
       showToast(t('screens.myDecks.createDecks.deck_creation_error'), 'error');
       return;

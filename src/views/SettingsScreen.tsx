@@ -2,7 +2,7 @@ import { Dialog, makeStyles, Text, useTheme, useThemeMode } from '@rneui/themed'
 import { Divider } from '@rneui/themed';
 import { Switch } from '@rneui/themed';
 import React, { useEffect, useState } from 'react';
-import { Alert, ColorValue, Linking, TouchableNativeFeedback, View } from 'react-native';
+import { ColorValue, Linking, TouchableNativeFeedback, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
 import ChangeLanguageDialog from '../components/ChangeLanguageDialog';
@@ -66,6 +66,7 @@ export default function SettingsScreen({ navigation }: NavProps) {
   const [user, setUser] = useState<_User>();
   const [backupAlertVisible, setBackupAlertVisible] = useState(false);
   const [importAlertVisible, setImportAlertVisible] = useState(false);
+  const [usingSm2, setUsingSm2] = useState(true);
 
   useEffect(() => {
     const getData = async () => {
@@ -78,8 +79,9 @@ export default function SettingsScreen({ navigation }: NavProps) {
       }
 
       setUser(user);
-      const { locale, isDarkMode } = user.preferences;
+      const { locale, isDarkMode, usingSm2 } = user.preferences;
       setLanguage(locale);
+      setUsingSm2(usingSm2);
       setMode(isDarkMode ? 'dark' : 'light');
       setDarkModeSwitch(isDarkMode ? true : false);
     };
@@ -87,11 +89,18 @@ export default function SettingsScreen({ navigation }: NavProps) {
     getData();
   }, []);
 
+  const toggleSm2 = async () => {
+    console.log(!usingSm2);
+    
+    setUsingSm2(!usingSm2);
+    await updatePreference(mode === 'dark', language, !usingSm2);
+  };
+
   const toggleDarkMode = async () => {
     setMode(mode === 'dark' ? 'light' : 'dark');
     setDarkModeSwitch(darkModeSwitch ? false : true);
 
-    await updatePreference(mode !== 'dark', language);
+    await updatePreference(mode !== 'dark', language, usingSm2);
     await NavigationBar.setBackgroundColorAsync(mode !== 'dark' ? theme.colors.violetShade! : theme.colors.white);
   };
 
@@ -99,12 +108,12 @@ export default function SettingsScreen({ navigation }: NavProps) {
     i18n.changeLanguage(lang);
     setLanguage(lang);
 
-    await updatePreference(mode === 'dark', lang);
+    await updatePreference(mode === 'dark', lang, usingSm2);
   };
 
-  const updatePreference = async (isDarkMode: boolean, locale: Language) => {
+  const updatePreference = async (isDarkMode: boolean, locale: Language, isUsingSm2: boolean) => {
     if (!user) return;
-    await FirebaseApp.getInstance().updateUserPreference(user.id, new UserPreference(isDarkMode, locale));
+    await FirebaseApp.getInstance().updateUserPreference(user.id, new UserPreference(isDarkMode, locale, isUsingSm2));
   };
 
   const onSignOutClick = async () => {
@@ -178,6 +187,24 @@ export default function SettingsScreen({ navigation }: NavProps) {
           />
         }
       />
+      <Divider style={styles.divider} color={theme.colors.touchable} />
+      <Menu
+        title={t('screens.settings.use_sm2')}
+        onPress={toggleSm2}
+        Icon1={<Icon name="science" style={styles.icon1} color={theme.colors.text} size={iconSize.sm} />}
+        Icon2={
+          <Switch
+            value={usingSm2}
+            onValueChange={toggleSm2}
+            color={theme.colors.purple}
+            trackColor={{
+              false: theme.colors.ash,
+              true: theme.colors.purple,
+            }}
+          />
+        }
+      />
+
       <Divider style={styles.divider} color={theme.colors.touchable} />
       <Menu
         title={t('screens.settings.import')}
