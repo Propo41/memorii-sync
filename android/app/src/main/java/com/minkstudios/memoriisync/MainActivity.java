@@ -1,4 +1,4 @@
-package com.squidellastudios.brainflip;
+package com.minkstudios.memoriisync;
 
 import android.os.Build;
 import android.os.Bundle;

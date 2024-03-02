@@ -142,7 +142,7 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
 
     defaultConfig {
-        applicationId 'com.squidellastudios.brainflip'
+        applicationId 'com.minkstudios.memoriisync'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 3

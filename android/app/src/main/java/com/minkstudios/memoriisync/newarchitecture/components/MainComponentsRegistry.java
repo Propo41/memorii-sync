@@ -1,4 +1,4 @@
-package com.squidellastudios.brainflip.newarchitecture.components;
+package com.minkstudios.memoriisync.newarchitecture.components;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;

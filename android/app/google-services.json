@@ -1,57 +1,57 @@
 {
   "project_info": {
-    "project_number": "274432102559",
-    "project_id": "brain-flip-app",
-    "storage_bucket": "brain-flip-app.appspot.com"
+    "project_number": "253470686564",
+    "project_id": "memoriisync",
+    "storage_bucket": "memoriisync.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:274432102559:android:eaa3125994723958ad52aa",
+        "mobilesdk_app_id": "1:253470686564:android:2fae1a7cfba4967af08e71",
         "android_client_info": {
-          "package_name": "com.squidellastudios.brainflip"
+          "package_name": "com.minkstudios.memoriisync"
         }
       },
       "oauth_client": [
         {
-          "client_id": "274432102559-glgf8o00h2ch65h5c369nvom6elm7bph.apps.googleusercontent.com",
+          "client_id": "253470686564-54sc6haskihd7avr28vbmrufj3ih9nbc.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.squidellastudios.brainflip",
-            "certificate_hash": "0b31f5fb735eb1c94d6ee4970316d425c62dde17"
-          }
-        },
-        {
-          "client_id": "274432102559-jinakf9kgnkvfghlji3e3namhql9e7su.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.squidellastudios.brainflip",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
-          }
-        },
-        {
-          "client_id": "274432102559-v35iiom2332ol1lo6k2sk589j6oqj4va.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.squidellastudios.brainflip",
+            "package_name": "com.minkstudios.memoriisync",
             "certificate_hash": "ba8e25feee6885df39e681c28f857e4be0021360"
           }
         },
         {
-          "client_id": "274432102559-idceoidhn4otap52smau02gliackgc34.apps.googleusercontent.com",
+          "client_id": "253470686564-b1ssh1j27v4m8um71aj2ppso40o035mr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.minkstudios.memoriisync",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "253470686564-ujoocsrf6mldb2q00a8bppbar0fvv38k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.minkstudios.memoriisync",
+            "certificate_hash": "0b31f5fb735eb1c94d6ee4970316d425c62dde17"
+          }
+        },
+        {
+          "client_id": "253470686564-0cs0g7a1keksd4eqps3nfbuhjo169pd7.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDpk4AEFLw49OTP2lDL8Z9e-enhCRh2b0g"
+          "current_key": "AIzaSyASsQfaLZnSLjDV6qe5EkbxajJbFx11gUI"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "274432102559-idceoidhn4otap52smau02gliackgc34.apps.googleusercontent.com",
+              "client_id": "253470686564-0cs0g7a1keksd4eqps3nfbuhjo169pd7.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

@@ -11,7 +11,7 @@ import { NavProps, NavRoutes } from '../config/routes';
 import { useFocusEffect } from '@react-navigation/native';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { _Market } from '../models/dto';
-import { fetchOfferings } from '../helpers/utility';
+// import { fetchOfferings } from '../helpers/utility';
 
 type StoreItemProps = {
   mt?: number;
@@ -79,7 +79,11 @@ export default function StoresScreen({ navigation }: NavProps) {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    init();
+    try {
+      init();
+    } catch (error) {
+      console.log(error);
+    }
     setTimeout(() => {
       setRefreshing(false);
     }, 2000);
@@ -89,17 +93,17 @@ export default function StoresScreen({ navigation }: NavProps) {
     FirebaseApp.getInstance()
       .fetchMarketItems()
       .then(async (items) => {
-        const offerings = await fetchOfferings();
-        const marketItems = items.map((item) => {
-          const inAppPackage = offerings.find((offeringPkg) => offeringPkg.offeringIdentifier === item.offeringIdentifier);
-          if (inAppPackage) {
-            item._package = inAppPackage;
-          }
+        // const offerings = await fetchOfferings();
+        // const marketItems = items.map((item) => {
+        //   const inAppPackage = offerings.find((offeringPkg) => offeringPkg.offeringIdentifier === item.offeringIdentifier);
+        //   if (inAppPackage) {
+        //     item._package = inAppPackage;
+        //   }
 
-          return item;
-        });
+        //   return item;
+        // });
 
-        setMarket(marketItems);
+        setMarket(items);
       });
   };
 
