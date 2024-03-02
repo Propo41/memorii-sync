@@ -19,8 +19,8 @@ import { isValidUrl, kickUser, log } from '../helpers/utility';
 import auth from '@react-native-firebase/auth';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { Cache } from '../models/Cache';
-import { PURCHASE_URL } from '../config/conf';
 import { _User } from '../models/dto';
+import { SITE_URL } from '../config/conf';
 
 type SampleCardProps = {
   word: string;
@@ -175,8 +175,10 @@ export default function StoreScreen({ route, navigation }: NavProps) {
       return;
     }
 
+    const appInfo = await Cache.getInstance().getAppInfo();
+
     if (newPrice > 0 && !isPurchased) {
-      Linking.openURL(PURCHASE_URL);
+      Linking.openURL(appInfo?.storeUrl || SITE_URL);
       return;
       // const res = await makePurchase(currentUser.uid, _package);
       // if (res) {

@@ -136,7 +136,10 @@
             "cacheExpired": "Data was deleted. Try restaring the app!"
         },
         "misc": {
-            "text_input_placeholder": "Enter value"
+            "text_input_placeholder": "Enter value",
+            "update_alert_title": "Update available",
+            "update_alert_subtitle": "A new update is available. Please download the update promptly to ensure the app functions correctly.",
+            "update_alert_positive_btn": "Update"
         }
     }
 }

@@ -15,7 +15,7 @@ import { useTheme } from '@rneui/themed';
 import { BOTTOM_NAV_HEIGHT, iconSize, margins } from '../config';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
-import { INSTRUCTION_URL } from '../config/conf';
+import { SITE_URL } from '../config/conf';
 
 type DeckItemProps = {
   name: string;
@@ -124,8 +124,9 @@ export default function MyDecks({ navigation }: NavProps) {
             <Text
               body1_bold
               style={styles.instructions}
-              onPress={() => {
-                Linking.openURL(INSTRUCTION_URL);
+              onPress={async () => {
+                const appInfo = await Cache.getInstance().getAppInfo();
+                Linking.openURL(appInfo?.instructionUrl || SITE_URL);
               }}
             >
               {t('screens.myDecks.instructions2')}

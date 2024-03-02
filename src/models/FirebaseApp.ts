@@ -1,4 +1,4 @@
-import { _Deck, _Market, _Offering, _Set, _User, _UserPreference } from './dto';
+import { _AppInfo, _Deck, _Market, _Offering, _Set, _User, _UserPreference } from './dto';
 import firestore from '@react-native-firebase/firestore';
 import { fetch as netInfo } from '@react-native-community/netinfo';
 import { log } from '../helpers/utility';
@@ -18,11 +18,13 @@ interface FirebaseAppInterface {
 
   backUpDecks(userId: string, decks: _Deck[]): Promise<void>;
   restoreDecks(userId: string): Promise<_Deck[]>;
+
+  getAppInfo(): Promise<_AppInfo | null>;
 }
 
 export class FirebaseApp implements FirebaseAppInterface {
   private static instance: FirebaseApp | null = null;
-  private collections = { users: 'users', decks: 'decks', market: 'market', offers: 'offers' };
+  private collections = { users: 'users', decks: 'decks', market: 'market', offers: 'offers', appInfo: 'appInfo' };
 
   constructor() {
     firestore().settings({
@@ -192,5 +194,21 @@ export class FirebaseApp implements FirebaseAppInterface {
       log(error.message);
     }
     return decks;
+  }
+
+  async getAppInfo(): Promise<_AppInfo | null> {
+    try {
+      const snapshot = await firestore().collection(this.collections.appInfo).doc('appInfo').get({
+        source: 'server',
+      });
+
+      if (snapshot.exists) {
+        return _AppInfo.transform(snapshot.data() as InstanceType<typeof _AppInfo>);
+      }
+    } catch (error: any) {
+      log(error.message);
+    }
+
+    return null;
   }
 }
