@@ -4,7 +4,7 @@ import SetsScreen from './SetsScreen';
 import SettingsScreen from './SettingsScreen';
 import StoresScreen from './StoresScreen';
 import StoreScreen from './StoreScreen';
-import CardsScreen from './CardsScreen';
+import CardsScreen from './Cards';
 import LoginScreen from './LoginScreen';
 
 export { HomeScreen, MyDecksScreen, SetsScreen, SettingsScreen, StoresScreen, StoreScreen, CardsScreen, LoginScreen };

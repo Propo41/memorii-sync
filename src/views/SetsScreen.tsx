@@ -5,26 +5,25 @@ import { NavProps, NavRoutes } from '../config/routes';
 import NavigationBar from '../components/NavigationBar';
 import Set from '../components/Set';
 import { Cache } from '../models/Cache';
-import { _Set } from '../models/dto';
+import { _Set, _User } from '../models/dto';
 import { useFocusEffect } from '@react-navigation/native';
-import auth from '@react-native-firebase/auth';
 import { showToast } from '../components/CustomToast';
 import { useTranslation } from 'react-i18next';
 
 const calculateSetProgress = async (deckId: string, setList: _Set[]) => {
-  let setId = 0;
   const updatedSets = [];
   for (const set of setList) {
     let completedCount = 0;
-    const statuses = await Cache.getInstance().getCardStatuses(deckId, setId.toString());
+    const statuses = await Cache.getInstance().getCardStatuses(deckId, set.id);
 
     if (statuses) {
-      completedCount = Object.values(statuses).filter(Boolean).length;
+      for (const item of Object.values(statuses)) {
+        completedCount += item.isCompleted ? 1 : 0;
+      }
     }
 
     set._progress = completedCount;
     updatedSets.push(set);
-    setId++;
   }
   return updatedSets;
 };
@@ -34,11 +33,13 @@ export default function SetsScreen({ navigation, route }: NavProps) {
   const [sets, setSets] = useState<_Set[]>([]);
   const [deckId, setDeckId] = useState();
   const { t } = useTranslation();
+  const [user, setUser] = useState<_User>();
 
   useFocusEffect(
     React.useCallback(() => {
       // the screen is focused
-      const { deckId } = route.params!;
+      const { deckId, user } = route.params!;
+      setUser(user);
 
       const setData = async (deckId: string) => {
         const deck = await Cache.getInstance().getDeck(deckId);
@@ -47,6 +48,7 @@ export default function SetsScreen({ navigation, route }: NavProps) {
           return;
         }
 
+        deck.sets.sort((a, b) => b.createdAt - a.createdAt);
         setSets((await calculateSetProgress(deckId, deck.sets)) || []);
       };
 
@@ -80,9 +82,8 @@ export default function SetsScreen({ navigation, route }: NavProps) {
                       // @ts-expect-error cant fix this ts error
                       navigation.push(NavRoutes.Cards, {
                         deckId: deckId,
-                        setId: index,
-                        cards: cards,
-                        userId: auth().currentUser!.uid,
+                        set: set,
+                        user: user,
                       });
                     }}
                   />

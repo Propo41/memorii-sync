@@ -1,4 +1,4 @@
-import { makeStyles, Text } from '@rneui/themed';
+import { makeStyles, Text, useTheme } from '@rneui/themed';
 import { TouchableNativeFeedback, View } from 'react-native';
 import React from 'react';
 import { LinearProgress } from '@rneui/themed';
@@ -19,11 +19,12 @@ type DeckProps = {
 
 const Deck = ({ name, progress, containerBgColor, pbColor, pbBackgroundColor, textColor, mt, mb, onDeckPress }: DeckProps) => {
   const styles = useStyles();
+  const { theme } = useTheme();
   const { t } = useTranslation();
 
   return (
     <View style={{ ...styles.container, backgroundColor: containerBgColor, marginTop: mt || 0, marginBottom: mb || 0 }}>
-      <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple(pbBackgroundColor, false)} onPress={onDeckPress}>
+      <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple('#A5A5A5', false)} onPress={onDeckPress}>
         <View style={styles.contentContainer}>
           <Text style={{ color: textColor || styles.text.color }} head2>
             {name}

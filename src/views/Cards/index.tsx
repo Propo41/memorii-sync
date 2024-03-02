@@ -1,94 +1,48 @@
-import NavigationBar from '../components/NavigationBar';
+import NavigationBar from '../../components/NavigationBar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import React, { View, Animated, PanResponder, StatusBar } from 'react-native';
-import { Button, FAB, LinearProgress, makeStyles, Text, useTheme } from '@rneui/themed';
-import { SCREEN_HEIGHT, SCREEN_WIDTH, toSize } from '../helpers/scaling';
-import Card from '../components/Card';
+import { Button, Dialog, LinearProgress, makeStyles, Text, useTheme } from '@rneui/themed';
+import { SCREEN_HEIGHT, SCREEN_WIDTH, toSize } from '../../helpers/scaling';
+import Card from '../../components/Card';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import EntypoIcons from 'react-native-vector-icons/Entypo';
-import { STATUSBAR_HEIGHT, iconSize } from '../config';
-import { _Card } from '../models/dto';
-import { NavProps } from '../config/routes';
-import { Cache } from '../models/Cache';
+import { STATUSBAR_HEIGHT, iconSize } from '../../config';
+import { _Card, _CardStatus, _Set, _User } from '../../models/dto';
+import { NavProps } from '../../config/routes';
+import { Cache } from '../../models/Cache';
 import LottieView from 'lottie-react-native';
 import { useTranslation } from 'react-i18next';
-import LocaleSwitch from '../components/LocaleSwitch';
-import { showToast } from '../components/CustomToast';
+import LocaleSwitch from '../../components/LocaleSwitch';
+import { showToast } from '../../components/CustomToast';
 import * as SystemNavigationBar from 'expo-navigation-bar';
 import { Audio } from 'expo-av';
 import { Sound } from 'expo-av/build/Audio';
-import { isValidUrl, log } from '../helpers/utility';
-
-type ControlsProps = {
-  onPressCross: () => void;
-  onPressRotate: () => void;
-  onPressCheck: () => void;
-  onPlayAudio: () => void;
-  hasAudio: boolean;
-  isAudioPlaying: boolean;
-};
+import { getInitialStack, isValidUrl, log, reviewFlashcard } from '../../helpers/utility';
+import Controls from './Controls';
+import { FF_BOLD } from '../../theme/typography';
 
 const MARGIN_TOP = toSize(10);
 const CARD_HEIGHT = toSize(400);
 
-const Controls = ({ onPressCross, onPressRotate, onPressCheck, onPlayAudio, hasAudio, isAudioPlaying }: ControlsProps) => {
-  const styles = useStyles();
-  const { theme } = useTheme();
-
-  return (
-    <View style={styles.controls}>
-      <FAB size="large" color="white" icon={<EntypoIcons name="cross" color="#FF3636" size={iconSize.sm} />} onPress={onPressCross} />
-      {hasAudio && (
-        <FAB
-          size="large"
-          icon={<EntypoIcons name="sound" color={theme.colors.white} size={iconSize.sm} />}
-          color={theme.mode === 'dark' ? theme.colors.purple : theme.colors.orange}
-          style={{ marginLeft: theme.spacing.lg }}
-          onPress={onPlayAudio}
-          disabled={isAudioPlaying}
-        />
-      )}
-      <FAB
-        style={{ marginLeft: theme.spacing.lg }}
-        size="large"
-        icon={{
-          name: 'rotate-90-degrees-ccw',
-          color: 'white',
-        }}
-        onPress={onPressRotate}
-      />
-      <FAB
-        size="large"
-        style={{ marginLeft: theme.spacing.lg }}
-        icon={<MaterialCommunityIcons name="check-bold" color="#4FF960" size={iconSize.sm} />}
-        color="white"
-        onPress={onPressCheck}
-      />
-    </View>
-  );
-};
-
 type CardsScreenProps = {
-  cards: _Card[];
   deckId: string;
-  setId: string;
+  set: _Set;
   userId: string;
+  user: _User;
 };
 
-const CardsScreen = ({ route }: NavProps) => {
-  const { cards, deckId, setId, userId }: CardsScreenProps = route.params!;
+const CardsScreen = ({ route, navigation }: NavProps) => {
+  const { set, deckId, user }: CardsScreenProps = route.params!;
 
+  const [cards, setCards] = useState<_Card[]>([]);
   const [currentCard, setCurrentCard] = useState({ index: 0, isCorrect: false });
   const [progress, setProgress] = useState(0);
-  const [cardStatuses, setCardStatuses] = useState<Record<number, boolean>>({});
-  const styles = useStyles();
-  const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const { t } = useTranslation();
+  const [isSessionComplete, setIsSessionComplete] = useState(false);
   const [localeSwitch, setLocalSwtich] = useState<boolean>(false);
+  let [cardStatuses, setCardStatuses] = useState<Record<string, _CardStatus>>(set.cardStatuses);
+
   // animation
-  const animationRef = useRef<LottieView>(null);
+  const confettiRef = useRef<LottieView>(null);
   const position = useRef(new Animated.ValueXY()).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const flipAnimation = useRef(new Animated.Value(0)).current;
@@ -99,6 +53,15 @@ const CardsScreen = ({ route }: NavProps) => {
   const [sound, setSound] = useState<Sound | null>();
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
+  // alerts
+  const [resetAlert, setResetAlert] = useState(false);
+
+  // styles
+  const styles = useStyles();
+  const { theme } = useTheme();
+  const { t } = useTranslation();
+
+  // audio
   useEffect(() => {
     return sound
       ? () => {
@@ -107,46 +70,58 @@ const CardsScreen = ({ route }: NavProps) => {
       : undefined;
   }, [sound]);
 
+  // initialize cards and set navigation bar color
   useEffect(() => {
+    if (user.preferences.usingSm2) {
+      const cardsForToday = getInitialStack(set.cards, cardStatuses);
+      setCards(cardsForToday);
+
+      if (cardsForToday.length === 0) {
+        setIsSessionComplete(true);
+        fadeIn();
+        confettiRef.current?.play();
+      }
+    } else {
+      setCards(set.cards);
+    }
+
+    setLoading(false);
+    SystemNavigationBar.setBackgroundColorAsync(theme.colors.cardsBackground!);
+
     return () => {
       // on destroy
       SystemNavigationBar.setBackgroundColorAsync(theme.colors.background);
     };
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const cardStatuses = await Cache.getInstance().getCardStatuses(deckId, setId);
-      if (cardStatuses) {
-        setCardStatuses(cardStatuses);
-      }
-      setLoading(false);
-    };
-
-    fetchData();
-    SystemNavigationBar.setBackgroundColorAsync(theme.colors.cardsBackground!);
-  }, []);
-
+  // on card swiped
   useEffect(() => {
     if (currentCard.index === 0) return;
     setProgress(currentCard.index / cards.length);
-    setCardStatuses((prev) => {
-      const statuses = { ...prev, [cards[currentCard.index - 1].id]: currentCard.isCorrect };
-      Cache.getInstance().saveCardStatuses(deckId, setId, statuses);
-      return statuses;
-    });
 
-    if (currentCard.index === cards.length) {
-      setIsCompleted(true);
+    if (user.preferences.usingSm2) {
+      const cardId = cards[currentCard.index - 1].id;
+      reviewFlashcard(cardStatuses[cardId], currentCard.isCorrect ? 4.5 : 2.5);
+
+      // save the card status
+      setCardStatuses((prev) => {
+        const updatedStatus = { ...prev, [cardId]: prev[cardId] };
+        Cache.getInstance().saveCardStatuses(deckId, set.id, updatedStatus);
+
+        return updatedStatus;
+      });
+    } else if (currentCard.index === cards.length) {
+      setIsSessionComplete(true);
       fadeIn();
     }
   }, [currentCard]);
 
+  // session listener
   useEffect(() => {
-    if (isCompleted) {
-      animationRef.current?.play();
+    if (isSessionComplete) {
+      confettiRef.current?.play();
     }
-  }, [isCompleted]);
+  }, [isSessionComplete]);
 
   const playSound = async (path: string) => {
     try {
@@ -300,6 +275,33 @@ const CardsScreen = ({ route }: NavProps) => {
     })
   ).current;
 
+  const onAudioPlayClick = () => {
+    if (isAudioPlaying) {
+      return;
+    }
+
+    const audio = cards[currentCard.index].audio;
+    playSound(audio!);
+    setIsAudioPlaying(true);
+  };
+
+  const onRotateClick = () => {
+    flipRotation ? flipToBack() : flipToFront();
+  };
+
+  const onResetPress = async () => {
+    await Cache.getInstance().resetCardStatuses(deckId, set.id);
+    showToast(t('screens.cards.reset_done'));
+    setResetAlert(false);
+
+    // setCards(getInitialStack(set.cards, cardStatuses));
+    // setCurrentCard({ index: 0, isCorrect: false });
+    // setProgress(0);
+    // setIsSessionComplete(false);
+    // confettiRef.current?.pause();
+    navigation.pop();
+  };
+
   const frontView = (text: string, isCompleted: boolean, example?: string, type?: string) => {
     return (
       // @ts-expect-error package resolution warning
@@ -312,7 +314,7 @@ const CardsScreen = ({ route }: NavProps) => {
           ...styles.front,
         }}
       >
-        <Card text={text} isTopView={true} isCompleted={isCompleted} example={example} type={type} />
+        <Card text={text} isTopView={true} isCompleted={user.preferences.usingSm2 ? isCompleted : false} example={example} type={type} />
       </Animated.View>
     );
   };
@@ -324,7 +326,7 @@ const CardsScreen = ({ route }: NavProps) => {
         {...panResponder.panHandlers}
         style={{ transform: [...rotateAndTranslate.transform, ...flipToBackStyle.transform], ...styles.cardContainer, ...styles.back }}
       >
-        <Card text={text} isTopView={false} isCompleted={isCompleted} example={example} />
+        <Card text={text} isTopView={false} isCompleted={user.preferences.usingSm2 ? isCompleted : false} example={example} />
       </Animated.View>
     );
   };
@@ -334,7 +336,7 @@ const CardsScreen = ({ route }: NavProps) => {
       return null;
     }
 
-    const isCompleted = !!cardStatuses[cards[currentCard.index].id];
+    const isCompleted = cardStatuses[cards[currentCard.index].id].isCompleted;
     const firstCard = cards[currentCard.index];
     const secondCard = currentCard.index + 1 >= cards.length ? null : cards[currentCard.index + 1];
 
@@ -343,7 +345,7 @@ const CardsScreen = ({ route }: NavProps) => {
         {secondCard && (
           /* @ts-expect-error package resolution warning */
           <Animated.View key={secondCard.id} style={{ opacity: nextCardOpacity, transform: [{ scale: nextCardScale }], ...styles.cardContainer }}>
-            <Card text={secondCard.front} isCompleted={isCompleted} type={secondCard.type} />
+            <Card text={secondCard.front} isCompleted={user.preferences.usingSm2 ? isCompleted : false} type={secondCard.type} />
           </Animated.View>
         )}
         <View>
@@ -358,26 +360,44 @@ const CardsScreen = ({ route }: NavProps) => {
     // @ts-expect-error package resolution warning
     <Animated.View style={{ ...styles.container, backgroundColor: backgroundColor }}>
       <StatusBar backgroundColor={theme.colors.cardsBackground} />
-      <NavigationBar title="" style={{ backgroundColor: theme.colors.transparent }} />
+      <NavigationBar
+        title=""
+        style={{ backgroundColor: theme.colors.transparent }}
+        optionsMenu={
+          <Button
+            type="clear"
+            buttonStyle={styles.optionsIconBtn}
+            containerStyle={{
+              borderRadius: 30,
+            }}
+            onPress={() => setResetAlert(true)}
+          >
+            <MaterialCommunityIcons name="refresh" style={styles.optionsIcon} size={toSize(23)} />
+          </Button>
+        }
+      />
       {/* shuffle button */}
-      <View style={styles.shuffleButtonContainer}>
-        <Button
-          radius={'xs'}
-          size={'lg'}
-          type="solid"
-          onPress={() => {
-            shuffleCards();
-            showToast(t('screens.cards.shuffle'));
-            setCurrentCard({ index: 0, isCorrect: false });
-          }}
-          buttonStyle={styles.shuffleButton}
-        >
-          <MaterialCommunityIcons name="shuffle" color={theme.colors.white} size={iconSize.sm} />
-        </Button>
-      </View>
-      {isCompleted && (
+      {/* {cards.length > 0 && (
+        <View style={styles.shuffleButtonContainer}>
+          <Button
+            radius={'xs'}
+            size={'lg'}
+            type="solid"
+            onPress={() => {
+              shuffleCards();
+              showToast(t('screens.cards.shuffle'));
+              setCurrentCard({ index: 0, isCorrect: false });
+            }}
+            buttonStyle={styles.shuffleButton}
+          >
+            <MaterialCommunityIcons name="shuffle" color={theme.colors.white} size={iconSize.sm} />
+          </Button>
+        </View>
+      )} */}
+
+      {isSessionComplete && (
         <>
-          <LottieView ref={animationRef} loop={false} source={require('../assets/animation/confetti-animation.json')} style={styles.confetti} />
+          <LottieView ref={confettiRef} loop={false} source={require('../../assets/animation/confetti-animation.json')} style={styles.confetti} />
           {/* @ts-expect-error package resolution warning */}
           <Animated.View
             style={{
@@ -388,7 +408,7 @@ const CardsScreen = ({ route }: NavProps) => {
               <View style={styles.completionCard}>
                 <Text body1_bold>{t('screens.cards.completed.title')}</Text>
                 <Text body2 style={styles.pt}>
-                  {t('screens.cards.completed.subtitle')}
+                  {user.preferences.usingSm2 ? t('screens.cards.completed.subtitle') : t('screens.cards.completed.subtitle_no_sm2')}
                 </Text>
               </View>
             </View>
@@ -413,18 +433,8 @@ const CardsScreen = ({ route }: NavProps) => {
           <Controls
             onPressCheck={() => onCorrectGuess()}
             onPressCross={() => onWrongGuess()}
-            onPressRotate={() => {
-              flipRotation ? flipToBack() : flipToFront();
-            }}
-            onPlayAudio={() => {
-              if (isAudioPlaying) {
-                return;
-              }
-
-              const audio = cards[currentCard.index].audio;
-              playSound(audio!);
-              setIsAudioPlaying(true);
-            }}
+            onPressRotate={onRotateClick}
+            onPlayAudio={onAudioPlayClick}
             hasAudio={isValidUrl(cards[currentCard.index].audio)}
             isAudioPlaying={isAudioPlaying}
           />
@@ -445,6 +455,18 @@ const CardsScreen = ({ route }: NavProps) => {
           </View>
         </View>
       )}
+      <Dialog isVisible={resetAlert} onBackdropPress={() => setResetAlert(!resetAlert)}>
+        <Text style={styles.alertTitle}>{t('screens.cards.alert.title')}</Text>
+        <Text body1>{t('screens.cards.alert.subtitle')}</Text>
+        <Dialog.Actions>
+          <Dialog.Button title={t('screens.settings.alert.dialog_confirm')} titleStyle={styles.alertActionButtonPos} onPress={onResetPress} />
+          <Dialog.Button
+            title={t('screens.settings.alert.dialog_cancel')}
+            titleStyle={styles.alertTitle}
+            onPress={() => setResetAlert(!resetAlert)}
+          />
+        </Dialog.Actions>
+      </Dialog>
     </Animated.View>
   );
 };
@@ -526,16 +548,20 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: '#ADB0FF',
     borderRadius: 10,
   },
+  alertTitle: {
+    fontFamily: FF_BOLD,
+    paddingBottom: 5,
+  },
+  alertActionButtonPos: {
+    fontFamily: FF_BOLD,
+    paddingBottom: 5,
+    color: theme.colors.orange,
+  },
   controlsContainer: {
     flex: 1,
     marginLeft: toSize(25),
     marginRight: toSize(25),
     marginTop: toSize(CARD_HEIGHT + 20),
-  },
-  controls: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
   },
   back: {
     backgroundColor: '#FDFFB4',
@@ -545,6 +571,13 @@ const useStyles = makeStyles((theme) => ({
   },
   backface: {
     backfaceVisibility: 'hidden',
+  },
+  optionsIcon: {
+    color: theme.mode === 'dark' ? theme.colors.white : theme.colors.orange,
+  },
+  optionsIconBtn: {
+    padding: 0,
+    paddingHorizontal: 0,
   },
 }));
 
