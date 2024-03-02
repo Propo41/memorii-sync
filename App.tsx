@@ -9,7 +9,7 @@ import { AppNavigator } from './src/navigation';
 import { palette, typography } from './src/theme';
 import { NavRoutes } from './src/config/routes';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { FIREBASE_WEB_CLIENT_ID, REVENUECAT_GOOGLE_API_KEY, REVENUECAT_USER_ID } from './src/config/conf';
+import { FIREBASE_WEB_CLIENT_ID, REVENUECAT_GOOGLE_API_KEY } from './src/config/conf';
 import CustomToast from './src/components/CustomToast';
 import Purchases from 'react-native-purchases';
 import { log } from './src/helpers/utility';

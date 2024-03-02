@@ -5,7 +5,7 @@ import { Keyboard, Linking, TouchableOpacity, TouchableWithoutFeedback, View } f
 import { Easing } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTranslation } from 'react-i18next';
-import { _Appearance, _Card, _Set } from '../models/dto';
+import { _Appearance, _Card, _CardStatus, _Set } from '../models/dto';
 import CustomTextInput from './CustomTextInput';
 import { margins } from '../config';
 import { FF_REGULAR } from '../theme/typography';
@@ -188,8 +188,16 @@ const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogPayload,
   const onCreateClick = async () => {
     try {
       let cards: _Card[] | null = [];
+      let cardStauses: Record<string, _CardStatus> = {};
+      let createdAt: number = new Date().getTime();
+      let id: string | null = null;
+
+      // editing mode
       if (dialogPayload.set?.cards.length) {
         cards = dialogPayload.set.cards;
+        cardStauses = dialogPayload.set.cardStatuses;
+        createdAt = dialogPayload.set.createdAt;
+        id = dialogPayload.set.id;
       }
 
       if (!doc && !dialogPayload.set?.cards) {
@@ -214,6 +222,10 @@ const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogPayload,
 
         if (data) {
           cards = data;
+          // initialize card statuses
+          for (const card of cards) {
+            cardStauses[card.id] = new _CardStatus();
+          }
         }
 
         if (!status) {
@@ -230,6 +242,9 @@ const CreateSetDialog = ({ onAddSetClick, isPremium, closeDialog, dialogPayload,
       const appearance = new _Appearance(bgColor || '#595959', fgColor || '#A5A5A5');
       const newSet = new _Set(name, appearance);
       newSet.cards = cards;
+      newSet.cardStatuses = cardStauses;
+      newSet.createdAt = createdAt;
+      newSet.id = id || newSet.id;
 
       if (onAddSetClick(newSet) !== false) {
         dialogPayload.editing

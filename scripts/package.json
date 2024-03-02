@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "anki_to_csv.js",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^1.6.7",
+    "typescript": "^5.3.3",
     "xml-js": "^1.6.11"
   }
 }

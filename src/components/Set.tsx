@@ -43,7 +43,7 @@ const Set = ({ name, fgColor, bgColor, mt, mb, onSetPress, completed, total }: D
 
   return (
     <View style={{ ...styles.container, backgroundColor: bgColor, marginTop: mt || 0, marginBottom: mb || 0 }}>
-      <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple(fgColor, false)} onPress={onSetPress}>
+      <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple('#A5A5A5', false)} onPress={onSetPress}>
         <View style={styles.setContainer}>
           <Text style={styles.title} head3>
             {name}

@@ -71,7 +71,7 @@ export class FirebaseApp implements FirebaseAppInterface {
     try {
       await firestore().collection(this.collections.users).doc(userId).update({
         preferences,
-      });
+      });      
     } catch (error: any) {
       log(error.message);
     }

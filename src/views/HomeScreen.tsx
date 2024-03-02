@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Avatar, Image, Text, makeStyles, useTheme, useThemeMode } from '@rneui/themed';
 import React, { useCallback, useState } from 'react';
-import { RefreshControl, ScrollView, StatusBar, View } from 'react-native';
+import { ScrollView, StatusBar, View } from 'react-native';
 import Deck from '../components/Deck';
 import TitleBar from '../components/TitleBar';
 import { iconSize } from '../config';
@@ -16,12 +16,13 @@ import * as NavigationBar from 'expo-navigation-bar';
 import { kickUser } from '../helpers/utility';
 
 const getCompletionCount = async (deck: _Deck) => {
-  const setIds = Array.from({ length: deck.sets.length }, (_, index) => index);
   let total = 0;
-  for (const setId of setIds) {
-    const statuses = await Cache.getInstance().getCardStatuses(deck.id!, setId.toString());
+  for (const set of deck.sets) {
+    const statuses = await Cache.getInstance().getCardStatuses(deck.id!, set.id);
     if (statuses) {
-      total += Object.values(statuses).filter(Boolean).length;
+      for (const item of Object.values(statuses)) {
+        total += item.isCompleted ? 1 : 0;
+      }
     }
   }
 
@@ -51,11 +52,11 @@ export default function HomeScreen({ navigation }: NavProps) {
   const [_, setLanguage] = useState<string>('English');
   const { t, i18n } = useTranslation(); // i18n instance
   const [isEmpty, setIsEmpty] = useState(false);
-  const [refreshing, setRefreshing] = React.useState(false);
 
   useFocusEffect(
     useCallback(() => {
       init();
+      //Cache.getInstance().deleteAllData();
     }, [])
   );
 
@@ -73,8 +74,10 @@ export default function HomeScreen({ navigation }: NavProps) {
     }
 
     setUser(user);
-    setUserPreference(user);
+    setUserPreference(user.preferences.locale, user.preferences.isDarkMode);
     let deckList = await Cache.getInstance().getDecks([...user.decksPurchased, ...user.decksCreated]);
+    deckList.sort((a, b) => b.createdAt - a.createdAt);
+
     setDecks(await calculateDeckProgress(user.id, deckList));
 
     if (deckList.length === 0) {
@@ -84,16 +87,7 @@ export default function HomeScreen({ navigation }: NavProps) {
     }
   };
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    init();
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000);
-  }, []);
-
-  const setUserPreference = async (user: _User) => {
-    const { locale, isDarkMode } = user.preferences;
+  const setUserPreference = async (locale: string, isDarkMode: boolean) => {
     setLanguage(locale);
     i18n.changeLanguage(locale);
 
@@ -104,7 +98,7 @@ export default function HomeScreen({ navigation }: NavProps) {
   return (
     <View>
       <StatusBar backgroundColor={theme.colors.background} hidden={false} />
-      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <TitleBar
           title={t('screens.home.title')}
           subtitle={t('screens.home.subtitle')}
@@ -137,6 +131,7 @@ export default function HomeScreen({ navigation }: NavProps) {
                   // @ts-expect-error cant fix this ts error
                   navigation.push(NavRoutes.Sets, {
                     deckId: deck.id,
+                    user: user,
                   });
                 }}
               />

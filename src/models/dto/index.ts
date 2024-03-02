@@ -1,3 +1,4 @@
+import { CardStatus } from './CardStatus';
 import { Offering } from './Offering';
 import { Market } from './Market';
 import { Set } from './Set';
@@ -18,4 +19,5 @@ export {
   Market as _Market,
   Transaction as _Transaction,
   Offering as _Offering,
+  CardStatus as _CardStatus,
 };
