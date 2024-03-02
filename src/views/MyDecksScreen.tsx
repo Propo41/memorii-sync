@@ -1,25 +1,21 @@
 import React, { useCallback, useState } from 'react';
 import { Linking, RefreshControl, ScrollView, TouchableNativeFeedback, View } from 'react-native';
-import { Button, FAB, Image, Text, makeStyles } from '@rneui/themed';
+import { FAB, Image, Text, makeStyles } from '@rneui/themed';
 import { NavProps, NavRoutes } from '../config/routes';
 import TitleBar from '../components/TitleBar';
 import { useFocusEffect } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import { useTranslation } from 'react-i18next';
-import { fetchOfferings, kickUser, log, makePurchase } from '../helpers/utility';
+import { kickUser } from '../helpers/utility';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { _Deck, _Offering, _User } from '../models/dto';
 import { Cache } from '../models/Cache';
-import { toFont, toSize } from '../helpers/scaling';
+import { toSize } from '../helpers/scaling';
 import { useTheme } from '@rneui/themed';
 import { BOTTOM_NAV_HEIGHT, iconSize, margins } from '../config';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { INSTRUCTION_URL } from '../config/conf';
-import { FF_REGULAR } from '../theme/typography';
-import Icon2 from 'react-native-vector-icons/MaterialIcons';
-import { PurchasesPackage } from 'react-native-purchases';
-import { showToast } from '../components/CustomToast';
 
 type DeckItemProps = {
   name: string;
@@ -55,108 +51,11 @@ const DeckItem = ({ name, bgColor, totalCards, mt, mb, onDeckPress }: DeckItemPr
   );
 };
 
-type PricingCardProps = {
-  onPricingSelect: (p?: PurchasesPackage) => void;
-  isPremium: boolean;
-  showPricingCard: (show: boolean) => void;
-};
-
-const PricingCard = ({ onPricingSelect, isPremium, showPricingCard }: PricingCardProps) => {
-  const styles = useStyles();
-  const { theme } = useTheme();
-  const [selection, setSelection] = useState(0);
-  const { t } = useTranslation();
-  const [pricingCards, setPricingCards] = useState<_Offering[]>([]);
-
-  useFocusEffect(
-    useCallback(() => {
-      !isPremium &&
-        FirebaseApp.getInstance()
-          .fetchOffers()
-          .then(async (items) => {
-            const offerings = await fetchOfferings();
-            log(offerings.toString());
-
-            const appOffers = items.map((item) => {
-              const inAppPackage = offerings.find((offeringPkg) => offeringPkg.offeringIdentifier === item.offeringIdentifier);
-              if (inAppPackage) {
-                item._package = inAppPackage;
-              }
-
-              return item;
-            });
-
-            if (appOffers.length === 0) {
-              showToast(t('screens.myDecks.app_offerings_not_found'), 'error');
-              showPricingCard(false);
-            } else {
-              setPricingCards(appOffers);
-            }
-          });
-    }, [])
-  );
-
-  if (pricingCards.length === 0) {
-    return null;
-  }
-
-  return (
-    <View style={styles.pricingCardContainer}>
-      <View style={styles.pricingContentContainerTop}>
-        <Text head1>{pricingCards[selection]?._package?.product.priceString || pricingCards[selection].type}</Text>
-        <View style={styles.pricingStackedBtnsContainer}>
-          {pricingCards.map((p, index) => {
-            return (
-              <Button
-                key={index}
-                title={p.type}
-                onPress={() => {
-                  setSelection(index);
-                }}
-                // eslint-disable-next-line react-native/no-inline-styles
-                buttonStyle={{
-                  ...styles.pricingStackedButtons,
-                  backgroundColor: index === selection ? theme.colors.purple : theme.colors.white,
-                  marginLeft: index !== 0 ? 5 : 0,
-                }}
-                titleStyle={{ ...styles.pricingStackedButtonsTitle, color: index === selection ? theme.colors.white : theme.colors.black }}
-              />
-            );
-          })}
-        </View>
-      </View>
-      <View style={styles.pricingContentContainerBtm}>
-        {pricingCards[selection]?.summary.map((summary, index) => {
-          return (
-            // eslint-disable-next-line react-native/no-inline-styles
-            <View key={index} style={{ marginTop: index === 0 ? 8 : 15, ...styles.pricingSummary }}>
-              <Icon2 color="#4FF960" name="check-circle" style={styles.statusIcon} size={20} />
-              <Text style={styles.pricingSummaryText} key={index}>
-                {summary}
-              </Text>
-            </View>
-          );
-        })}
-
-        <Button
-          onPress={() => {
-            onPricingSelect(pricingCards[selection]?._package);
-          }}
-          title={t('screens.myDecks.btn_continue')}
-          buttonStyle={styles.pricingBtn}
-          titleStyle={styles.pricingBtnTitle}
-        />
-      </View>
-    </View>
-  );
-};
-
 export default function MyDecks({ navigation }: NavProps) {
   const styles = useStyles();
   const { t } = useTranslation();
   const [isEmpty, setIsEmpty] = useState(false);
   const [user, setUser] = useState<_User>();
-  const [showPricingCard, setShowPricingCard] = useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
 
   const [decks, setDecks] = useState<_Deck[]>([]);
@@ -202,36 +101,13 @@ export default function MyDecks({ navigation }: NavProps) {
     }
   };
 
-  const onPricingSelect = async (pkg?: PurchasesPackage) => {
-    if (!user) return;
-
-    if (!pkg) {
-      setShowPricingCard(false);
-    } else {
-      const transaction = await makePurchase(user.id, pkg);
-      if (transaction) {
-        await FirebaseApp.getInstance().makePremium(user.id);
-
-        showToast(t('screens.myDecks.premium_unlocked'));
-        setShowPricingCard(false);
-        setUser({ ...user, isPremium: true });
-      }
-    }
-  };
-
   const onCreateDeckClick = () => {
     if (!user) {
       return;
     }
 
     if ((user.decksCreated || []).length === 0 && user.isPremium) {
-      // if user has not created any decks yet and the user is not a premium user, let him create a deck
-      setShowPricingCard(false);
       navigation.push(NavRoutes.CreateDeck);
-    } else if (user.isPremium) {
-      navigation.push(NavRoutes.CreateDeck);
-    } else {
-      setShowPricingCard(true);
     }
   };
 
@@ -239,9 +115,6 @@ export default function MyDecks({ navigation }: NavProps) {
     <View style={styles.rootContainer}>
       <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         <TitleBar title={t('screens.myDecks.title')} subtitle={t('screens.myDecks.subtitle')} />
-        {showPricingCard && (
-          <PricingCard onPricingSelect={onPricingSelect} isPremium={user?.isPremium || false} showPricingCard={setShowPricingCard} />
-        )}
         {isEmpty && (
           <View style={styles.notFoundContainer}>
             <Image source={require('../assets/not-found.png')} style={styles.emptyImage} />
@@ -259,7 +132,7 @@ export default function MyDecks({ navigation }: NavProps) {
             </Text>
           </View>
         )}
-        {!showPricingCard && decks.length > 0 && (
+        {decks.length > 0 && (
           <>
             <View style={{ marginTop: theme.spacing.lg }}>
               {decks.map((deck, index) => {
@@ -287,15 +160,14 @@ export default function MyDecks({ navigation }: NavProps) {
           </>
         )}
       </ScrollView>
-      {!showPricingCard && (
-        <FAB
-          size="large"
-          icon={<Entypo name="plus" color={theme.colors.white} size={iconSize.sm} />}
-          color={theme.mode === 'dark' ? theme.colors.purple : theme.colors.orange}
-          style={styles.fab}
-          onPress={onCreateDeckClick}
-        />
-      )}
+
+      <FAB
+        size="large"
+        icon={<Entypo name="plus" color={theme.colors.white} size={iconSize.sm} />}
+        color={theme.mode === 'dark' ? theme.colors.purple : theme.colors.orange}
+        style={styles.fab}
+        onPress={onCreateDeckClick}
+      />
     </View>
   );
 }
@@ -375,63 +247,5 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'flex-end',
     marginRight: 15,
     marginBottom: 10,
-  },
-  pricingCardContainer: {
-    marginTop: 40,
-    height: '100%',
-    borderRadius: 10,
-    marginHorizontal: margins.window_hor,
-  },
-  pricingContentContainerTop: {
-    backgroundColor: theme.colors.lightAsh,
-    alignItems: 'center',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    paddingVertical: 20,
-  },
-  pricingContentContainerBtm: {
-    paddingHorizontal: 50,
-    backgroundColor: theme.colors.white,
-    marginHorizontal: 0,
-    paddingBottom: 15,
-    paddingTop: 10,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-  pricingBtn: {
-    backgroundColor: theme.colors.orange,
-    borderRadius: 10,
-    paddingVertical: 15,
-    marginTop: 30,
-  },
-  pricingBtnTitle: {
-    fontFamily: FF_REGULAR,
-    fontSize: toFont(16),
-    paddingHorizontal: 5,
-    color: theme.colors.white,
-  },
-  pricingStackedBtnsContainer: {
-    display: 'flex',
-    flexDirection: 'row',
-    marginTop: 30,
-  },
-  pricingStackedButtons: {
-    borderRadius: 10,
-    borderColor: theme.colors.black,
-    borderWidth: 1,
-  },
-  pricingStackedButtonsTitle: {
-    fontFamily: FF_REGULAR,
-    fontSize: toFont(16),
-    paddingHorizontal: 8,
-  },
-  pricingSummary: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pricingSummaryText: {
-    color: theme.colors.black,
-    marginLeft: 5,
   },
 }));

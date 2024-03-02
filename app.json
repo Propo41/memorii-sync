@@ -20,7 +20,7 @@
     "android": {
       "googleServicesFile": "./google-services.json",
       "versionCode": 3,
-      "package": "com.squidellastudios.brainflip",
+      "package": "com.minkstudios.memoriisync",
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"

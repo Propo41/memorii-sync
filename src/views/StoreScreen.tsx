@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Linking, ScrollView, View } from 'react-native';
 import { Button, FAB, Text, makeStyles, useTheme } from '@rneui/themed';
 import { toFont, toSize } from '../helpers/scaling';
 import { FF_REGULAR } from '../theme/typography';
@@ -15,10 +15,11 @@ import { showToast } from '../components/CustomToast';
 import { Sound } from 'expo-av/build/Audio';
 import * as SystemNavigationBar from 'expo-navigation-bar';
 import { Market } from '../models/dto/Market';
-import { isValidUrl, log, makePurchase } from '../helpers/utility';
+import { isValidUrl, log } from '../helpers/utility';
 import auth from '@react-native-firebase/auth';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { Cache } from '../models/Cache';
+import { PURCHASE_URL } from '../config/conf';
 
 type SampleCardProps = {
   word: string;
@@ -150,10 +151,12 @@ export default function StoreScreen({ route, navigation }: NavProps) {
     }
 
     if (_package && newPrice > 0) {
-      const res = await makePurchase(currentUser.uid, _package);
-      if (res) {
-        showToast(t('screens.store.deck_purchased'));
-      }
+      Linking.openURL(PURCHASE_URL);
+
+      // const res = await makePurchase(currentUser.uid, _package);
+      // if (res) {
+      //   showToast(t('screens.store.deck_purchased'));
+      // }
     } else {
       showToast(t('screens.store.deck_downloading'));
     }
