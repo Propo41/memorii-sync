@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, View } from 'react-native';
 import { Button, Text, makeStyles, useTheme } from '@rneui/themed';
-import { toSize } from '../helpers/scaling';
+import { toFont, toSize } from '../helpers/scaling';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import TitleBar from '../components/TitleBar';
 import { iconSize, margins } from '../config';
@@ -11,6 +11,7 @@ import { NavProps, NavRoutes } from '../config/routes';
 import { useFocusEffect } from '@react-navigation/native';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { _Market } from '../models/dto';
+import Markdown from 'react-native-markdown-display';
 // import { fetchOfferings } from '../helpers/utility';
 
 type StoreItemProps = {
@@ -27,7 +28,7 @@ type StoreItemProps = {
 const StoreItem = ({ mt, mb, onPress, color, title, subtitle, discountRate, oldPrice }: StoreItemProps) => {
   const styles = useStyles();
   const { t } = useTranslation();
-  const newPrice = oldPrice - (oldPrice * discountRate) / 100;
+  const newPrice = Math.round(oldPrice - (oldPrice * discountRate) / 100);
 
   return (
     <View style={{ ...styles.itemContainer, marginTop: mt || 0, marginBottom: mb || 0 }}>
@@ -37,9 +38,13 @@ const StoreItem = ({ mt, mb, onPress, color, title, subtitle, discountRate, oldP
             {title}
           </Text>
           <View style={styles.flexGrow} />
-          <Text body2 style={styles.text}>
+          <Markdown
+            style={{
+              body: styles.markdownBody,
+            }}
+          >
             {subtitle}
-          </Text>
+          </Markdown>
         </View>
         <View style={styles.flexGrow} />
 
@@ -184,7 +189,7 @@ const useStyles = makeStyles((theme) => ({
     marginTop: toSize(25),
   },
   mt_0: {
-    marginTop: toSize(0),
+    marginTop: toSize(5),
   },
   itemButton: {
     borderRadius: 10,
@@ -196,5 +201,10 @@ const useStyles = makeStyles((theme) => ({
   },
   flexGrow: {
     flexGrow: 1,
+  },
+  markdownBody: {
+    fontFamily: FF_REGULAR,
+    fontSize: toFont(16),
+    color: theme.colors.white,
   },
 }));
