@@ -237,7 +237,7 @@ export default function StoreScreen({ route, navigation }: NavProps) {
             <SampleCard
               word={samples[currentSampleIndex].front}
               value1={samples[currentSampleIndex].back}
-              value2={samples[currentSampleIndex].backLocale}
+              value2={samples[currentSampleIndex].back2}
               example={samples[currentSampleIndex].example}
               audio={samples[currentSampleIndex].audio}
               navigateIndex={`${currentSampleIndex + 1}/${samples.length}`}

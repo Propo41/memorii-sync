@@ -11,7 +11,7 @@ export class UserPreference {
     this.isDarkMode = isDarkMode || this.isDarkMode;
     this.locale = locale || this.locale;
     this.cardAppearance = cardAppearance || this.cardAppearance;
-    this.usingSm2 = usingSm2? true: false;
+    this.usingSm2 = usingSm2 || this.usingSm2;
   }
 
   static transform(_userPreference: InstanceType<typeof UserPreference>): UserPreference {

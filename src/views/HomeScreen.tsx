@@ -56,7 +56,7 @@ export default function HomeScreen({ navigation }: NavProps) {
   useFocusEffect(
     useCallback(() => {
       init();
-      //Cache.getInstance().deleteAllData();
+     // Cache.getInstance().deleteAllData();
     }, [])
   );
 

@@ -16,7 +16,7 @@ const possible_headers = [
   { header: 'type', required: false },
   { header: 'back', required: true },
   { header: 'example', required: false },
-  { header: 'backLocale', required: false, needPremium1: true },
+  { header: 'back2', required: false, needPremium1: true },
   { header: 'audio', required: false, needPremium2: true },
 ];
 ```

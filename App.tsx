@@ -65,18 +65,19 @@ export default function App() {
     FirebaseApp.getInstance()
       .getAppInfo()
       .then(async (appInfo) => {
+        if (appInfo) {
+          await Cache.getInstance().saveAppInfo(appInfo);
+          setAppInfo(appInfo);
+        }
+
         const currentAppInfo = await Cache.getInstance().getAppInfo();
 
         if (!appInfo || !currentAppInfo) return;
-
-        setAppInfo(appInfo);
 
         if (appInfo.version > currentAppInfo.version) {
           // update is available. Show user prompt
           setUpdateAlertVisible(true);
         }
-
-        await Cache.getInstance().saveAppInfo(appInfo);
       });
   }, []);
 
