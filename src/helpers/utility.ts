@@ -40,7 +40,7 @@ const possible_headers = [
   { header: 'type', required: false },
   { header: 'back', required: true },
   { header: 'example', required: false },
-  { header: 'backLocale', required: false, needPremium1: true },
+  { header: 'back2', required: false, needPremium1: true },
   { header: 'audio', required: false, needPremium1: true },
 ];
 
@@ -60,12 +60,12 @@ export const rawToCards = async (rawData: string, hasPremiumAccess: boolean = fa
       message: t('screens.myDecks.createSets.no_lines'),
     };
 
-  if (lines.length > 50 && !hasPremiumAccess) {
-    return {
-      status: false,
-      message: t('screens.myDecks.createSets.cards_limit'),
-    };
-  }
+  // if (lines.length > 50 && !hasPremiumAccess) {
+  //   return {
+  //     status: false,
+  //     message: t('screens.myDecks.createSets.cards_limit'),
+  //   };
+  // }
 
   const headers = lines[0].trim().split('\t');
 
@@ -85,11 +85,11 @@ export const rawToCards = async (rawData: string, hasPremiumAccess: boolean = fa
         };
       }
 
-      if (ph.needPremium1 && !hasPremiumAccess) {
-        // @ts-expect-error ignore it
-        card[ph.header] = '';
-        continue;
-      }
+      // if (ph.needPremium1 && !hasPremiumAccess) {
+      //   // @ts-expect-error ignore it
+      //   card[ph.header] = '';
+      //   continue;
+      // }
 
       const item = columns[index] || '';
       // @ts-expect-error ignore it

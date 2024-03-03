@@ -349,7 +349,7 @@ const CardsScreen = ({ route, navigation }: NavProps) => {
           </Animated.View>
         )}
         <View>
-          {backView(localeSwitch ? firstCard.backLocale : firstCard.back, isCompleted, firstCard.example)}
+          {backView(localeSwitch ? firstCard.back2 : firstCard.back, isCompleted, firstCard.example)}
           {frontView(firstCard.front, isCompleted, firstCard.example, firstCard.type)}
         </View>
       </>
@@ -440,7 +440,7 @@ const CardsScreen = ({ route, navigation }: NavProps) => {
           />
 
           <View style={styles.switchProgressContainer}>
-            {cards[currentCard.index].backLocale.length > 0 && (
+            {cards[currentCard.index].back2.length > 0 && (
               <LocaleSwitch
                 value={true}
                 onValueChange={(value: boolean) => {
@@ -541,6 +541,7 @@ const useStyles = makeStyles((theme) => ({
     bottom: 0,
     right: 0,
     left: 0,
+    alignItems: 'center',
   },
   progress: {
     marginBottom: 20,
