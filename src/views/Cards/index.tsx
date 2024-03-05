@@ -72,6 +72,8 @@ const CardsScreen = ({ route, navigation }: NavProps) => {
 
   // initialize cards and set navigation bar color
   useEffect(() => {
+    console.log('using', user.preferences.usingSm2);
+
     if (user.preferences.usingSm2) {
       const cardsForToday = getInitialStack(set.cards, cardStatuses);
       setCards(cardsForToday);

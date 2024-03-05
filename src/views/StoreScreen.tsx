@@ -50,7 +50,7 @@ const SampleCard = ({ word, value1, value2, example, audio, onNextClick, onPrevC
 
   const onPlayAudio = async () => {
     try {
-      if (isValidUrl(audio!)) {
+      if (!isValidUrl(audio)) {
         showToast(t('screens.store.audio_broken'), 'error');
         return;
       }
@@ -188,11 +188,18 @@ export default function StoreScreen({ route, navigation }: NavProps) {
     // for now, the deck will be added manually by admin after purchase completion
     // await FirebaseApp.getInstance().addDeckToUser(deckId, currentUser.uid); // at first, attach the deck id to user
 
+    // if the product is free / or has 100% discount
+    if (newPrice === 0) {
+      await FirebaseApp.getInstance().addDeckToUser(deckId, currentUser.uid);
+    }
+
     const downloadedDeck = await FirebaseApp.getInstance().getDeck(deckId); // next try downloading
     if (!downloadedDeck) {
       showToast(t('screens.store.deck_details_not_found'), 'error');
       return;
     }
+
+    console.log(downloadedDeck);
 
     showToast(t('screens.store.deck_downloading'));
     await Cache.getInstance().updateDeck(deckId, downloadedDeck);

@@ -90,7 +90,7 @@ export default function SettingsScreen({ navigation }: NavProps) {
   }, []);
 
   const toggleSm2 = async () => {
-    console.log(!usingSm2);
+    console.log("usingsm2", !usingSm2);
 
     setUsingSm2(!usingSm2);
     await updatePreference(mode === 'dark', language, !usingSm2);
@@ -112,7 +112,7 @@ export default function SettingsScreen({ navigation }: NavProps) {
   };
 
   const updatePreference = async (isDarkMode: boolean, locale: Language, isUsingSm2: boolean) => {
-    if (!user) return;
+    if (!user) return    
     await FirebaseApp.getInstance().updateUserPreference(user.id, new UserPreference(isDarkMode, locale, isUsingSm2));
   };
 

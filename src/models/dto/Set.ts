@@ -17,9 +17,7 @@ export class Set {
     this.appearance = appearance || new Appearance('#F48B8E', '#F35B60');
   }
 
-  static transform(_set: InstanceType<typeof Set>): Set {
-    console.log("hello");
-    
+  static transform(_set: InstanceType<typeof Set>): Set {    
     const set = new Set(_set.name, Appearance.transform(_set.appearance));
     set.cards = _set.cards?.map((card) => Card.transform(card));
     set.id = _set.id;

@@ -106,9 +106,11 @@ export default function MyDecks({ navigation }: NavProps) {
       return;
     }
 
-    if ((user.decksCreated || []).length === 0 && user.isPremium) {
-      navigation.push(NavRoutes.CreateDeck);
-    }
+    // if ((user.decksCreated || []).length === 0 && user.isPremium) {
+    //   navigation.push(NavRoutes.CreateDeck);
+    // }
+
+    navigation.push(NavRoutes.CreateDeck);
   };
 
   return (

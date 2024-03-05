@@ -15,9 +15,10 @@ type StatusMessage = {
 };
 
 export const isValidUrl = (url: string | undefined) => {
-  if (!url || url.length === 0) return false;
+  const trimmed = url?.trim();
+  if (!trimmed || trimmed.length === 0) return false;
   const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
-  return urlRegex.test(url);
+  return urlRegex.test(trimmed);
 };
 
 export const log = (message: string, data?: object) => {

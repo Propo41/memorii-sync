@@ -11,15 +11,16 @@ export class UserPreference {
     this.isDarkMode = isDarkMode || this.isDarkMode;
     this.locale = locale || this.locale;
     this.cardAppearance = cardAppearance || this.cardAppearance;
-    this.usingSm2 = usingSm2 || this.usingSm2;
+    this.usingSm2 = usingSm2 === true ? true : false;
   }
 
   static transform(_userPreference: InstanceType<typeof UserPreference>): UserPreference {
-    const userPreference = new UserPreference();
-    userPreference.isDarkMode = _userPreference.isDarkMode;
-    userPreference.locale = _userPreference.locale;
-    userPreference.cardAppearance = Appearance.transform(_userPreference.cardAppearance);
-    userPreference.usingSm2 = _userPreference.usingSm2;
+    const userPreference = new UserPreference(
+      _userPreference.isDarkMode,
+      _userPreference.locale,
+      _userPreference.usingSm2,
+      Appearance.transform(_userPreference.cardAppearance)
+    );
 
     return userPreference;
   }
