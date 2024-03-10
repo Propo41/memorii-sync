@@ -2,16 +2,16 @@ import { Language } from '../../config';
 import { Appearance } from './Appearance';
 
 export class UserPreference {
-  isDarkMode: boolean = false;
+  isDarkMode: boolean;
   locale: Language = 'English';
   cardAppearance: Appearance = new Appearance('#fff', '#fff'); // currently not supported
-  usingSm2: boolean = true;
+  usingSm2: boolean;
 
-  constructor(isDarkMode?: boolean | null, locale?: Language | null, usingSm2?: boolean, cardAppearance?: Appearance) {
-    this.isDarkMode = isDarkMode || this.isDarkMode;
+  constructor(isDarkMode: boolean = false, locale?: Language | null, usingSm2: boolean = true, cardAppearance?: Appearance) {
+    this.isDarkMode = isDarkMode;
     this.locale = locale || this.locale;
     this.cardAppearance = cardAppearance || this.cardAppearance;
-    this.usingSm2 = usingSm2 === true ? true : false;
+    this.usingSm2 = usingSm2;
   }
 
   static transform(_userPreference: InstanceType<typeof UserPreference>): UserPreference {
