@@ -1,6 +1,8 @@
 ## Requirements
 
 - node v16.13.0
+- src/config/conf.ts file needs to be updated with user's config
+- google-services.json needs to be put in the root directory
 
 ## Docs
 
