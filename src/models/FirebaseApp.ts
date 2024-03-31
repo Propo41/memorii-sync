@@ -73,7 +73,7 @@ export class FirebaseApp implements FirebaseAppInterface {
     try {
       await firestore().collection(this.collections.users).doc(userId).update({
         preferences,
-      });      
+      });
     } catch (error: any) {
       log(error.message);
     }
@@ -97,14 +97,27 @@ export class FirebaseApp implements FirebaseAppInterface {
     }
   }
 
+  // owns the deck. adds it to decksCreated
+  // when a user deletes a deck, it gets deleted from this field
   async addDeckToUser(deckId: string, userId: string) {
     try {
+      const payload = { decksCreated: firestore.FieldValue.arrayUnion(deckId) }
       await firestore()
         .collection(this.collections.users)
         .doc(userId)
-        .update({
-          decksCreated: firestore.FieldValue.arrayUnion(deckId),
-        });
+        .update(payload);
+    } catch (error: any) {
+      log(error.message);
+    }
+  }
+
+  async purchaseDeck(deckId: string, userId: string) {
+    try {
+      const payload = { decksPurchased: firestore.FieldValue.arrayUnion(deckId) };
+      await firestore()
+        .collection(this.collections.users)
+        .doc(userId)
+        .update(payload);
     } catch (error: any) {
       log(error.message);
     }

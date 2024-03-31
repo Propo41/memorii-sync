@@ -190,6 +190,7 @@ export default function StoreScreen({ route, navigation }: NavProps) {
 
     // if the product is free / or has 100% discount
     if (newPrice === 0) {
+      await FirebaseApp.getInstance().purchaseDeck(deckId, currentUser.uid);
       await FirebaseApp.getInstance().addDeckToUser(deckId, currentUser.uid);
     }
 

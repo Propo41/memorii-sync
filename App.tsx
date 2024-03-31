@@ -10,14 +10,12 @@ import { palette, typography } from './src/theme';
 import { NavRoutes } from './src/config/routes';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { FIREBASE_WEB_CLIENT_ID } from './src/config/conf';
-import CustomToast, { showToast } from './src/components/CustomToast';
+import CustomToast from './src/components/CustomToast';
 import { FirebaseApp } from './src/models/FirebaseApp';
 import { Cache } from './src/models/Cache';
 import { FF_BOLD } from './src/theme/typography';
 import { useTranslation } from 'react-i18next';
 import { _AppInfo } from './src/models/dto';
-// import Purchases from 'react-native-purchases';
-// import { log } from './src/helpers/utility';
 
 const theme = createTheme({
   lightColors: palette['light'],
@@ -43,18 +41,6 @@ export default function App() {
     GoogleSignin.configure({
       webClientId: FIREBASE_WEB_CLIENT_ID,
     });
-
-    // const setup = async () => {
-    //   if (Platform.OS == 'android') {
-    //     await Purchases.configure({ apiKey: REVENUECAT_GOOGLE_API_KEY });
-    //   }
-    // };
-
-    // Purchases.setLogLevel(Purchases.LOG_LEVEL.ERROR);
-
-    // setup().catch((e) => {
-    //   log('Error', e);
-    // });
   }, []);
 
   useEffect(() => {

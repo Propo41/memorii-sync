@@ -6,5 +6,3 @@
 
 export const FIREBASE_WEB_CLIENT_ID = ''
 export const SITE_URL = '';
-export const REVENUECAT_GOOGLE_API_KEY = '';
-export const REVENUECAT_USER_ID = '';
