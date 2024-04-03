@@ -29,7 +29,7 @@ const getCompletionCount = async (deck: _Deck) => {
   return total;
 };
 
-const calculateDeckProgress = async (userId: string, decksList: _Deck[]) => {
+const calculateDeckProgress = async (decksList: _Deck[]) => {
   const updatedDecks = [];
   for (const deck of decksList) {
     const total = deck.sets.reduce((acc, set) => acc + (set.cards?.length || 0), 0);
@@ -75,10 +75,10 @@ export default function HomeScreen({ navigation }: NavProps) {
 
     setUser(user);
     setUserPreference(user.preferences.locale, user.preferences.isDarkMode);
-    let deckList = await Cache.getInstance().getDecks([...user.decksPurchased, ...user.decksCreated]);
+    let deckList = await Cache.getInstance().getDecks(user.decksCreated);
     deckList.sort((a, b) => b.createdAt - a.createdAt);
 
-    setDecks(await calculateDeckProgress(user.id, deckList));
+    setDecks(await calculateDeckProgress(deckList));
 
     if (deckList.length === 0) {
       setIsEmpty(true);

@@ -287,7 +287,9 @@ export default function CreateDeckScreen({ navigation, route }: NavProps) {
     const currentUser = auth().currentUser;
     if (!currentUser) return;
 
+    await FirebaseApp.getInstance().deleteUserDeck(currentUser.uid, input.id!)
     await Cache.getInstance().deleteDeck(input.id!);
+
     navigation.goBack();
 
     setDeleteAlertVisible(!deleteAlertVisible);

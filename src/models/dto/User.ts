@@ -8,7 +8,7 @@ export class User {
   isEmailVerified: boolean = false;
   createdAt?: string;
   preferences: UserPreference = new UserPreference();
-  decksCreated: string[] = [];
+  decksCreated: string[] = []; // todo: rename it to decksOwned
   decksPurchased: string[] = [];
   isPremium: boolean = false;
 

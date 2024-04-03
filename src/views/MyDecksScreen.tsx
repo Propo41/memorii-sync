@@ -89,7 +89,7 @@ export default function MyDecks({ navigation }: NavProps) {
     }
 
     setUser(user);
-    const decksList = await Cache.getInstance().getDecks([...user.decksCreated, ...user.decksPurchased]);
+    const decksList = await Cache.getInstance().getDecks(user.decksCreated);
     decksList.sort((a, b) => b.createdAt - a.createdAt);
 
     setDecks(decksList);

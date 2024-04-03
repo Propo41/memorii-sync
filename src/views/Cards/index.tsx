@@ -5,7 +5,7 @@ import { Button, Dialog, LinearProgress, makeStyles, Text, useTheme } from '@rne
 import { SCREEN_HEIGHT, SCREEN_WIDTH, toSize } from '../../helpers/scaling';
 import Card from '../../components/Card';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { STATUSBAR_HEIGHT, iconSize } from '../../config';
+import { STATUSBAR_HEIGHT } from '../../config';
 import { _Card, _CardStatus, _Set, _User } from '../../models/dto';
 import { NavProps } from '../../config/routes';
 import { Cache } from '../../models/Cache';
@@ -20,8 +20,18 @@ import { getInitialStack, isValidUrl, log, reviewFlashcard } from '../../helpers
 import Controls from './Controls';
 import { FF_BOLD } from '../../theme/typography';
 
-const MARGIN_TOP = toSize(10);
-const CARD_HEIGHT = toSize(400);
+let scale = 0.5;
+if (SCREEN_HEIGHT < 700) {
+  scale = 0.6;  // small screens
+} else if (SCREEN_HEIGHT >= 700 && SCREEN_HEIGHT < 1000) {
+  scale = 0.5;  // medium screens
+} else {
+  scale = 0.5;  // larger screens
+}
+
+const MARGIN_TOP = toSize(15);
+const CARD_HEIGHT =  toSize(SCREEN_HEIGHT * scale);
+const CONTROLS_MT = toSize(50);
 
 type CardsScreenProps = {
   deckId: string;
@@ -63,6 +73,8 @@ const CardsScreen = ({ route, navigation }: NavProps) => {
 
   // audio
   useEffect(() => {
+    console.log(SCREEN_HEIGHT);
+    
     return sound
       ? () => {
           sound.unloadAsync();
@@ -513,10 +525,10 @@ const useStyles = makeStyles((theme) => ({
     paddingBottom: 30,
   },
   cardContainer: {
-    height: toSize(400),
+    height: CARD_HEIGHT,
     left: 0,
     right: 0,
-    marginTop: toSize(60 - MARGIN_TOP),
+    marginTop: toSize(50 - MARGIN_TOP),
     marginLeft: toSize(25),
     marginRight: toSize(25),
     padding: 10,
@@ -564,7 +576,7 @@ const useStyles = makeStyles((theme) => ({
     flex: 1,
     marginLeft: toSize(25),
     marginRight: toSize(25),
-    marginTop: toSize(CARD_HEIGHT + 20),
+    marginTop: CARD_HEIGHT + CONTROLS_MT,
   },
   back: {
     backgroundColor: '#FDFFB4',

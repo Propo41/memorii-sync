@@ -18,6 +18,7 @@ interface FirebaseAppInterface {
 
   backUpDecks(userId: string, decks: _Deck[]): Promise<void>;
   restoreDecks(userId: string): Promise<_Deck[]>;
+  deleteUserDeck(userId: string, deckId: string): Promise<void>;
 
   getAppInfo(): Promise<_AppInfo | null>;
 }
@@ -223,5 +224,18 @@ export class FirebaseApp implements FirebaseAppInterface {
     }
 
     return null;
+  }
+
+  async deleteUserDeck(userId: string, deckId: string) {
+    try {
+      const user = await this.getUser(userId);
+      if(!user) return;
+
+      const updatedArray = user.decksCreated.filter((item) => item !== deckId);
+      user.decksCreated = updatedArray;
+      await this.updateUser(userId, user)
+    } catch (error: any) {
+      log(error.message);
+    }
   }
 }

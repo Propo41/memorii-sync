@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Brain Flip",
-    "slug": "brain-flip",
-    "version": "1.0.2",
+    "name": "Memorii Sync",
+    "slug": "memorii-sync",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
     "splash": {

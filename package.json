@@ -1,6 +1,6 @@
 {
-  "name": "memory-sync",
-  "version": "1.0.0",
+  "name": "memorii-sync",
+  "version": "1.0.1",
   "author": {
     "name": "Ali Ahnaf"
   },
@@ -13,8 +13,6 @@
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",
-    "ios": "expo run:ios",
-    "web": "expo start --web",
     "prebuild": "expo prebuild",
     "eject": "expo eject",
     "eslint": "eslint ."
