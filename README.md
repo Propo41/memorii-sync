@@ -1,5 +1,7 @@
 # Memorii Sync
 
+![Frame 1 (1)](https://github.com/Propo41/memorii-sync/assets/46298019/065f0bbb-2c17-4227-a037-f35db486c7a2)
+
 Yet another simple and intuitive flashcard app to boost your memory. Memorii Sync is designed to be an easy-to-use flashcard application aimed at enhancing memory retention and facilitating efficient learning
 
 ## Features
