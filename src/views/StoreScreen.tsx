@@ -20,7 +20,7 @@ import auth from '@react-native-firebase/auth';
 import { FirebaseApp } from '../models/FirebaseApp';
 import { Cache } from '../models/Cache';
 import { _User } from '../models/dto';
-import { SITE_URL } from '../config/conf';
+import { SITE_URL } from '../config';
 
 type SampleCardProps = {
   word: string;

@@ -75,4 +75,3 @@ dist/
 
 # firebase
 google-services.json
-src/config/conf.ts

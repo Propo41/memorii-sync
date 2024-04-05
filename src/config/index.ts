@@ -17,6 +17,7 @@ export const iconSize = {
   lg: 50,
 };
 
+export const SITE_URL = 'https://docs.google.com/document/d/10NVEhKlNySMA-iQWAsp3REKYFR47hObkRPAkagXYyHc/edit?usp=sharing';
 export type Language = 'English' | 'Bangla';
 
 export { i18n };

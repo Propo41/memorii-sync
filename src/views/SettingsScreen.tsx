@@ -20,7 +20,7 @@ import { log } from '../helpers/utility';
 import { _User } from '../models/dto';
 import { Cache } from '../models/Cache';
 import { FF_BOLD } from '../theme/typography';
-import { SITE_URL } from '../config/conf';
+import { SITE_URL } from '../config';
 
 type MenuProps = {
   title: string;

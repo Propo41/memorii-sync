@@ -9,7 +9,6 @@ import { AppNavigator } from './src/navigation';
 import { palette, typography } from './src/theme';
 import { NavRoutes } from './src/config/routes';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { FIREBASE_WEB_CLIENT_ID } from './src/config/conf';
 import CustomToast from './src/components/CustomToast';
 import { FirebaseApp } from './src/models/FirebaseApp';
 import { Cache } from './src/models/Cache';
@@ -38,9 +37,16 @@ export default function App() {
   const [appInfo, setAppInfo] = useState<_AppInfo>();
 
   useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: FIREBASE_WEB_CLIENT_ID,
-    });
+    const googleServices = require('./google-services.json');
+    // Note: Before triggering a sign-in request, you must initialize the Google SDK using your any required scopes 
+    // and the webClientId, which can be found in the `android/app/google-services.json` file as the `client/oauth_client/client_id` property. 
+    // Make sure to pick the client_id with `client_type: 3`
+    const oAuthClient = googleServices.client[0].oauth_client.find((client: any) => client.client_type === 3);
+    if (oAuthClient) {
+      GoogleSignin.configure({
+        webClientId: oAuthClient.client_id,
+      });
+    }
   }, []);
 
   useEffect(() => {

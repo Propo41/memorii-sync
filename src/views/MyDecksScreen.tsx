@@ -15,7 +15,7 @@ import { useTheme } from '@rneui/themed';
 import { BOTTOM_NAV_HEIGHT, iconSize, margins } from '../config';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
-import { SITE_URL } from '../config/conf';
+import { SITE_URL } from '../config';
 
 type DeckItemProps = {
   name: string;

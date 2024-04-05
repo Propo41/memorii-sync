@@ -29,22 +29,33 @@ npx expo run:android # run the app in an emulator
 
 #### Building the apk:
 
+The apk should be created through the expo cli. For that, you must have an Expo account. Then go to: https://expo.dev/accounts/minkstudios/projects, and create a new project with the name `memorii-sync`. 
+
+By default, the `google-services.json` file is added to gitignore. So, it won't be uploaded to expo when you start the build process. There are 2 ways this can be avoided: 
+
+1. Adding it as a secret. Check: https://docs.expo.dev/build-reference/variables/#how-to-upload-a-secret-file-and-use-it-in-my-app-config  
+2. Removing the  `google-services.json` from gitignore. This is the simplest way.
+
 ```bash
 npm install -g eas-cli
+eas login
+
+eas init --id <id> # you can find the id in the expo dashboard after creating a new project
 eas build -p android --profile preview
 ```
 
 #### Generating SHA-1
-The SHA-1 needs to be placed both in the expo project and the firebase project
+
 ```bash
 cd android
 ./gradlew signingReport
 ```
+For the google sign-in to work properly, you must copy the SHA-1 value from your expo project to your firebase project. You can find the expo project's SHA-1 under `Project Settings > Credentials`
 
 #### Important eas commands
 ```bash
 eas whoami
-eas configure
+eas login
 
 eas init --id <eas-project-id> # resets the id
 

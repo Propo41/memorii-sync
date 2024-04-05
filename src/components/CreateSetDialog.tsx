@@ -13,7 +13,7 @@ import { toFont, toSize } from '../helpers/scaling';
 import * as DocumentPicker from 'expo-document-picker';
 import { showToast } from './CustomToast';
 import { rawToCards, readFile } from '../helpers/utility';
-import { SITE_URL } from '../config/conf';
+import { SITE_URL } from '../config';
 import ColorPicker from 'react-native-wheel-color-picker';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { Cache } from '../models/Cache';

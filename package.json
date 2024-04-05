@@ -15,7 +15,8 @@
     "android": "expo run:android",
     "prebuild": "expo prebuild",
     "eject": "expo eject",
-    "eslint": "eslint ."
+    "eslint": "eslint .",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@expo-google-fonts/josefin-sans": "^0.2.3",
